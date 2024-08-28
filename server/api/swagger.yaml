@@ -100,17 +100,37 @@ definitions:
       msg:
         type: string
     type: object
+  user.UserInfo:
+    properties:
+      created_at:
+        type: integer
+      email:
+        type: string
+      uid:
+        type: string
+      username:
+        type: string
+    type: object
+  user.UserListResult:
+    properties:
+      list:
+        items:
+          $ref: '#/definitions/user.UserInfo'
+        type: array
+      total:
+        type: integer
+    type: object
 info:
   contact:
     name: dstgo
-    url: https://github.com/dstgo/maxwell
+    url: https://github.com/dstgo/lobby
   description: This is lobby swagger generated api documentation, know more information
     about lobby on GitHub.
   license:
     name: MIT LICENSE
     url: https://mit-license.org/
-  title: MaxWell HTTP API
-  version: v0.0.0Beta
+  title: Lobby HTTP API
+  version: v0.0.0-Beta
 paths:
   /auth/code:
     post:
@@ -272,6 +292,64 @@ paths:
       summary: Pong
       tags:
       - system
+  /user/info:
+    get:
+      consumes:
+      - application/json
+      description: get user information by given uid
+      parameters:
+      - description: uid
+        in: query
+        name: uid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/types.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/user.UserInfo'
+              type: object
+      summary: Info
+      tags:
+      - user
+  /user/list:
+    get:
+      consumes:
+      - application/json
+      description: list user info by page
+      parameters:
+      - in: query
+        name: page
+        required: true
+        type: integer
+      - in: query
+        name: search
+        type: string
+      - in: query
+        name: size
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/types.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/user.UserListResult'
+              type: object
+      summary: List
+      tags:
+      - user
 securityDefinitions:
   BearerAuth:
     in: header

@@ -4,7 +4,6 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/schema"
-	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"github.com/dstgo/lobby/pkg/ids"
 	"github.com/dstgo/lobby/pkg/ts"
@@ -36,7 +35,5 @@ func (User) Fields() []ent.Field {
 
 // Edges of the User.
 func (User) Edges() []ent.Edge {
-	return []ent.Edge{
-		edge.To("containers", Container.Type),
-	}
+	return []ent.Edge{}
 }

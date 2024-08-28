@@ -9,11 +9,14 @@ package server
 import (
 	"github.com/dstgo/lobby/server/api"
 	auth2 "github.com/dstgo/lobby/server/api/auth"
+	"github.com/dstgo/lobby/server/api/system"
+	user2 "github.com/dstgo/lobby/server/api/user"
 	"github.com/dstgo/lobby/server/data/cache"
 	"github.com/dstgo/lobby/server/data/mq"
 	"github.com/dstgo/lobby/server/data/repo"
 	"github.com/dstgo/lobby/server/handler/auth"
 	"github.com/dstgo/lobby/server/handler/email"
+	"github.com/dstgo/lobby/server/handler/user"
 	"github.com/dstgo/lobby/server/types"
 )
 
@@ -45,8 +48,15 @@ func setup(env *types.Env) (api.Router, error) {
 	authHandler := auth.NewAuthHandler(userRepo, tokenHandler, verifyCodeHandler)
 	authAPI := auth2.NewAuthAPI(tokenHandler, authHandler, verifyCodeHandler)
 	router := auth2.NewRouter(routerGroup, authAPI)
+	systemAPI := system.NewSystemAPI()
+	systemRouter := system.NewRouter(routerGroup, systemAPI)
+	userHandler := user.NewUserHandler(userRepo)
+	userAPI := user2.NewUserAPI(userHandler)
+	userRouter := user2.NewRouter(routerGroup, userAPI)
 	apiRouter := api.Router{
-		Auth: router,
+		Auth:   router,
+		System: systemRouter,
+		User:   userRouter,
 	}
 	return apiRouter, nil
 }

@@ -1,0 +1,280 @@
+basePath: /api/
+definitions:
+  auth.LoginOption:
+    properties:
+      password:
+        description: user password
+        type: string
+      remember:
+        description: remember user or not
+        type: boolean
+      username:
+        description: username or email
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  auth.RefreshTokenOption:
+    properties:
+      accessToken:
+        description: access token
+        type: string
+      refreshToken:
+        description: refresh token
+        type: string
+    required:
+    - accessToken
+    - refreshToken
+    type: object
+  auth.RegisterOption:
+    properties:
+      code:
+        description: verification code from verify email
+        type: string
+      email:
+        description: user email address
+        type: string
+      password:
+        description: user password
+        type: string
+      username:
+        description: username must be alphanumeric
+        type: string
+    required:
+    - code
+    - password
+    - username
+    type: object
+  auth.ResetPasswordOption:
+    properties:
+      code:
+        description: verification code from verify email
+        type: string
+      email:
+        description: user email address
+        type: string
+      password:
+        description: new password
+        type: string
+    required:
+    - code
+    - password
+    type: object
+  auth.TokenResult:
+    properties:
+      accessToken:
+        type: string
+      refreshToken:
+        type: string
+    type: object
+  auth.Usage:
+    enum:
+    - 0
+    - 1
+    - 2
+    type: integer
+    x-enum-varnames:
+    - UsageUnknown
+    - UsageRegister
+    - UsageReset
+  auth.VerifyCodeOption:
+    properties:
+      to:
+        description: email receiver
+        type: string
+      usage:
+        allOf:
+        - $ref: '#/definitions/auth.Usage'
+        description: 'verify code usage: 1-register 2-reset password'
+    required:
+    - usage
+    type: object
+  types.Response:
+    properties:
+      code:
+        type: integer
+      data: {}
+      error:
+        type: string
+      msg:
+        type: string
+    type: object
+info:
+  contact:
+    name: dstgo
+    url: https://github.com/dstgo/maxwell
+  description: This is lobby swagger generated api documentation, know more information
+    about lobby on GitHub.
+  license:
+    name: MIT LICENSE
+    url: https://mit-license.org/
+  title: MaxWell HTTP API
+  version: v0.0.0Beta
+paths:
+  /auth/code:
+    post:
+      consumes:
+      - application/json
+      description: send verification code mail to specified email address
+      parameters:
+      - description: VerifyCodeOption
+        in: body
+        name: VerifyCodeOption
+        required: true
+        schema:
+          $ref: '#/definitions/auth.VerifyCodeOption'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.Response'
+      summary: VerifyCode
+      tags:
+      - auth
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: login with password, and returns jwt token pair
+      parameters:
+      - description: login params
+        in: body
+        name: loginOption
+        required: true
+        schema:
+          $ref: '#/definitions/auth.LoginOption'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/types.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/auth.TokenResult'
+              type: object
+      summary: Login
+      tags:
+      - auth
+  /auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: ask for refresh access token lifetime with refresh token
+      parameters:
+      - description: refresh params
+        in: body
+        name: RefreshTokenOption
+        required: true
+        schema:
+          $ref: '#/definitions/auth.RefreshTokenOption'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/types.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/auth.TokenResult'
+              type: object
+      summary: Refresh
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: register a new user with verification code
+      parameters:
+      - description: register params
+        in: body
+        name: RegisterOption
+        required: true
+        schema:
+          $ref: '#/definitions/auth.RegisterOption'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.Response'
+      summary: Register
+      tags:
+      - auth
+  /auth/reset:
+    post:
+      consumes:
+      - application/json
+      description: reset user password with verification code
+      parameters:
+      - description: reset params
+        in: body
+        name: ResetPasswordOption
+        required: true
+        schema:
+          $ref: '#/definitions/auth.ResetPasswordOption'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.Response'
+      summary: ResetPassword
+      tags:
+      - auth
+  /ping:
+    get:
+      consumes:
+      - application/json
+      description: test server if is available
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/types.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Ping
+      tags:
+      - system
+  /pong:
+    get:
+      consumes:
+      - application/json
+      description: test if server authentication is working
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/types.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Pong
+      tags:
+      - system
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

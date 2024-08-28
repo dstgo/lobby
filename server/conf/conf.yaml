@@ -1,0 +1,123 @@
+server:
+  # listen address
+  address: 127.0.0.1:8080
+  # the maximum duration for reading the entire request
+  readTimeout: 60s
+  # the maximum duration before timing out writes of the response
+  writeTimeout: 60s
+  # the maximum amount of time to wait for the next request when keep-alives are enabled
+  idleTimeout: 300s
+  # value of 'maxMemory' param that is given to http.Request's ParseMultipartForm
+  multipartMax: 52428800
+  # enabled pprof program profiling
+  pprof: false
+  # tls certificate
+  tls:
+    cert: /etc/lobby/example.com.cert
+    key: /etc/lobby/example.com.key
+
+# http rate limit
+limit:
+  # the maximum request times for public api in given duration
+  public:
+    limit: 30
+    duration: 5m
+  private:
+
+
+# logger configuration
+log:
+  # log output file
+  filename: /etc/lobby/access.log
+  # log level
+  # LevelDebug Level = -4
+  # LevelInfo  Level = 0
+  # LevelWarn  Level = 4
+  # LevelError Level = 8
+  level: 0
+  # log format, TEXT, JSON is available
+  format: TEXT
+  # log record with source file info
+  source: false
+  # show color in console output
+  color: false
+
+db:
+  # sqlite | mysql | postgresql
+  driver: mysql
+  # db address
+  address: 127.0.0.1:8080
+  # db username
+  user: root
+  # db password
+  password: 12345678
+  # db database name
+  database: lobby
+  # connection params
+  param: charset=utf8mb4&parseTime=True&loc=Local
+  # max idle connections limit
+  maxIdleConnections: 10
+  # max opening connections limit
+  maxOpenConnections: 100
+  # max connection lifetime
+  maxLifeTime: 1h
+  # max connection idle time
+  maxIdleTime: 10m
+
+redis:
+  # redis address
+  address: 127.0.0.1:6379
+  # redis requiredpass
+  password: 123456
+  # max read timeout
+  readTimeout: 60s
+  # max write timeout
+  writeTimeout: 60s
+
+jwt:
+  # jwt issuer
+  issuer: lobby
+  # access token
+  access:
+    expire: 4h
+    key: lobby-token-access
+  # refresh-token
+  refresh:
+    expire: 72h
+    key: lobby-token-refresh
+  delay: 5m
+
+# email configuration
+email:
+  # smtp host server
+  host: smtp.example.com
+  # smtp port
+  port: 25
+  # username
+  username: admin
+  # password to authenticate
+  password: 1234556
+  # message queue configuration
+  mq:
+    # publish topic
+    topic: email
+    # max length of topic
+    maxLen: 10_0000
+    # max batch size of per reading
+    batchSize: 20
+    # consumer group
+    group: email_group
+    # how many consumer in groups, must >=1.
+    consumers:
+      - consumerA
+      - consumerB
+  # verification code configuration
+  code:
+    # life-time of verification code
+    ttl: 5m
+    # max wait time before asking for new verification code
+    retry: 60s
+
+
+
+

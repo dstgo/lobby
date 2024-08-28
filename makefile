@@ -91,14 +91,14 @@ endif
 ent_clean:
 	@rm -rf $(ent_generated)
 
-api_path := server/api
+api_path := ./server/api
 
 .PHONY: swag
 swag:
 	go generate $(api_path)
 
 
-wire_out := server/
+wire_out := ./server/
 
 .PHONY: wire
 wire:

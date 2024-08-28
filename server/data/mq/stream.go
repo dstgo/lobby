@@ -46,12 +46,12 @@ func (h *StreamQueue) Consume(ctx context.Context, topic, group, consumer string
 
 			// read the latest message
 			if id, err := h.consume(ctx, topic, group, consumer, ">", batchSize, cb); err != nil {
-				errorLog("stream consume > failed", err, id, topic, group, consumer)
+				errorLog("stream consume latest failed", err, id, topic, group, consumer)
 			}
 
 			// consume the messages that already received but not ack yet
 			if id, err := h.consume(ctx, topic, group, consumer, "1", batchSize, cb); err != nil {
-				errorLog("stream consume 1 failed", err, id, topic, group, consumer)
+				errorLog("stream consume not-ack failed", err, id, topic, group, consumer)
 			}
 
 			// clear dead messages in pending list

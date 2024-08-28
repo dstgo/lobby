@@ -11,6 +11,7 @@ import (
 	"github.com/dstgo/size"
 	"github.com/ginx-contribs/ginx"
 	"github.com/ginx-contribs/ginx/constant/methods"
+	"github.com/ginx-contribs/ginx/contribs/requestid"
 	"github.com/ginx-contribs/ginx/middleware"
 	"log/slog"
 	"net/http/pprof"
@@ -62,6 +63,8 @@ func NewApp(ctx context.Context, appConf *conf.App) (*ginx.Server, error) {
 		ginx.WithMiddlewares(
 			// reocvery handler
 			middleware.Recovery(slog.Default(), nil),
+			// request id
+			requestid.RequestId(),
 			// access logger
 			middleware.Logger(slog.Default(), "accesslog"),
 			// rate limit by counting

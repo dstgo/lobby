@@ -8,7 +8,6 @@ import (
 	"github.com/dstgo/lobby/server/conf"
 	"github.com/spf13/cobra"
 	"log/slog"
-	"os"
 	"strings"
 )
 
@@ -30,11 +29,6 @@ var rootCmd = &cobra.Command{
 		}
 
 		if err := cfgx.LoadConfigAndMapTo(ConfigFile, &appConf); err != nil {
-			return err
-		}
-
-		// print banner
-		if err := app.PrintBanner(os.Stderr); err != nil {
 			return err
 		}
 

@@ -78,19 +78,19 @@ ent_out := ./server/data/ent
 ent_target := schema
 ent_generated := $(shell find $(ent_out)/* ! -path "*$(ent_target)*")
 
-.PHONY: ent_gen
-ent_gen:
-ifneq ($(schema),)
-	# generate new $(schema) schema
+.PHONY: ent_new, ent_gen, ent_clean
+ent_new:
+	# generate schema $(schema)
 	ent new --target $(ent_out)/$(ent_target) $(schema)
-endif
+
+ent_gen:
 	# generate ent code
 	ent generate $(ent_out)/$(ent_target)
 
-.PHONY: ent_clean
 ent_clean:
 	@rm -rf $(ent_generated)
 
+# go swagger
 api_path := ./server/api
 
 .PHONY: swag

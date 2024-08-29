@@ -2,31 +2,43 @@ package ids
 
 import "testing"
 
-func testId(n int, f func() string) []string {
+func testId(n int, f func() string) map[string]int {
 	m := make(map[string]int)
 	for range n {
 		m[f()]++
 	}
 
-	var repeat []string
+	var repeat map[string]int
 	for k, v := range m {
 		if v > 1 {
-			repeat = append(repeat, k)
+			repeat[k] = v
 		}
 	}
 	return repeat
 }
 
-func TestULId(t *testing.T) {
-	ids := testId(1000_0000, ULID)
-	for _, id := range ids {
-		t.Log(id)
+func TestULIdRepeat(t *testing.T) {
+	n := 100_0000
+	ids := testId(n, ULID)
+	for id, r := range ids {
+		t.Logf("ULID %s conflict %d times in %d times", id, r, n)
 	}
 }
 
-func TestUUId(t *testing.T) {
-	ids := testId(1000_0000, UUID)
-	for _, id := range ids {
-		t.Log(id)
+func TestUUIdRepeat(t *testing.T) {
+	n := 100_0000
+	ids := testId(n, UUID)
+	for id, r := range ids {
+		t.Logf("uuid %s conflict %d times in %d times", id, r, n)
 	}
+}
+
+func TestUUID(t *testing.T) {
+	uuid := UUID()
+	t.Log(uuid)
+}
+
+func TestULID(t *testing.T) {
+	ulid := ULID()
+	t.Log(ulid)
 }

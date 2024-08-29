@@ -82,13 +82,24 @@ func validatePramsHandler(ctx *gin.Context, val any, err error) {
 }
 
 // initialize database with ent
-func initializeDB(ctx context.Context, options dbx.Options) (*ent.Client, error) {
-	sqldb, err := dbx.Open(options)
+func initializeDB(ctx context.Context, dbConf conf.DB) (*ent.Client, error) {
+	sqldb, err := dbx.Open(dbx.Options{
+		Driver:             dbConf.Driver,
+		Address:            dbConf.Address,
+		User:               dbConf.User,
+		Password:           dbConf.Password,
+		Database:           dbConf.Database,
+		Params:             dbConf.Params,
+		MaxIdleConnections: dbConf.MaxIdleConnections,
+		MaxOpenConnections: dbConf.MaxOpenConnections,
+		MaxLifeTime:        dbConf.MaxLifeTime,
+		MaxIdleTime:        dbConf.MaxIdleTime,
+	})
 	if err != nil {
 		return nil, err
 	}
 	entClient := ent.NewClient(
-		ent.Driver(entsql.OpenDB(options.Driver, sqldb)),
+		ent.Driver(entsql.OpenDB(dbConf.Driver, sqldb)),
 	)
 	// migrate database
 	if err := entClient.Schema.Create(ctx); err != nil {

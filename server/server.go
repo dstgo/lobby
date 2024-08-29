@@ -51,6 +51,7 @@ func NewApp(ctx context.Context, appConf *conf.App) (*ginx.Server, error) {
 	server := ginx.New(
 		ginx.WithOptions(ginx.Options{
 			Mode:               gin.ReleaseMode,
+			Address:            appConf.Server.Address,
 			ReadTimeout:        appConf.Server.ReadTimeout,
 			WriteTimeout:       appConf.Server.WriteTimeout,
 			IdleTimeout:        appConf.Server.IdleTimeout,
@@ -66,7 +67,7 @@ func NewApp(ctx context.Context, appConf *conf.App) (*ginx.Server, error) {
 			// request id
 			requestid.RequestId(),
 			// access logger
-			middleware.Logger(slog.Default(), "accesslog"),
+			middleware.Logger(slog.Default(), "request-log"),
 			// rate limit by counting
 			mids.RateLimitByCount(redisClient, appConf.Limit.Public.Limit, appConf.Limit.Public.Window, mids.ByIpPath),
 			// jwt authentication

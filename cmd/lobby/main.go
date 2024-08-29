@@ -3,18 +3,19 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/dstgo/lobby/pkg/cfgx"
-	app "github.com/dstgo/lobby/server"
+	"github.com/dstgo/lobby/server"
 	"github.com/dstgo/lobby/server/conf"
+	"github.com/ginx-contribs/ginx"
 	"github.com/spf13/cobra"
 	"log/slog"
 	"strings"
 )
 
 var (
-	Version    string
-	BuildTime  string
-	ConfigFile string
+	Author     = "dstgo"
+	Version    = "unknown"
+	BuildTime  = "0000"
+	ConfigFile = "conf.toml"
 )
 
 var rootCmd = &cobra.Command{
@@ -22,47 +23,54 @@ var rootCmd = &cobra.Command{
 	Short:        "lobby is the web server of wendy panel, responsible for managing nodes that from any machine.",
 	SilenceUsage: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		// load config file
-		appConf := conf.App{
-			Version:   Version,
-			BuildTime: BuildTime,
-		}
-
-		if err := cfgx.LoadConfigAndMapTo(ConfigFile, &appConf); err != nil {
-			return err
-		}
-
-		appConf.Log.Prompt = "[lobby]"
-		// initialize app logger
-		logger, err := app.NewLogger(appConf.Log)
+		ctx := context.Background()
+		lobbyServer, err := newLobbyServer(ctx, Author, Version, BuildTime, ConfigFile)
 		if err != nil {
 			return err
 		}
-		defer logger.Close()
-
-		// set it to the default logger
-		slog.SetDefault(logger.Slog())
-		slog.Info(fmt.Sprintf("logging in level: %s", strings.ToLower(appConf.Log.Level.String())))
-
-		// this is the root context for the whole program
-		rootCtx := context.Background()
-
-		// initialize app
-		server, err := app.NewApp(rootCtx, &appConf)
-		if err != nil {
-			return err
-		}
-
-		// run the server
-		return server.Spin()
+		return lobbyServer.Spin()
 	},
 }
 
 func init() {
-	rootCmd.PersistentFlags().StringVarP(&ConfigFile, "config", "f", "conf.yaml", "server configuration file")
+	rootCmd.PersistentFlags().StringVarP(&ConfigFile, "config", "f", "conf.toml", "server configuration file")
 	rootCmd.AddCommand(versionCmd)
 }
 
 func main() {
 	rootCmd.Execute()
+}
+
+func newLobbyServer(ctx context.Context, author, version, buildTime, configFile string) (*ginx.Server, error) {
+	// read config file
+	appConf, err := conf.ReadFrom(configFile)
+	if err != nil {
+		return nil, err
+	}
+
+	appConf.Author = author
+	appConf.Version = version
+	appConf.BuildTime = buildTime
+
+	// revise configuration
+	appConf, err = conf.Revise(appConf)
+	if err != nil {
+		return nil, err
+	}
+
+	// initialize app logger
+	logger, err := server.NewLogger(appConf.Log)
+	if err != nil {
+		return nil, err
+	}
+
+	slog.SetDefault(logger.Slog())
+	slog.Info(fmt.Sprintf("logging in level: %s", strings.ToLower(appConf.Log.Level.String())))
+
+	// initialize app
+	app, err := server.NewApp(ctx, &appConf)
+	if err != nil {
+		return nil, err
+	}
+	return app, nil
 }

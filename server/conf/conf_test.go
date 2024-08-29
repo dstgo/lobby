@@ -1,18 +1,24 @@
 package conf
 
 import (
-	"fmt"
-	"github.com/dstgo/lobby/pkg/cfgx"
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/yaml.v3"
+	"log/slog"
 	"testing"
 )
 
-func TestLoadConf(t *testing.T) {
-	var conf App
-	err := cfgx.LoadConfigAndMapTo("./conf.yaml", &conf)
-	assert.Nil(t, err)
-	marshal, err := yaml.Marshal(conf)
-	assert.Nil(t, err)
-	fmt.Println(string(marshal))
+func TestReadFrom(t *testing.T) {
+	filename := "testdata/conf.toml"
+	cfg := App{Server: Server{Address: "127.0.0.1:8080"}, Log: Log{Level: slog.LevelDebug}}
+	err := WriteTo(filename, cfg)
+	assert.NoError(t, err)
+	app, err := ReadFrom(filename)
+	assert.NoError(t, err)
+	assert.Equal(t, app.Server.Address, cfg.Server.Address)
+}
+
+func TestRevise(t *testing.T) {
+	cfg := App{Server: Server{Address: "127.0.0.1:8080"}, Log: Log{Level: slog.LevelDebug}}
+	reviseConf, err := Revise(cfg)
+	assert.NoError(t, err)
+	t.Log(reviseConf)
 }

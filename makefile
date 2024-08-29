@@ -42,12 +42,12 @@ endif
 
 .PHONY: build
 build:
-	# go lint
-	go vet ./...
-
 	# prepare target environment $(os)/$(arch)
 	go env -w GOOS=$(os)
 	go env -w GOARCH=$(arch)
+
+	# go lint
+	go vet ./...
 
 	# build go module
 	go build -trimpath \
@@ -61,8 +61,8 @@ build:
 
 
 # support platforms
-windows := 386 amd64 arm64 arm
-linux := 386 amd64 arm64 arm
+windows := amd64 arm64 arm
+linux := amd64 arm64 arm
 darwin := amd64 arm64
 platforms := windows linux darwin
 

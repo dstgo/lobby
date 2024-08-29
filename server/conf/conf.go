@@ -41,7 +41,7 @@ type Log struct {
 	Filename string     `toml:"filename" comment:"log output file"`
 	Prompt   string     `toml:"-"`
 	Level    slog.Level `toml:"level" comment:"support levels: DEBUG | INFO | WARN | ERROR"`
-	Format   string     `toml:"format" comment:"text or json"`
+	Format   string     `toml:"format" comment:"TEXT or JSON"`
 	Source   bool       `toml:"source" comment:"whether to show source file in logs"`
 	Color    bool       `toml:"color" comment:"enable color log"`
 }

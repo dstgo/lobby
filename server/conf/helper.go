@@ -1,6 +1,7 @@
 package conf
 
 import (
+	"github.com/ginx-contribs/logx"
 	"github.com/mitchellh/mapstructure"
 	"github.com/pelletier/go-toml/v2"
 	"log/slog"
@@ -47,10 +48,10 @@ var DefaultConfig = App{
 		Pprof:        false,
 	},
 	Log: Log{
-		Filename: "conf.toml",
+		Filename: "/etc/lobby/server.log",
 		Prompt:   "[lobby]",
 		Level:    slog.LevelInfo,
-		Format:   "text",
+		Format:   logx.TextFormat,
 		Source:   false,
 		Color:    false,
 	},

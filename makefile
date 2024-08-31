@@ -73,19 +73,20 @@ build_all:
 			$(shell $(MAKE) build os=$(os_i) arch=$(arch_j) mode=$(mode))))
 
 # ent schema path
-schema =
-ent_out := ./server/data/ent
-ent_target := schema
-ent_generated := $(shell find $(ent_out)/* ! -path "*$(ent_target)*")
+schema = $(null_string)
+ent_dir := ./server/data/ent
+ent_out := $(ent_dir)/schema
+ent_template := ./server/data/ent/template
+ent_generated := $(shell find $(ent_dir)/* ! -path "$(ent_out)*" ! -path "$(ent_template)*")
 
 .PHONY: ent_new, ent_gen, ent_clean
 ent_new:
 	# generate schema $(schema)
-	ent new --target $(ent_out)/$(ent_target) $(schema)
+	ent new --target $(ent_out) $(schema) --template $(ent_template)/schema.tmpl
 
 ent_gen:
 	# generate ent code
-	ent generate $(ent_out)/$(ent_target)
+	ent generate $(ent_out) --template $(ent_template)
 
 ent_clean:
 	@rm -rf $(ent_generated)
@@ -94,7 +95,7 @@ ent_clean:
 api_path := ./server/api
 
 .PHONY: swag
-swag:
+swag_gen:
 	go generate $(api_path)
 
 

@@ -43,6 +43,7 @@ func TokenAuthenticator(tokenHandler *authhandler.TokenHandler) gin.HandlerFunc 
 			types.SetTokenInfo(ctx, &tokenInfo)
 			ctx.Next()
 		} else {
+			ctx.Abort()
 			// check if is needed to refresh
 			if errors.Is(err, types.ErrTokenNeedsRefresh) {
 				resp.Fail(ctx).Error(types.ErrTokenNeedsRefresh).JSON()

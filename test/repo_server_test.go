@@ -5,7 +5,7 @@ import (
 	"github.com/dstgo/lobby/server"
 	"github.com/dstgo/lobby/server/data/ent"
 	"github.com/dstgo/lobby/server/data/repo"
-	dstype "github.com/dstgo/lobby/server/types/dst"
+	"github.com/dstgo/lobby/server/types"
 	"github.com/dstgo/lobby/test/testuitl"
 	"github.com/stretchr/testify/assert"
 	"strings"
@@ -70,7 +70,7 @@ func TestPageQueryByOptions(t *testing.T) {
 	if !assert.NoError(t, err) {
 		return
 	}
-	list, total, err := serverRepo.PageQueryByOption(ctx, dstype.SearchOptions{})
+	list, total, err := serverRepo.PageQueryByOption(ctx, types.LobbyServerSearchOptions{})
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -101,7 +101,7 @@ func TestPageQueryByOptionsPage(t *testing.T) {
 		{page: 1, size: 1000, expectedSize: 1000},
 	}
 	for _, pair := range sample {
-		list, total, err := serverRepo.PageQueryByOption(ctx, dstype.SearchOptions{
+		list, total, err := serverRepo.PageQueryByOption(ctx, types.LobbyServerSearchOptions{
 			Page: pair.page,
 			Size: pair.size,
 		})
@@ -131,7 +131,7 @@ func TestPageQueryByOptionsWithMatch(t *testing.T) {
 	for i, match := range samples {
 		page := 1
 		size := 20
-		list, total, err := serverRepo.PageQueryByOption(ctx, dstype.SearchOptions{
+		list, total, err := serverRepo.PageQueryByOption(ctx, types.LobbyServerSearchOptions{
 			Page:  page,
 			Size:  size,
 			Match: match,
@@ -162,7 +162,7 @@ func TestPageQueryByOptionsWithTags(t *testing.T) {
 	for i, tags := range samples {
 		page := 1
 		size := 20
-		list, total, err := serverRepo.PageQueryByOption(ctx, dstype.SearchOptions{
+		list, total, err := serverRepo.PageQueryByOption(ctx, types.LobbyServerSearchOptions{
 			Page: page,
 			Size: size,
 			Tags: tags,
@@ -185,19 +185,19 @@ func TestPageQueryByOptionsWithServerType(t *testing.T) {
 		return
 	}
 
-	samples := []dstype.ServerType{
-		dstype.TypeOfficial,
-		dstype.TypeSteamClan,
-		dstype.TypeSteamClanOnly,
-		dstype.TypeFriendOnly,
-		dstype.TypeClientHosted,
-		dstype.TypeDedicated,
+	samples := []types.DstServerType{
+		types.TypeOfficial,
+		types.TypeSteamClan,
+		types.TypeSteamClanOnly,
+		types.TypeFriendOnly,
+		types.TypeClientHosted,
+		types.TypeDedicated,
 	}
 
 	for i, serverType := range samples {
 		page := 1
 		size := 100
-		list, total, err := serverRepo.PageQueryByOption(ctx, dstype.SearchOptions{
+		list, total, err := serverRepo.PageQueryByOption(ctx, types.LobbyServerSearchOptions{
 			Page:       page,
 			Size:       size,
 			ServerType: serverType,
@@ -220,10 +220,10 @@ func TestPageQueryByOptionsWithManyCondition(t *testing.T) {
 		return
 	}
 
-	samples := []dstype.SearchOptions{
-		{Page: 1, Size: 100, Sort: dstype.SortByLevel, Desc: true},
-		{Page: 1, Size: 100, Sort: dstype.SortByVersion, Desc: true},
-		{Page: 1, Size: 100, Sort: dstype.SortByOnline, Desc: true},
+	samples := []types.LobbyServerSearchOptions{
+		{Page: 1, Size: 100, Sort: types.DstSortByLevel, Desc: true},
+		{Page: 1, Size: 100, Sort: types.DstSortByVersion, Desc: true},
+		{Page: 1, Size: 100, Sort: types.DstSortByOnline, Desc: true},
 		{Page: 1, Size: 100, Address: "45.74.14.148"},
 		{Page: 1, Size: 100, Season: "spring"},
 		{Page: 1, Size: 100, Platform: "Steam", Season: "summer", CountryCode: "CN", ModEnabled: 1},

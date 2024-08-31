@@ -8,6 +8,21 @@ import (
 	"github.com/google/wire"
 )
 
+// RegisterRouter
+// @title	                        Lobby HTTP API
+// @version		                    v0.0.0-Beta
+// @description                     This is lobby swagger generated api documentation, know more information about lobby on GitHub.
+// @contact.name                    dstgo
+// @contact.url                     https://github.com/dstgo/lobby
+// @BasePath	                    /api/
+// @license.name                    MIT LICENSE
+// @license.url                     https://mit-license.org/
+// @securityDefinitions.apikey      BearerAuth
+// @in                              header
+// @name                            Authorization
+//
+//go:generate swag init --ot yaml --generatedTime -g api.go -d ./,../types,../pkg --output ./ && swag fmt -g api.go -d ./
+
 type Router struct {
 	Auth   auth.Router
 	System system.Router
@@ -32,18 +47,3 @@ var Provider = wire.NewSet(
 	// build Router struct
 	wire.Struct(new(Router), "*"),
 )
-
-// RegisterRouter
-// @title	                        Lobby HTTP API
-// @version		                    v0.0.0-Beta
-// @description                     This is lobby swagger generated api documentation, know more information about lobby on GitHub.
-// @contact.name                    dstgo
-// @contact.url                     https://github.com/dstgo/lobby
-// @BasePath	                    /api/
-// @license.name                    MIT LICENSE
-// @license.url                     https://mit-license.org/
-// @securityDefinitions.apikey      BearerAuth
-// @in                              header
-// @name                            Authorization
-//
-//go:generate swag init --ot yaml --generatedTime -g api.go -d ./,../types,../../pkg/ --output ./ && swag fmt -g api.go -d ./

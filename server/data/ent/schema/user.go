@@ -5,8 +5,8 @@ import (
 	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/schema"
 	"entgo.io/ent/schema/field"
-	"github.com/dstgo/lobby/pkg/ids"
-	"github.com/dstgo/lobby/pkg/ts"
+	"github.com/dstgo/lobby/server/pkg/ids"
+	"github.com/dstgo/lobby/server/pkg/ts"
 )
 
 // User holds the schema definition for the User entity.

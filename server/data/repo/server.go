@@ -3,12 +3,12 @@ package repo
 import (
 	"context"
 	"entgo.io/ent/dialect/sql"
-	"github.com/dstgo/lobby/pkg/lobbyapi"
 	"github.com/dstgo/lobby/server/data/ent"
 	"github.com/dstgo/lobby/server/data/ent/secondary"
 	"github.com/dstgo/lobby/server/data/ent/server"
 	"github.com/dstgo/lobby/server/data/ent/tag"
-	dstype "github.com/dstgo/lobby/server/types/dst"
+	"github.com/dstgo/lobby/server/pkg/lobbyapi"
+	"github.com/dstgo/lobby/server/types"
 )
 
 // NewServerRepo returns a new instance of ServerRepo
@@ -80,7 +80,7 @@ func (s *ServerRepo) MaxQV(ctx context.Context) (int64, error) {
 }
 
 // PageQueryByOption returns a list of servers that match the given query options
-func (s *ServerRepo) PageQueryByOption(ctx context.Context, options dstype.SearchOptions) (list []*ent.Server, total int, err error) {
+func (s *ServerRepo) PageQueryByOption(ctx context.Context, options types.LobbyServerSearchOptions) (list []*ent.Server, total int, err error) {
 	// select the latest query version
 	query := s.Ent.Server.Query()
 	qv, err := s.MaxQV(ctx)
@@ -133,21 +133,21 @@ func (s *ServerRepo) PageQueryByOption(ctx context.Context, options dstype.Searc
 
 	// server type
 	switch options.ServerType {
-	case dstype.TypeDedicated:
+	case types.TypeDedicated:
 		query = query.Where(server.Dedicated(true))
-	case dstype.TypeClientHosted:
+	case types.TypeClientHosted:
 		query = query.Where(server.ClientHosted(true))
-	case dstype.TypeOfficial:
+	case types.TypeOfficial:
 		query = query.Where(server.Or(
 			server.NameContains("Public Server"),
 			server.NameContains("Klei Official"),
 			server.HostIn("KU_KleiServ", "KU_KleiServ", "KU_zHxWQDSW"),
 		))
-	case dstype.TypeSteamClan:
+	case types.TypeSteamClan:
 		query = query.Where(server.SteamClanIDNEQ(""))
-	case dstype.TypeSteamClanOnly:
+	case types.TypeSteamClanOnly:
 		query = query.Where(server.SteamClanIDNEQ(""), server.ClanOnly(true))
-	case dstype.TypeFriendOnly:
+	case types.TypeFriendOnly:
 		query = query.Where(server.FriendOnly(true))
 	}
 
@@ -187,15 +187,15 @@ func (s *ServerRepo) PageQueryByOption(ctx context.Context, options dstype.Searc
 		opt.Desc = options.Desc
 	}
 	switch options.Sort {
-	case dstype.SortByName:
+	case types.DstSortByName:
 		query = query.Order(server.ByName(orderOpt))
-	case dstype.SortByCountry:
+	case types.DstSortByCountry:
 		query = query.Order(server.ByCountry(orderOpt))
-	case dstype.SortByVersion:
+	case types.DstSortByVersion:
 		query = query.Order(server.ByVersion(orderOpt))
-	case dstype.SortByOnline:
+	case types.DstSortByOnline:
 		query = query.Order(server.ByOnline(orderOpt))
-	case dstype.SortByLevel:
+	case types.DstSortByLevel:
 		query = query.Order(server.ByLevel(orderOpt))
 	}
 

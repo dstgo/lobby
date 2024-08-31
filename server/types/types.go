@@ -1,9 +1,9 @@
 package types
 
 import (
-	"github.com/dstgo/lobby/pkg/lobbyapi"
 	"github.com/dstgo/lobby/server/conf"
 	"github.com/dstgo/lobby/server/data/ent"
+	"github.com/dstgo/lobby/server/pkg/lobbyapi"
 	"github.com/ginx-contribs/ginx"
 	"github.com/ginx-contribs/ginx/constant/status"
 	"github.com/ginx-contribs/ginx/pkg/resp/statuserr"
@@ -19,14 +19,20 @@ type Response struct {
 	Error string `json:"error"`
 }
 
-// Env app env to hold all dependent components
-type Env struct {
+// Context holds all dependent context
+type Context struct {
+	// app configuration
 	AppConf *conf.App
-	Ent     *ent.Client
-	Redis   *redis.Client
-	Router  *ginx.RouterGroup
-	Email   *mail.Client
-	Lobby   *lobbyapi.Client
+	// ent client
+	Ent *ent.Client
+	// redis client
+	Redis *redis.Client
+	// app router
+	Router *ginx.RouterGroup
+	// email client
+	Email *mail.Client
+	// lobbyapi client
+	Lobby *lobbyapi.Client
 }
 
 // custom code is composed of three parts: Order_Status_Code, it will be shown in the response body.

@@ -22,12 +22,12 @@ import (
 
 // EnvProvider only use for wire injection
 var EnvProvider = wire.NewSet(
-	wire.FieldsOf(new(*types.Env), "AppConf"),
-	wire.FieldsOf(new(*types.Env), "Ent"),
-	wire.FieldsOf(new(*types.Env), "Redis"),
-	wire.FieldsOf(new(*types.Env), "Router"),
-	wire.FieldsOf(new(*types.Env), "Email"),
-	wire.FieldsOf(new(*types.Env), "Lobby"),
+	wire.FieldsOf(new(*types.Context), "AppConf"),
+	wire.FieldsOf(new(*types.Context), "Ent"),
+	wire.FieldsOf(new(*types.Context), "Redis"),
+	wire.FieldsOf(new(*types.Context), "Router"),
+	wire.FieldsOf(new(*types.Context), "Email"),
+	wire.FieldsOf(new(*types.Context), "Lobby"),
 	wire.FieldsOf(new(*conf.App), "Jwt"),
 	wire.FieldsOf(new(*conf.App), "Email"),
 )

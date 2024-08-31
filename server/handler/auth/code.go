@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/dstgo/lobby/server/data/cache"
 	"github.com/dstgo/lobby/server/handler/email"
-	"github.com/dstgo/lobby/server/types/auth"
+	"github.com/dstgo/lobby/server/types"
 	"github.com/ginx-contribs/ginx/pkg/resp/statuserr"
 	"github.com/redis/go-redis/v9"
 	"golang.org/x/net/context"
@@ -25,7 +25,7 @@ type VerifyCodeHandler struct {
 }
 
 // SendVerifyCodeEmail send a verify code email to the specified address
-func (v *VerifyCodeHandler) SendVerifyCodeEmail(ctx context.Context, to string, usage auth.Usage) error {
+func (v *VerifyCodeHandler) SendVerifyCodeEmail(ctx context.Context, to string, usage types.Usage) error {
 	ttl := v.sender.Cfg.Code.TTL
 	retryttl := v.sender.Cfg.Code.RetryTTL
 	var code string
@@ -33,7 +33,7 @@ func (v *VerifyCodeHandler) SendVerifyCodeEmail(ctx context.Context, to string, 
 	for try := 0; ; try++ {
 		// max retry 10 times
 		if try > 10 {
-			return auth.ErrVerifyCodeRetryLater
+			return types.ErrVerifyCodeRetryLater
 		}
 
 		// generated a verification code
@@ -45,7 +45,7 @@ func (v *VerifyCodeHandler) SendVerifyCodeEmail(ctx context.Context, to string, 
 		} else if err != nil {
 			return statuserr.InternalError(err)
 		} else if !tryOk {
-			return auth.ErrVerifyCodeRetryLater
+			return types.ErrVerifyCodeRetryLater
 		} else {
 			break
 		}
@@ -66,17 +66,17 @@ func (v *VerifyCodeHandler) SendVerifyCodeEmail(ctx context.Context, to string, 
 }
 
 // CheckVerifyCode check verify code if is valid
-func (v *VerifyCodeHandler) CheckVerifyCode(ctx context.Context, to, code string, usage auth.Usage) error {
+func (v *VerifyCodeHandler) CheckVerifyCode(ctx context.Context, to, code string, usage types.Usage) error {
 	getTo, err := v.codeCache.Get(ctx, usage, code)
 	if errors.Is(err, redis.Nil) || getTo != to {
-		return auth.ErrVerifyCodeInvalid
+		return types.ErrVerifyCodeInvalid
 	} else if err != nil {
 		return statuserr.InternalError(err)
 	}
 	return nil
 }
 
-func (v *VerifyCodeHandler) RemoveVerifyCode(ctx context.Context, code string, usage auth.Usage) error {
+func (v *VerifyCodeHandler) RemoveVerifyCode(ctx context.Context, code string, usage types.Usage) error {
 	err := v.codeCache.Del(ctx, usage, code)
 	if err != nil {
 		return statuserr.InternalError(err)

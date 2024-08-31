@@ -30,7 +30,7 @@ import (
 // Injectors from wire.go:
 
 // initialize and setup app environment
-func setup(env *types.Env) (api.Router, error) {
+func setup(env *types.Context) (api.Router, error) {
 	routerGroup := env.Router
 	app := env.AppConf
 	jwt := app.Jwt

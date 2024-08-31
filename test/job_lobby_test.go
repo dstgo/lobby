@@ -2,11 +2,11 @@ package test
 
 import (
 	"context"
-	"github.com/dstgo/lobby/pkg/lobbyapi"
 	"github.com/dstgo/lobby/server"
 	"github.com/dstgo/lobby/server/data/repo"
 	"github.com/dstgo/lobby/server/handler/dst"
 	"github.com/dstgo/lobby/server/job"
+	"github.com/dstgo/lobby/server/pkg/lobbyapi"
 	"github.com/dstgo/lobby/test/testuitl"
 	"github.com/stretchr/testify/assert"
 	"testing"

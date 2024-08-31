@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/dstgo/lobby/server/conf"
 	"github.com/dstgo/lobby/server/data/cache"
-	"github.com/dstgo/lobby/server/types/auth"
+	"github.com/dstgo/lobby/server/types"
 	"github.com/ginx-contribs/ginx/pkg/resp/statuserr"
 	"github.com/ginx-contribs/jwtx"
 	"github.com/ginx-contribs/str2bytes"
@@ -32,9 +32,9 @@ type TokenHandler struct {
 	JwtConf      conf.Jwt
 }
 
-func (t *TokenHandler) Issue(ctx context.Context, payload auth.TokenPayload, refresh bool) (auth.TokenPair, error) {
+func (t *TokenHandler) Issue(ctx context.Context, payload types.TokenPayload, refresh bool) (types.TokenPair, error) {
 	now := time.Now()
-	var tokenPair auth.TokenPair
+	var tokenPair types.TokenPair
 
 	// issue access token
 	accessToken, err := t.newToken(now, t.JwtConf.Access.Key, payload)
@@ -48,7 +48,7 @@ func (t *TokenHandler) Issue(ctx context.Context, payload auth.TokenPayload, ref
 	ttl := t.JwtConf.Access.Expire + t.JwtConf.Access.Delay + latency
 	// store into the cache
 	if err := t.accessCache.Set(ctx, accessToken.Claims.ID, accessToken.Claims.ID, ttl); err != nil {
-		return auth.TokenPair{}, err
+		return types.TokenPair{}, err
 	}
 
 	tokenPair.AccessToken = accessToken
@@ -73,9 +73,9 @@ func (t *TokenHandler) Issue(ctx context.Context, payload auth.TokenPayload, ref
 }
 
 // Refresh refreshes the access token lifetime with the given refresh token
-func (t *TokenHandler) Refresh(ctx context.Context, accessToken string, refreshToken string) (auth.TokenPair, error) {
+func (t *TokenHandler) Refresh(ctx context.Context, accessToken string, refreshToken string) (types.TokenPair, error) {
 	now := time.Now()
-	var pair auth.TokenPair
+	var pair types.TokenPair
 	// return directly if refresh token is expired
 	refresh, err := t.VerifyRefresh(ctx, refreshToken)
 	if err != nil {
@@ -130,12 +130,12 @@ func (t *TokenHandler) Refresh(ctx context.Context, accessToken string, refreshT
 }
 
 // VerifyAccess verifies the access token if is valid and parses the payload in the token.
-func (t *TokenHandler) VerifyAccess(ctx context.Context, token string, now time.Time) (auth.Token, error) {
+func (t *TokenHandler) VerifyAccess(ctx context.Context, token string, now time.Time) (types.Token, error) {
 	parsedToken, err := t.parse(token, t.JwtConf.Access.Key)
 	if errors.Is(err, jwt.ErrTokenExpired) {
 		// check if token needs to be refreshed
 		if parsedToken.Claims.Remember && parsedToken.Claims.ExpiresAt.Add(t.JwtConf.Access.Delay).Sub(now) > 0 {
-			return parsedToken, auth.ErrTokenNeedsRefresh
+			return parsedToken, types.ErrTokenNeedsRefresh
 		}
 		return parsedToken, err
 	} else if err != nil {
@@ -152,7 +152,7 @@ func (t *TokenHandler) VerifyAccess(ctx context.Context, token string, now time.
 }
 
 // VerifyRefresh verifies the refresh token if is valid.
-func (t *TokenHandler) VerifyRefresh(ctx context.Context, token string) (auth.Token, error) {
+func (t *TokenHandler) VerifyRefresh(ctx context.Context, token string) (types.Token, error) {
 	parsedToken, err := t.parse(token, t.JwtConf.Refresh.Key)
 	if err != nil {
 		return parsedToken, err
@@ -166,9 +166,9 @@ func (t *TokenHandler) VerifyRefresh(ctx context.Context, token string) (auth.To
 	return parsedToken, nil
 }
 
-func (t *TokenHandler) newToken(now time.Time, key string, payload auth.TokenPayload) (auth.Token, error) {
+func (t *TokenHandler) newToken(now time.Time, key string, payload types.TokenPayload) (types.Token, error) {
 	// create the token claims
-	claims := auth.TokenClaims{
+	claims := types.TokenClaims{
 		TokenPayload: payload,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    t.JwtConf.Issuer,
@@ -181,25 +181,25 @@ func (t *TokenHandler) newToken(now time.Time, key string, payload auth.TokenPay
 	// issue the token
 	token, err := jwtx.IssueWithClaims(str2bytes.Str2Bytes(key), t.method, claims)
 	if err != nil {
-		return auth.Token{}, err
+		return types.Token{}, err
 	}
 
-	return auth.Token{
+	return types.Token{
 		Token:       token.Token,
 		Claims:      claims,
 		TokenString: token.SignedString,
 	}, err
 }
 
-func (t *TokenHandler) parse(token, secret string) (auth.Token, error) {
-	parseJwt, err := jwtx.VerifyWithClaims(token, str2bytes.Str2Bytes(secret), t.method, &auth.TokenClaims{})
+func (t *TokenHandler) parse(token, secret string) (types.Token, error) {
+	parseJwt, err := jwtx.VerifyWithClaims(token, str2bytes.Str2Bytes(secret), t.method, &types.TokenClaims{})
 	if err == nil || errors.Is(err, jwt.ErrTokenExpired) {
-		return auth.Token{
+		return types.Token{
 			Token:       parseJwt.Token,
-			Claims:      *parseJwt.Claims.(*auth.TokenClaims),
+			Claims:      *parseJwt.Claims.(*types.TokenClaims),
 			TokenString: parseJwt.SignedString,
 		}, nil
 	} else {
-		return auth.Token{}, err
+		return types.Token{}, err
 	}
 }

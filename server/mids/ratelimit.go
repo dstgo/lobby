@@ -2,7 +2,7 @@ package mids
 
 import (
 	"errors"
-	"github.com/dstgo/lobby/server/types/auth"
+	"github.com/dstgo/lobby/server/types"
 	"github.com/dstgo/lobby/server/types/route"
 	"github.com/gin-gonic/gin"
 	"github.com/ginx-contribs/ginx"
@@ -40,7 +40,7 @@ func RateLimitByCount(client *redis.Client, limit int, window time.Duration, key
 			allow()
 		} else {
 			if errors.Is(err, ratelimit.ErrRateLimitExceed) {
-				resp.Fail(ctx).Error(auth.ErrRateLimitExceeded).JSON()
+				resp.Fail(ctx).Error(types.ErrRateLimitExceeded).JSON()
 			} else {
 				resp.InternalError(ctx).Error(err).JSON()
 			}

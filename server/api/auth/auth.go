@@ -3,7 +3,7 @@ package auth
 import (
 	"errors"
 	authandler "github.com/dstgo/lobby/server/handler/auth"
-	"github.com/dstgo/lobby/server/types/auth"
+	"github.com/dstgo/lobby/server/types"
 	"github.com/gin-gonic/gin"
 	"github.com/ginx-contribs/ginx"
 	"github.com/ginx-contribs/ginx/pkg/resp"
@@ -26,11 +26,11 @@ type AuthAPI struct {
 // @Tags         auth
 // @Accept       json
 // @Produce      json
-// @Param        loginOption  body  auth.LoginOption  true "login params"
-// @Success      200  {object}  types.Response{data=auth.TokenResult}
+// @Param        loginOption  body  types.AuthLoginOption  true "login params"
+// @Success      200  {object}  types.Response{data=types.TokenResult}
 // @Router       /auth/login [POST]
 func (a *AuthAPI) Login(ctx *gin.Context) {
-	var loginOpt auth.LoginOption
+	var loginOpt types.AuthLoginOption
 	if err := ginx.ShouldValidateJSON(ctx, &loginOpt); err != nil {
 		return
 	}
@@ -40,7 +40,7 @@ func (a *AuthAPI) Login(ctx *gin.Context) {
 	if err != nil {
 		resp.Fail(ctx).Error(err).JSON()
 	} else {
-		resp.Ok(ctx).Msg("login ok").Data(auth.TokenResult{
+		resp.Ok(ctx).Msg("login ok").Data(types.TokenResult{
 			AccessToken:  tokenPair.AccessToken.TokenString,
 			RefreshToken: tokenPair.RefreshToken.TokenString,
 		}).JSON()
@@ -53,11 +53,11 @@ func (a *AuthAPI) Login(ctx *gin.Context) {
 // @Tags         auth
 // @Accept       json
 // @Produce      json
-// @Param        RegisterOption  body  auth.RegisterOption  true "register params"
+// @Param        AuthRegisterOption  body  types.AuthRegisterOption  true "register params"
 // @Success      200  {object}  types.Response
 // @Router       /auth/register [POST]
 func (a *AuthAPI) Register(ctx *gin.Context) {
-	var registerOpt auth.RegisterOption
+	var registerOpt types.AuthRegisterOption
 	if err := ginx.ShouldValidateJSON(ctx, &registerOpt); err != nil {
 		return
 	}
@@ -76,11 +76,11 @@ func (a *AuthAPI) Register(ctx *gin.Context) {
 // @Tags         auth
 // @Accept       json
 // @Produce      json
-// @Param        ResetPasswordOption   body  auth.ResetPasswordOption  true "reset params"
+// @Param        AuthResetPasswordOption   body  types.AuthResetPasswordOption  true "reset params"
 // @Success      200  {object}  types.Response
 // @Router       /auth/reset [POST]
 func (a *AuthAPI) ResetPassword(ctx *gin.Context) {
-	var restOpt auth.ResetPasswordOption
+	var restOpt types.AuthResetPasswordOption
 	if err := ginx.ShouldValidateJSON(ctx, &restOpt); err != nil {
 		return
 	}
@@ -98,11 +98,11 @@ func (a *AuthAPI) ResetPassword(ctx *gin.Context) {
 // @Tags         auth
 // @Accept       json
 // @Produce      json
-// @Param        RefreshTokenOption  body  auth.RefreshTokenOption  true "refresh params"
-// @Success      200  {object}  types.Response{data=auth.TokenResult}
+// @Param        AuthRefreshTokenOption  body  types.AuthRefreshTokenOption  true "refresh params"
+// @Success      200  {object}  types.Response{data=types.TokenResult}
 // @Router       /auth/refresh [POST]
 func (a *AuthAPI) Refresh(ctx *gin.Context) {
-	var refreshOpt auth.RefreshTokenOption
+	var refreshOpt types.AuthRefreshTokenOption
 	if err := ginx.ShouldValidateJSON(ctx, &refreshOpt); err != nil {
 		return
 	}
@@ -111,13 +111,13 @@ func (a *AuthAPI) Refresh(ctx *gin.Context) {
 	tokenPair, err := a.token.Refresh(ctx, refreshOpt.AccessToken, refreshOpt.RefreshToken)
 	if err != nil {
 		if errors.Is(err, jwt.ErrTokenExpired) {
-			resp.Fail(ctx).Error(auth.ErrCredentialExpired).JSON()
+			resp.Fail(ctx).Error(types.ErrCredentialExpired).JSON()
 		} else {
 			ctx.Error(err)
-			resp.Fail(ctx).Error(auth.ErrCredentialInvalid).JSON()
+			resp.Fail(ctx).Error(types.ErrCredentialInvalid).JSON()
 		}
 	} else {
-		resp.Ok(ctx).Msg("refresh ok").Data(auth.TokenResult{
+		resp.Ok(ctx).Msg("refresh ok").Data(types.TokenResult{
 			AccessToken:  tokenPair.AccessToken.TokenString,
 			RefreshToken: tokenPair.RefreshToken.TokenString,
 		}).JSON()
@@ -130,18 +130,18 @@ func (a *AuthAPI) Refresh(ctx *gin.Context) {
 // @Tags         auth
 // @Accept       json
 // @Produce      json
-// @Param        VerifyCodeOption   body   auth.VerifyCodeOption  true  "VerifyCodeOption"
+// @Param        AuthVerifyCodeOption   body   types.AuthVerifyCodeOption  true  "AuthVerifyCodeOption"
 // @Success      200  {object}  types.Response
 // @Router       /auth/code [POST]
 func (a *AuthAPI) VerifyCode(ctx *gin.Context) {
-	var verifyOpt auth.VerifyCodeOption
+	var verifyOpt types.AuthVerifyCodeOption
 	if err := ginx.ShouldValidateJSON(ctx, &verifyOpt); err != nil {
 		return
 	}
 
 	// check usage
-	if err := auth.CheckValidUsage(verifyOpt.Usage); err != nil {
-		resp.Fail(ctx).Error(auth.ErrVerifyCodeUsageUnsupported).JSON()
+	if err := types.CheckValidUsage(verifyOpt.Usage); err != nil {
+		resp.Fail(ctx).Error(types.ErrVerifyCodeUsageUnsupported).JSON()
 		return
 	}
 

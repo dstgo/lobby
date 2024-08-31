@@ -2,7 +2,7 @@ package user
 
 import (
 	"github.com/dstgo/lobby/server/handler/user"
-	usertype "github.com/dstgo/lobby/server/types/user"
+	usertype "github.com/dstgo/lobby/server/types"
 	"github.com/gin-gonic/gin"
 	"github.com/ginx-contribs/ginx"
 	"github.com/ginx-contribs/ginx/pkg/resp"
@@ -23,10 +23,10 @@ type UserAPI struct {
 // @Accept       json
 // @Produce      json
 // @Param        uid  query  string  true "uid"
-// @Success      200  {object}  types.Response{data=usertype.UserInfo}
+// @Success      200  {object}  types.Response{data=types.UserInfo}
 // @Router       /user/info [GET]
 func (u UserAPI) Info(ctx *gin.Context) {
-	var opt usertype.UidOption
+	var opt usertype.ULIDOptions
 	if err := ginx.ShouldValidateQuery(ctx, &opt); err != nil {
 		return
 	}
@@ -44,11 +44,11 @@ func (u UserAPI) Info(ctx *gin.Context) {
 // @Tags         user
 // @Accept       json
 // @Produce      json
-// @Param        PageOption   query   usertype.PageOption  true  "PageOption"
-// @Success      200  {object}  types.Response{data=usertype.UserListResult}
+// @Param        UserSearchOption   query   types.UserSearchOption  true  "UserSearchOption"
+// @Success      200  {object}  types.Response{data=types.UserSearchResult}
 // @Router       /user/list [GET]
 func (u UserAPI) List(ctx *gin.Context) {
-	var page usertype.PageOption
+	var page usertype.UserSearchOption
 	if err := ginx.ShouldValidateQuery(ctx, &page); err != nil {
 		return
 	}

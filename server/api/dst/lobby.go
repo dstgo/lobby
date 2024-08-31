@@ -2,7 +2,7 @@ package dst
 
 import (
 	"github.com/dstgo/lobby/server/handler/dst"
-	dstype "github.com/dstgo/lobby/server/types/dst"
+	dstype "github.com/dstgo/lobby/server/types"
 	"github.com/gin-gonic/gin"
 	"github.com/ginx-contribs/ginx"
 	"github.com/ginx-contribs/ginx/pkg/resp"
@@ -22,11 +22,11 @@ type LobbyAPI struct {
 // @Tags         dst/lobby
 // @Accept       json
 // @Produce      json
-// @Param        SearchOptions  query dstype.SearchOptions  true "SearchOptions"
-// @Success      200  {object}  types.Response{data=dstype.QueryListResult}
+// @Param        LobbyServerSearchOptions  query types.LobbyServerSearchOptions  true "LobbyServerSearchOptions"
+// @Success      200  {object}  types.Response{data=types.LobbyServerSearchResult}
 // @Router       /lobby/search [GET]
 func (l *LobbyAPI) Search(ctx *gin.Context) {
-	var opt dstype.SearchOptions
+	var opt dstype.LobbyServerSearchOptions
 	if err := ginx.ShouldValidateQuery(ctx, &opt); err != nil {
 		return
 	}
@@ -44,11 +44,11 @@ func (l *LobbyAPI) Search(ctx *gin.Context) {
 // @Tags         dst/lobby
 // @Accept       json
 // @Produce      json
-// @Param        QueryDetailsOptions  query  dstype.QueryDetailsOptions  true "QueryDetailsOptions"
-// @Success      200  {object}  types.Response{data=dstype.QueryDetailsResult}
+// @Param        LobbyServerDetailsOptions  query  types.LobbyServerDetailsOptions  true "LobbyServerDetailsOptions"
+// @Success      200  {object}  types.Response{data=types.LobbyServerDetails}
 // @Router       /lobby/info [GET]
 func (l *LobbyAPI) Details(ctx *gin.Context) {
-	var opt dstype.QueryDetailsOptions
+	var opt dstype.LobbyServerDetailsOptions
 	if err := ginx.ShouldValidateQuery(ctx, &opt); err != nil {
 		return
 	}

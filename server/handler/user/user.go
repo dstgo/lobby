@@ -3,7 +3,7 @@ package user
 import (
 	"context"
 	"github.com/dstgo/lobby/server/data/repo"
-	"github.com/dstgo/lobby/server/types/user"
+	"github.com/dstgo/lobby/server/types"
 	"github.com/ginx-contribs/ginx/pkg/resp/statuserr"
 )
 
@@ -15,19 +15,19 @@ type UserHandler struct {
 	userRepo *repo.UserRepo
 }
 
-func (u *UserHandler) FindByUID(ctx context.Context, uid string) (user.UserInfo, error) {
+func (u *UserHandler) FindByUID(ctx context.Context, uid string) (types.UserInfo, error) {
 	record, err := u.userRepo.FindByUID(ctx, uid)
 	if err != nil {
-		return user.UserInfo{}, statuserr.InternalError(err)
+		return types.UserInfo{}, statuserr.InternalError(err)
 	}
-	return user.RecordToUser(record), nil
+	return types.EntToUser(record), nil
 }
 
-func (u *UserHandler) ListUserByPage(ctx context.Context, page, size int, pattern string) (user.UserListResult, error) {
+func (u *UserHandler) ListUserByPage(ctx context.Context, page, size int, pattern string) (types.UserSearchResult, error) {
 	users, err := u.userRepo.ListByPage(ctx, page, size, pattern)
 	if err != nil {
-		return user.UserListResult{}, statuserr.InternalError(err)
+		return types.UserSearchResult{}, statuserr.InternalError(err)
 	}
-	toUsers := user.RecordsToUsers(users)
-	return user.UserListResult{Total: int64(len(users)), List: toUsers}, nil
+	toUsers := types.EntsToUsers(users)
+	return types.UserSearchResult{Total: int64(len(users)), List: toUsers}, nil
 }

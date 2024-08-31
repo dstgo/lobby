@@ -1,6 +1,45 @@
 basePath: /api/
 definitions:
-  auth.LoginOption:
+  lobbyapi.Mod:
+    properties:
+      enabled:
+        type: boolean
+      id:
+        type: string
+      name:
+        type: string
+      version1:
+        type: string
+      version2:
+        type: string
+    type: object
+  lobbyapi.Player:
+    properties:
+      colour:
+        description: hex color code
+        type: string
+      level:
+        description: shard level
+        type: integer
+      name:
+        type: string
+      prefab:
+        type: string
+      steamId:
+        type: string
+    type: object
+  lobbyapi.Secondaries:
+    properties:
+      __addr:
+        type: string
+      id:
+        type: string
+      port:
+        type: integer
+      steamid:
+        type: string
+    type: object
+  types.AuthLoginOption:
     properties:
       password:
         description: user password
@@ -15,7 +54,7 @@ definitions:
     - password
     - username
     type: object
-  auth.RefreshTokenOption:
+  types.AuthRefreshTokenOption:
     properties:
       accessToken:
         description: access token
@@ -27,7 +66,7 @@ definitions:
     - accessToken
     - refreshToken
     type: object
-  auth.RegisterOption:
+  types.AuthRegisterOption:
     properties:
       code:
         description: verification code from verify email
@@ -46,7 +85,7 @@ definitions:
     - password
     - username
     type: object
-  auth.ResetPasswordOption:
+  types.AuthResetPasswordOption:
     properties:
       code:
         description: verification code from verify email
@@ -61,36 +100,51 @@ definitions:
     - code
     - password
     type: object
-  auth.TokenResult:
-    properties:
-      accessToken:
-        type: string
-      refreshToken:
-        type: string
-    type: object
-  auth.Usage:
-    enum:
-    - 0
-    - 1
-    - 2
-    type: integer
-    x-enum-varnames:
-    - UsageUnknown
-    - UsageRegister
-    - UsageReset
-  auth.VerifyCodeOption:
+  types.AuthVerifyCodeOption:
     properties:
       to:
         description: email receiver
         type: string
       usage:
         allOf:
-        - $ref: '#/definitions/auth.Usage'
+        - $ref: '#/definitions/types.Usage'
         description: 'verify code usage: 1-register 2-reset password'
     required:
     - usage
     type: object
-  dst.QueryDetailsResult:
+  types.DstServerType:
+    enum:
+    - 0
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    type: integer
+    x-enum-varnames:
+    - TypeAny
+    - TypeDedicated
+    - TypeClientHosted
+    - TypeOfficial
+    - TypeSteamClan
+    - TypeSteamClanOnly
+    - TypeFriendOnly
+  types.DstSortType:
+    enum:
+    - 0
+    - 1
+    - 2
+    - 3
+    - 4
+    type: integer
+    x-enum-varnames:
+    - DstSortByName
+    - DstSortByCountry
+    - DstSortByVersion
+    - DstSortByOnline
+    - DstSortByLevel
+  types.LobbyServerDetails:
     properties:
       address:
         type: string
@@ -187,16 +241,7 @@ definitions:
       version:
         type: integer
     type: object
-  dst.QueryListResult:
-    properties:
-      list:
-        items:
-          $ref: '#/definitions/dst.ServerInfo'
-        type: array
-      total:
-        type: integer
-    type: object
-  dst.ServerInfo:
+  types.LobbyServerInfo:
     properties:
       address:
         type: string
@@ -279,76 +324,14 @@ definitions:
       version:
         type: integer
     type: object
-  dst.ServerType:
-    enum:
-    - 0
-    - 1
-    - 2
-    - 3
-    - 4
-    - 5
-    - 6
-    type: integer
-    x-enum-varnames:
-    - TypeAny
-    - TypeDedicated
-    - TypeClientHosted
-    - TypeOfficial
-    - TypeSteamClan
-    - TypeSteamClanOnly
-    - TypeFriendOnly
-  dst.SortType:
-    enum:
-    - 0
-    - 1
-    - 2
-    - 3
-    - 4
-    type: integer
-    x-enum-varnames:
-    - SortByName
-    - SortByCountry
-    - SortByVersion
-    - SortByOnline
-    - SortByLevel
-  lobbyapi.Mod:
+  types.LobbyServerSearchResult:
     properties:
-      enabled:
-        type: boolean
-      id:
-        type: string
-      name:
-        type: string
-      version1:
-        type: string
-      version2:
-        type: string
-    type: object
-  lobbyapi.Player:
-    properties:
-      colour:
-        description: hex color code
-        type: string
-      level:
-        description: shard level
+      list:
+        items:
+          $ref: '#/definitions/types.LobbyServerInfo'
+        type: array
+      total:
         type: integer
-      name:
-        type: string
-      prefab:
-        type: string
-      steamId:
-        type: string
-    type: object
-  lobbyapi.Secondaries:
-    properties:
-      __addr:
-        type: string
-      id:
-        type: string
-      port:
-        type: integer
-      steamid:
-        type: string
     type: object
   types.Response:
     properties:
@@ -360,7 +343,24 @@ definitions:
       msg:
         type: string
     type: object
-  user.UserInfo:
+  types.TokenResult:
+    properties:
+      accessToken:
+        type: string
+      refreshToken:
+        type: string
+    type: object
+  types.Usage:
+    enum:
+    - 0
+    - 1
+    - 2
+    type: integer
+    x-enum-varnames:
+    - UsageUnknown
+    - UsageRegister
+    - UsageReset
+  types.UserInfo:
     properties:
       created_at:
         type: integer
@@ -371,11 +371,11 @@ definitions:
       username:
         type: string
     type: object
-  user.UserListResult:
+  types.UserSearchResult:
     properties:
       list:
         items:
-          $ref: '#/definitions/user.UserInfo'
+          $ref: '#/definitions/types.UserInfo'
         type: array
       total:
         type: integer
@@ -398,12 +398,12 @@ paths:
       - application/json
       description: send verification code mail to specified email address
       parameters:
-      - description: VerifyCodeOption
+      - description: AuthVerifyCodeOption
         in: body
-        name: VerifyCodeOption
+        name: AuthVerifyCodeOption
         required: true
         schema:
-          $ref: '#/definitions/auth.VerifyCodeOption'
+          $ref: '#/definitions/types.AuthVerifyCodeOption'
       produces:
       - application/json
       responses:
@@ -425,7 +425,7 @@ paths:
         name: loginOption
         required: true
         schema:
-          $ref: '#/definitions/auth.LoginOption'
+          $ref: '#/definitions/types.AuthLoginOption'
       produces:
       - application/json
       responses:
@@ -436,7 +436,7 @@ paths:
             - $ref: '#/definitions/types.Response'
             - properties:
                 data:
-                  $ref: '#/definitions/auth.TokenResult'
+                  $ref: '#/definitions/types.TokenResult'
               type: object
       summary: Login
       tags:
@@ -449,10 +449,10 @@ paths:
       parameters:
       - description: refresh params
         in: body
-        name: RefreshTokenOption
+        name: AuthRefreshTokenOption
         required: true
         schema:
-          $ref: '#/definitions/auth.RefreshTokenOption'
+          $ref: '#/definitions/types.AuthRefreshTokenOption'
       produces:
       - application/json
       responses:
@@ -463,7 +463,7 @@ paths:
             - $ref: '#/definitions/types.Response'
             - properties:
                 data:
-                  $ref: '#/definitions/auth.TokenResult'
+                  $ref: '#/definitions/types.TokenResult'
               type: object
       summary: Refresh
       tags:
@@ -476,10 +476,10 @@ paths:
       parameters:
       - description: register params
         in: body
-        name: RegisterOption
+        name: AuthRegisterOption
         required: true
         schema:
-          $ref: '#/definitions/auth.RegisterOption'
+          $ref: '#/definitions/types.AuthRegisterOption'
       produces:
       - application/json
       responses:
@@ -498,10 +498,10 @@ paths:
       parameters:
       - description: reset params
         in: body
-        name: ResetPasswordOption
+        name: AuthResetPasswordOption
         required: true
         schema:
-          $ref: '#/definitions/auth.ResetPasswordOption'
+          $ref: '#/definitions/types.AuthResetPasswordOption'
       produces:
       - application/json
       responses:
@@ -536,7 +536,7 @@ paths:
             - $ref: '#/definitions/types.Response'
             - properties:
                 data:
-                  $ref: '#/definitions/dst.QueryDetailsResult'
+                  $ref: '#/definitions/types.LobbyServerDetails'
               type: object
       summary: Details
       tags:
@@ -617,7 +617,7 @@ paths:
         in: query
         maximum: 6
         minimum: 0
-        name: server_type
+        name: serverType
         type: integer
         x-enum-varnames:
         - TypeAny
@@ -644,11 +644,11 @@ paths:
         name: sort
         type: integer
         x-enum-varnames:
-        - SortByName
-        - SortByCountry
-        - SortByVersion
-        - SortByOnline
-        - SortByLevel
+        - DstSortByName
+        - DstSortByCountry
+        - DstSortByVersion
+        - DstSortByOnline
+        - DstSortByLevel
       - collectionFormat: csv
         description: tags of server
         in: query
@@ -670,7 +670,7 @@ paths:
             - $ref: '#/definitions/types.Response'
             - properties:
                 data:
-                  $ref: '#/definitions/dst.QueryListResult'
+                  $ref: '#/definitions/types.LobbyServerSearchResult'
               type: object
       summary: Search
       tags:
@@ -756,7 +756,7 @@ paths:
             - $ref: '#/definitions/types.Response'
             - properties:
                 data:
-                  $ref: '#/definitions/user.UserInfo'
+                  $ref: '#/definitions/types.UserInfo'
               type: object
       summary: Info
       tags:
@@ -788,7 +788,7 @@ paths:
             - $ref: '#/definitions/types.Response'
             - properties:
                 data:
-                  $ref: '#/definitions/user.UserListResult'
+                  $ref: '#/definitions/types.UserSearchResult'
               type: object
       summary: List
       tags:

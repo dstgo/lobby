@@ -3,12 +3,12 @@ package dst
 import (
 	"cmp"
 	"context"
-	"github.com/dstgo/lobby/pkg/geo"
-	"github.com/dstgo/lobby/pkg/lobbyapi"
 	"github.com/dstgo/lobby/server/data/ent"
 	"github.com/dstgo/lobby/server/data/repo"
-	"github.com/dstgo/lobby/server/types/dst"
-	"github.com/dstgo/lobby/server/utils/maputil"
+	"github.com/dstgo/lobby/server/pkg/geo"
+	"github.com/dstgo/lobby/server/pkg/lobbyapi"
+	"github.com/dstgo/lobby/server/pkg/maputil"
+	"github.com/dstgo/lobby/server/types"
 	"github.com/ginx-contribs/ginx/pkg/resp/statuserr"
 	"net"
 	"slices"
@@ -23,17 +23,17 @@ type LobbyHandler struct {
 	serverRepo *repo.ServerRepo
 }
 
-func (l *LobbyHandler) SearchByPage(ctx context.Context, options dst.SearchOptions) (dst.QueryListResult, error) {
+func (l *LobbyHandler) SearchByPage(ctx context.Context, options types.LobbyServerSearchOptions) (types.LobbyServerSearchResult, error) {
 	options.Size = min(options.Size, 100)
 	list, total, err := l.serverRepo.PageQueryByOption(ctx, options)
 	if err != nil {
-		return dst.QueryListResult{}, statuserr.InternalError(err)
+		return types.LobbyServerSearchResult{}, statuserr.InternalError(err)
 	}
-	var servers []dst.ServerInfo
+	var servers []types.LobbyServerInfo
 	for _, e := range list {
-		servers = append(servers, dst.EntServerToServerInfo(e))
+		servers = append(servers, types.EntServerToServerInfo(e))
 	}
-	return dst.QueryListResult{Total: total, List: servers}, nil
+	return types.LobbyServerSearchResult{Total: total, List: servers}, nil
 }
 
 func (l *LobbyHandler) LatestVersion(ctx context.Context) (int, error) {
@@ -44,28 +44,28 @@ func (l *LobbyHandler) LatestVersion(ctx context.Context) (int, error) {
 	return version, nil
 }
 
-func (l *LobbyHandler) GetServerDetails(ctx context.Context, region, rowId string) (dst.QueryDetailsResult, error) {
+func (l *LobbyHandler) GetServerDetails(ctx context.Context, region, rowId string) (types.LobbyServerDetails, error) {
 	serverDetails, err := l.client.GetServerDetails(region, rowId)
 	if err != nil {
-		return dst.QueryDetailsResult{}, err
+		return types.LobbyServerDetails{}, err
 	}
-	serverInfo := dst.LobbyServerToServerInfo(serverDetails.Server)
+	serverInfo := types.LobbyServerToServerInfo(serverDetails.Server)
 	ipAddress, err := geo.City(net.ParseIP(serverInfo.Address))
 	if err != nil {
-		return dst.QueryDetailsResult{}, err
+		return types.LobbyServerDetails{}, err
 	}
 	serverInfo.CountryCode = ipAddress.Country.IsoCode
-	serverInfo.Country = maputil.GetFbMap("zh-CN", "en", ipAddress.Country.Names)
-	serverInfo.City = maputil.GetFbMap("zh-CN", "en", ipAddress.City.Names)
-	serverInfo.Continent = maputil.GetFbMap("zh-CN", "en", ipAddress.Continent.Names)
+	serverInfo.Country = maputil.GetFallBack("zh-CN", "en", ipAddress.Country.Names)
+	serverInfo.City = maputil.GetFallBack("zh-CN", "en", ipAddress.City.Names)
+	serverInfo.Continent = maputil.GetFallBack("zh-CN", "en", ipAddress.Continent.Names)
 	if serverInfo.Platform == "WeGame" {
 		serverInfo.CountryCode = "CN"
 		serverInfo.Continent = "亚洲"
 		serverInfo.Country = "中国"
 	}
-	return dst.QueryDetailsResult{
-		ServerInfo: serverInfo,
-		MetaInfo:   serverDetails.Details,
+	return types.LobbyServerDetails{
+		LobbyServerInfo: serverInfo,
+		MetaInfo:        serverDetails.Details,
 	}, nil
 }
 

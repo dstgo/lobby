@@ -2,7 +2,7 @@ package cache
 
 import (
 	"errors"
-	"github.com/dstgo/lobby/server/types/auth"
+	"github.com/dstgo/lobby/server/types"
 	"github.com/ginx-contribs/ginx/pkg/resp/statuserr"
 	"github.com/redis/go-redis/v9"
 	"golang.org/x/net/context"
@@ -16,11 +16,11 @@ var (
 // VerifyCodeCache is responsible for storing verification code into cache
 type VerifyCodeCache interface {
 	// Set storage code into cache with ttl, return false if retry failed.
-	Set(ctx context.Context, usage auth.Usage, code, to string, ttl, retry time.Duration) (bool, error)
+	Set(ctx context.Context, usage types.Usage, code, to string, ttl, retry time.Duration) (bool, error)
 	// Get returns the specified code
-	Get(ctx context.Context, usage auth.Usage, code string) (string, error)
+	Get(ctx context.Context, usage types.Usage, code string) (string, error)
 	// Del remove the specified code from cache
-	Del(ctx context.Context, usage auth.Usage, code string) error
+	Del(ctx context.Context, usage types.Usage, code string) error
 }
 
 var _ VerifyCodeCache = (*RedisCodeCache)(nil)
@@ -34,7 +34,7 @@ type RedisCodeCache struct {
 	cache *redis.Client
 }
 
-func (r *RedisCodeCache) Set(ctx context.Context, usage auth.Usage, code, to string, ttl, retry time.Duration) (bool, error) {
+func (r *RedisCodeCache) Set(ctx context.Context, usage types.Usage, code, to string, ttl, retry time.Duration) (bool, error) {
 
 	// check retry ttl
 	retryRes, err := r.cache.Get(ctx, to).Result()
@@ -67,12 +67,12 @@ func (r *RedisCodeCache) Set(ctx context.Context, usage auth.Usage, code, to str
 	return true, nil
 }
 
-func (r *RedisCodeCache) Get(ctx context.Context, usage auth.Usage, code string) (string, error) {
+func (r *RedisCodeCache) Get(ctx context.Context, usage types.Usage, code string) (string, error) {
 	codeKey := usage.Name() + ":" + code
 	return r.cache.Get(ctx, codeKey).Result()
 }
 
-func (r *RedisCodeCache) Del(ctx context.Context, usage auth.Usage, code string) error {
+func (r *RedisCodeCache) Del(ctx context.Context, usage types.Usage, code string) error {
 	codeKey := usage.Name() + ":" + code
 	return r.cache.Del(ctx, codeKey).Err()
 }

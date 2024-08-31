@@ -1,7 +1,7 @@
 package geo
 
 import (
-	"github.com/dstgo/lobby/pkg/geo/internal"
+	"github.com/dstgo/lobby/server/pkg/geo/internal"
 	"github.com/oschwald/geoip2-golang"
 	"net"
 )

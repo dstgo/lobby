@@ -3,11 +3,11 @@ package server
 import (
 	"context"
 	"fmt"
-	"github.com/dstgo/lobby/pkg/lobbyapi"
-	"github.com/dstgo/lobby/pkg/logh"
 	"github.com/dstgo/lobby/server/conf"
 	authhandler "github.com/dstgo/lobby/server/handler/auth"
 	"github.com/dstgo/lobby/server/mids"
+	"github.com/dstgo/lobby/server/pkg/lobbyapi"
+	"github.com/dstgo/lobby/server/pkg/logh"
 	"github.com/dstgo/lobby/server/types"
 	"github.com/dstgo/size"
 	"github.com/ginx-contribs/ginx"
@@ -106,7 +106,7 @@ func NewApp(ctx context.Context, appConf *conf.App) (*ginx.Server, error) {
 
 	slog.Debug("setup api router")
 	// initialize api router
-	_, err = setup(&types.Env{
+	_, err = setup(&types.Context{
 		AppConf: appConf,
 		Ent:     db,
 		Redis:   redisClient,

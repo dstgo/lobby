@@ -5,7 +5,7 @@ import (
 	"encoding/base64"
 	"github.com/dstgo/lobby/server/data/ent"
 	"github.com/dstgo/lobby/server/data/repo"
-	"github.com/dstgo/lobby/server/types/auth"
+	"github.com/dstgo/lobby/server/types"
 	"github.com/ginx-contribs/ginx/pkg/resp/statuserr"
 	"github.com/ginx-contribs/str2bytes"
 	"golang.org/x/net/context"
@@ -29,7 +29,7 @@ func (a *AuthHandler) EncryptPassword(s string) string {
 }
 
 // LoginWithPassword user login by password
-func (a *AuthHandler) LoginWithPassword(ctx context.Context, option auth.LoginOption) (*auth.TokenPair, error) {
+func (a *AuthHandler) LoginWithPassword(ctx context.Context, option types.AuthLoginOption) (*types.TokenPair, error) {
 	// find user from repository
 	queryUser, err := a.userRepo.FindByNameOrMail(ctx, option.Username)
 	if ent.IsNotFound(err) {
@@ -41,11 +41,11 @@ func (a *AuthHandler) LoginWithPassword(ctx context.Context, option auth.LoginOp
 	// check password
 	hashPaswd := a.EncryptPassword(option.Password)
 	if queryUser.Password != hashPaswd {
-		return nil, auth.ErrPasswordMismatch
+		return nil, types.ErrPasswordMismatch
 	}
 
 	// issue token
-	tokenPair, err := a.token.Issue(ctx, auth.TokenPayload{
+	tokenPair, err := a.token.Issue(ctx, types.TokenPayload{
 		Username: queryUser.Username,
 		UserId:   queryUser.UID,
 		Remember: option.Remember,
@@ -59,10 +59,10 @@ func (a *AuthHandler) LoginWithPassword(ctx context.Context, option auth.LoginOp
 }
 
 // RegisterNewUser registers new user and returns it
-func (a *AuthHandler) RegisterNewUser(ctx context.Context, option auth.RegisterOption) (*ent.User, error) {
+func (a *AuthHandler) RegisterNewUser(ctx context.Context, option types.AuthRegisterOption) (*ent.User, error) {
 
 	// check verify code if is valid
-	err := a.verifyCode.CheckVerifyCode(ctx, option.Email, option.Code, auth.UsageRegister)
+	err := a.verifyCode.CheckVerifyCode(ctx, option.Email, option.Code, types.UsageRegister)
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +72,7 @@ func (a *AuthHandler) RegisterNewUser(ctx context.Context, option auth.RegisterO
 	if !ent.IsNotFound(err) && err != nil {
 		return nil, statuserr.InternalError(err)
 	} else if userByName != nil {
-		return nil, auth.ErrUserAlreadyExists
+		return nil, types.ErrUserAlreadyExists
 	}
 
 	// check email if is duplicate
@@ -80,7 +80,7 @@ func (a *AuthHandler) RegisterNewUser(ctx context.Context, option auth.RegisterO
 	if !ent.IsNotFound(err) && err != nil {
 		return nil, statuserr.InternalError(err)
 	} else if userByEmail != nil {
-		return nil, auth.ErrEmailAlreadyUsed
+		return nil, types.ErrEmailAlreadyUsed
 	}
 
 	// create new user
@@ -90,7 +90,7 @@ func (a *AuthHandler) RegisterNewUser(ctx context.Context, option auth.RegisterO
 	}
 
 	// remove verify code
-	err = a.verifyCode.RemoveVerifyCode(ctx, option.Code, auth.UsageRegister)
+	err = a.verifyCode.RemoveVerifyCode(ctx, option.Code, types.UsageRegister)
 	if err != nil {
 		return nil, err
 	}
@@ -98,10 +98,10 @@ func (a *AuthHandler) RegisterNewUser(ctx context.Context, option auth.RegisterO
 }
 
 // ResetPassword resets specified user password and returns uid
-func (a *AuthHandler) ResetPassword(ctx context.Context, option auth.ResetPasswordOption) error {
+func (a *AuthHandler) ResetPassword(ctx context.Context, option types.AuthResetPasswordOption) error {
 
 	// check verify code if is valid
-	err := a.verifyCode.CheckVerifyCode(ctx, option.Email, option.Code, auth.UsageReset)
+	err := a.verifyCode.CheckVerifyCode(ctx, option.Email, option.Code, types.UsageReset)
 	if err != nil {
 		return err
 	}
@@ -109,7 +109,7 @@ func (a *AuthHandler) ResetPassword(ctx context.Context, option auth.ResetPasswo
 	// check email if is already registered
 	queryUser, err := a.userRepo.FindByEmail(ctx, option.Email)
 	if ent.IsNotFound(err) {
-		return auth.ErrUserNotFund
+		return types.ErrUserNotFund
 	}
 
 	// update password
@@ -119,7 +119,7 @@ func (a *AuthHandler) ResetPassword(ctx context.Context, option auth.ResetPasswo
 	}
 
 	// remove verify code
-	err = a.verifyCode.RemoveVerifyCode(ctx, option.Code, auth.UsageReset)
+	err = a.verifyCode.RemoveVerifyCode(ctx, option.Code, types.UsageReset)
 	if err != nil {
 		return err
 	}

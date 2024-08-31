@@ -3,13 +3,13 @@ package job
 import (
 	"context"
 	"fmt"
-	"github.com/dstgo/lobby/pkg/geo"
-	"github.com/dstgo/lobby/pkg/lobbyapi"
-	"github.com/dstgo/lobby/pkg/ts"
 	"github.com/dstgo/lobby/server/data/ent"
 	"github.com/dstgo/lobby/server/handler/dst"
-	dstype "github.com/dstgo/lobby/server/types/dst"
-	"github.com/dstgo/lobby/server/utils/maputil"
+	"github.com/dstgo/lobby/server/pkg/geo"
+	lobbyapi2 "github.com/dstgo/lobby/server/pkg/lobbyapi"
+	"github.com/dstgo/lobby/server/pkg/maputil"
+	"github.com/dstgo/lobby/server/pkg/ts"
+	dstype "github.com/dstgo/lobby/server/types"
 	"golang.org/x/sync/errgroup"
 	"log/slog"
 	"net"
@@ -18,13 +18,13 @@ import (
 	"time"
 )
 
-func NewLobbyCollectJob(handler *dst.LobbyHandler, client *lobbyapi.Client) *LobbyCollectJob {
+func NewLobbyCollectJob(handler *dst.LobbyHandler, client *lobbyapi2.Client) *LobbyCollectJob {
 	return &LobbyCollectJob{handler: handler, client: client}
 }
 
 type LobbyCollectJob struct {
 	handler *dst.LobbyHandler
-	client  *lobbyapi.Client
+	client  *lobbyapi2.Client
 
 	count atomic.Int64
 }
@@ -78,7 +78,7 @@ func (l *LobbyCollectJob) Collect(v int64, limit int) (collected []*ent.Server, 
 	group.SetLimit(limit)
 
 	for _, region := range regions.Regions {
-		for _, platform := range lobbyapi.ExplicitPlatforms {
+		for _, platform := range lobbyapi2.ExplicitPlatforms {
 			// Collect servers concurrently
 			group.Go(func() error {
 				gstart := ts.Now()
@@ -115,7 +115,7 @@ func (l *LobbyCollectJob) getLobbyServers(region string, platform string, qv int
 }
 
 // ProcessServers converts lobbyapi.Server to *ent.Server
-func (l *LobbyCollectJob) ProcessServers(qv int64, servers []lobbyapi.Server) ([]*ent.Server, error) {
+func (l *LobbyCollectJob) ProcessServers(qv int64, servers []lobbyapi2.Server) ([]*ent.Server, error) {
 	var entServers []*ent.Server
 	for _, server := range servers {
 		createdServer := dstype.LobbyServerToEntServer(server)
@@ -146,9 +146,9 @@ func (l *LobbyCollectJob) ProcessServers(qv int64, servers []lobbyapi.Server) ([
 
 		// geo process
 		createdServer.CountryCode = ipAddress.Country.IsoCode
-		createdServer.Country = maputil.GetFbMap("zh-CN", "en", ipAddress.Country.Names)
-		createdServer.City = maputil.GetFbMap("zh-CN", "en", ipAddress.City.Names)
-		createdServer.Continent = maputil.GetFbMap("zh-CN", "en", ipAddress.Continent.Names)
+		createdServer.Country = maputil.GetFallBack("zh-CN", "en", ipAddress.Country.Names)
+		createdServer.City = maputil.GetFallBack("zh-CN", "en", ipAddress.City.Names)
+		createdServer.Continent = maputil.GetFallBack("zh-CN", "en", ipAddress.Continent.Names)
 		if createdServer.Platform == "WeGame" {
 			createdServer.CountryCode = "CN"
 			createdServer.Continent = "亚洲"

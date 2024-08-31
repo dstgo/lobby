@@ -12,6 +12,6 @@ import (
 )
 
 // initialize and setup app environment
-func setup(env *types.Env) (api.Router, error) {
+func setup(env *types.Context) (api.Router, error) {
 	panic(wire.Build(EnvProvider, data.Provider, handler.Provider, api.Provider))
 }

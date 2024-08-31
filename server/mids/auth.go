@@ -3,7 +3,7 @@ package mids
 import (
 	"errors"
 	authhandler "github.com/dstgo/lobby/server/handler/auth"
-	"github.com/dstgo/lobby/server/types/auth"
+	"github.com/dstgo/lobby/server/types"
 	"github.com/dstgo/lobby/server/types/route"
 	"github.com/gin-gonic/gin"
 	"github.com/ginx-contribs/ginx"
@@ -30,7 +30,7 @@ func TokenAuthenticator(tokenHandler *authhandler.TokenHandler) gin.HandlerFunc 
 		header := ctx.Request.Header.Get(headers.Authorization)
 		pair := strings.Split(header, " ")
 		if len(pair) != 2 || pair[0] != "Bearer" {
-			resp.Fail(ctx).Status(status.Unauthorized).Error(auth.ErrCredentialInvalid).JSON()
+			resp.Fail(ctx).Status(status.Unauthorized).Error(types.ErrCredentialInvalid).JSON()
 			ctx.Abort()
 			return
 		}
@@ -40,17 +40,17 @@ func TokenAuthenticator(tokenHandler *authhandler.TokenHandler) gin.HandlerFunc 
 		tokenInfo, err := tokenHandler.VerifyAccess(ctx, tokenString, now)
 		if err == nil {
 			// stores token info into context
-			auth.SetTokenInfo(ctx, &tokenInfo)
+			types.SetTokenInfo(ctx, &tokenInfo)
 			ctx.Next()
 		} else {
 			// check if is needed to refresh
-			if errors.Is(err, auth.ErrTokenNeedsRefresh) {
-				resp.Fail(ctx).Error(auth.ErrTokenNeedsRefresh).JSON()
+			if errors.Is(err, types.ErrTokenNeedsRefresh) {
+				resp.Fail(ctx).Error(types.ErrTokenNeedsRefresh).JSON()
 			} else if errors.Is(err, jwt.ErrTokenExpired) {
-				resp.Fail(ctx).Error(auth.ErrCredentialExpired).JSON()
+				resp.Fail(ctx).Error(types.ErrCredentialExpired).JSON()
 			} else { // invalid token
 				ctx.Error(err)
-				resp.Fail(ctx).Error(auth.ErrCredentialInvalid).JSON()
+				resp.Fail(ctx).Error(types.ErrCredentialInvalid).JSON()
 			}
 		}
 	}

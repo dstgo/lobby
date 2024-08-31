@@ -24,6 +24,8 @@ type Platform uint
 
 func (p Platform) String() string {
 	switch p {
+	case Any:
+		return "Any"
 	case Steam:
 		return "Steam"
 	case PSN:

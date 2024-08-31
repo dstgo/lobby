@@ -14,6 +14,7 @@ type App struct {
 	Email  Email     `toml:"email" comment:"email smtp client configuration"`
 	Jwt    Jwt       `toml:"jwt" comment:"jwt secret configuration"`
 	Limit  RateLimit `toml:"limit" comment:"rate limit configuration"`
+	Dst    Dst       `toml:"dst" comment:"dst configuration'"`
 
 	Author    string `toml:"-" mapstructure:"-"`
 	Version   string `toml:"-" mapstructure:"-"`
@@ -113,4 +114,11 @@ type EmailMq struct {
 type VerifyCode struct {
 	TTL      time.Duration `toml:"ttl" comment:"lifetime for verification code"`
 	RetryTTL time.Duration `toml:"retry" comment:"max wait time before asking for another new verification code"`
+}
+
+type Dst struct {
+	ProxyUrl    string `toml:"proxyURL" comment:"proxy URL for http client"`
+	SteamKey    string `toml:"steamKey" comment:"steam web api key"`
+	KeliToken   string `toml:"kleiToken" comment:"klei cluster server token"`
+	CollectCron string `json:"collect_cron" comment:"collect cron for server collecting job"`
 }

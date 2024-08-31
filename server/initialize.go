@@ -3,7 +3,6 @@ package server
 import (
 	entsql "entgo.io/ent/dialect/sql"
 	"errors"
-	"github.com/dstgo/lobby/assets"
 	"github.com/dstgo/lobby/server/conf"
 	"github.com/dstgo/lobby/server/data/ent"
 	"github.com/dstgo/lobby/server/types"
@@ -16,7 +15,6 @@ import (
 	"github.com/redis/go-redis/v9"
 	"github.com/wneessen/go-mail"
 	"golang.org/x/net/context"
-	"io"
 
 	// offline time zone database
 	_ "time/tzdata"
@@ -29,19 +27,10 @@ var EnvProvider = wire.NewSet(
 	wire.FieldsOf(new(*types.Env), "Redis"),
 	wire.FieldsOf(new(*types.Env), "Router"),
 	wire.FieldsOf(new(*types.Env), "Email"),
+	wire.FieldsOf(new(*types.Env), "Lobby"),
 	wire.FieldsOf(new(*conf.App), "Jwt"),
 	wire.FieldsOf(new(*conf.App), "Email"),
 )
-
-// PrintBanner prints the banner into given writer
-func PrintBanner(writer io.Writer) error {
-	bytes, err := assets.FS.ReadFile("banner.txt")
-	if err != nil {
-		return err
-	}
-	_, err = writer.Write(bytes)
-	return err
-}
 
 // NewLogger returns a new app logger with the given options
 func NewLogger(option conf.Log) (*logx.Logger, error) {
@@ -81,8 +70,8 @@ func validatePramsHandler(ctx *gin.Context, val any, err error) {
 	}
 }
 
-// initialize database with ent
-func initializeDB(ctx context.Context, dbConf conf.DB) (*ent.Client, error) {
+// InitializeDB initialize database with ent
+func InitializeDB(ctx context.Context, dbConf conf.DB) (*ent.Client, error) {
 	sqldb, err := dbx.Open(dbx.Options{
 		Driver:             dbConf.Driver,
 		Address:            dbConf.Address,
@@ -109,8 +98,8 @@ func initializeDB(ctx context.Context, dbConf conf.DB) (*ent.Client, error) {
 	return entClient, err
 }
 
-// initialize redis connection
-func initializeRedis(ctx context.Context, redisConf conf.Redis) (*redis.Client, error) {
+// InitializeRedis initialize redis connection
+func InitializeRedis(ctx context.Context, redisConf conf.Redis) (*redis.Client, error) {
 	redisClient := redis.NewClient(&redis.Options{
 		Addr:         redisConf.Address,
 		Password:     redisConf.Password,
@@ -125,8 +114,8 @@ func initializeRedis(ctx context.Context, redisConf conf.Redis) (*redis.Client, 
 	return redisClient, nil
 }
 
-// initialize email client
-func initializeEmail(ctx context.Context, emailConf conf.Email) (*mail.Client, error) {
+// InitializeEmail initialize email client
+func InitializeEmail(ctx context.Context, emailConf conf.Email) (*mail.Client, error) {
 	client, err := mail.NewClient(emailConf.Host,
 		mail.WithPort(emailConf.Port),
 		mail.WithSMTPAuth(mail.SMTPAuthPlain),

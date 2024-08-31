@@ -3,17 +3,20 @@ package server
 import (
 	"context"
 	"fmt"
+	"github.com/dstgo/lobby/pkg/lobbyapi"
+	"github.com/dstgo/lobby/pkg/logh"
 	"github.com/dstgo/lobby/server/conf"
 	authhandler "github.com/dstgo/lobby/server/handler/auth"
 	"github.com/dstgo/lobby/server/mids"
-	"github.com/dstgo/lobby/server/pkg/logh"
 	"github.com/dstgo/lobby/server/types"
 	"github.com/dstgo/size"
 	"github.com/ginx-contribs/ginx"
 	"github.com/ginx-contribs/ginx/constant/methods"
 	"github.com/ginx-contribs/ginx/contribs/requestid"
 	"github.com/ginx-contribs/ginx/middleware"
+	"github.com/go-resty/resty/v2"
 	"log/slog"
+	"net/http"
 	"net/http/pprof"
 	"time"
 
@@ -28,23 +31,32 @@ func NewApp(ctx context.Context, appConf *conf.App) (*ginx.Server, error) {
 
 	// initialize database
 	slog.Debug(fmt.Sprintf("connecting to %s(%s)", appConf.DB.Driver, appConf.DB.Address))
-	db, err := initializeDB(ctx, appConf.DB)
+	db, err := InitializeDB(ctx, appConf.DB)
 	if err != nil {
 		return nil, err
 	}
 
 	// initialize redis client
 	slog.Debug(fmt.Sprintf("connecting to redis(%s)", appConf.Redis.Address))
-	redisClient, err := initializeRedis(ctx, appConf.Redis)
+	redisClient, err := InitializeRedis(ctx, appConf.Redis)
 	if err != nil {
 		return nil, err
 	}
 
 	// initialize email client
 	slog.Debug(fmt.Sprintf("establish email client(%s:%d)", appConf.Email.Host, appConf.Email.Port))
-	emailClient, err := initializeEmail(ctx, appConf.Email)
+	emailClient, err := InitializeEmail(ctx, appConf.Email)
 	if err != nil {
 		return nil, err
+	}
+
+	// initialize http client
+	var lobbyClient *lobbyapi.Client
+	if appConf.Dst.ProxyUrl != "" {
+		lobbyClient = lobbyapi.NewWith(appConf.Dst.KeliToken, resty.New().SetProxy(appConf.Dst.ProxyUrl))
+	} else {
+		lobbyClient = lobbyapi.NewWith(appConf.Dst.KeliToken,
+			resty.NewWithClient(&http.Client{Transport: &http.Transport{Proxy: http.ProxyFromEnvironment}}))
 	}
 
 	// initialize ginx server
@@ -100,6 +112,7 @@ func NewApp(ctx context.Context, appConf *conf.App) (*ginx.Server, error) {
 		Redis:   redisClient,
 		Router:  server.RouterGroup().Group("/api"),
 		Email:   emailClient,
+		Lobby:   lobbyClient,
 	})
 	if err != nil {
 		return nil, err

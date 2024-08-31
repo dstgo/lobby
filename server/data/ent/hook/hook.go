@@ -9,6 +9,42 @@ import (
 	"github.com/dstgo/lobby/server/data/ent"
 )
 
+// The SecondaryFunc type is an adapter to allow the use of ordinary
+// function as Secondary mutator.
+type SecondaryFunc func(context.Context, *ent.SecondaryMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f SecondaryFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.SecondaryMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SecondaryMutation", m)
+}
+
+// The ServerFunc type is an adapter to allow the use of ordinary
+// function as Server mutator.
+type ServerFunc func(context.Context, *ent.ServerMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ServerFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ServerMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ServerMutation", m)
+}
+
+// The TagFunc type is an adapter to allow the use of ordinary
+// function as Tag mutator.
+type TagFunc func(context.Context, *ent.TagMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f TagFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.TagMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TagMutation", m)
+}
+
 // The UserFunc type is an adapter to allow the use of ordinary
 // function as User mutator.
 type UserFunc func(context.Context, *ent.UserMutation) (ent.Value, error)

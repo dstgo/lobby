@@ -6,5 +6,14 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
+// Secondary is the predicate function for secondary builders.
+type Secondary func(*sql.Selector)
+
+// Server is the predicate function for server builders.
+type Server func(*sql.Selector)
+
+// Tag is the predicate function for tag builders.
+type Tag func(*sql.Selector)
+
 // User is the predicate function for user builders.
 type User func(*sql.Selector)

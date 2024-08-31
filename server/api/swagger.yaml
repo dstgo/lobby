@@ -90,6 +90,266 @@ definitions:
     required:
     - usage
     type: object
+  dst.QueryDetailsResult:
+    properties:
+      address:
+        type: string
+      allowNewPlayers:
+        type: boolean
+      city:
+        type: string
+      clanOnly:
+        type: boolean
+      clientHosted:
+        type: boolean
+      continent:
+        type: string
+      country:
+        description: geo info
+        type: string
+      countryCode:
+        type: string
+      day:
+        type: integer
+      dayElapsedInSeason:
+        type: integer
+      daysLeftInSeason:
+        type: integer
+      dedicated:
+        type: boolean
+      friendOnly:
+        type: boolean
+      gameMode:
+        type: string
+      guid:
+        description: network info
+        type: string
+      host:
+        type: string
+      intent:
+        type: string
+      lanOnly:
+        type: boolean
+      level:
+        type: integer
+      maxOnline:
+        type: integer
+      mod:
+        description: switch options
+        type: boolean
+      mods:
+        items:
+          $ref: '#/definitions/lobbyapi.Mod'
+        type: array
+      name:
+        description: game info
+        type: string
+      online:
+        type: integer
+      ownerID:
+        type: string
+      password:
+        type: boolean
+      platform:
+        type: string
+      players:
+        items:
+          $ref: '#/definitions/lobbyapi.Player'
+        type: array
+      port:
+        type: integer
+      pvp:
+        type: boolean
+      region:
+        type: string
+      rowID:
+        type: string
+      season:
+        type: string
+      secondaries:
+        additionalProperties:
+          $ref: '#/definitions/lobbyapi.Secondaries'
+        type: object
+      serverPaused:
+        type: boolean
+      session:
+        type: string
+      steamClanID:
+        type: string
+      steamID:
+        type: string
+      steamRoom:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+      version:
+        type: integer
+    type: object
+  dst.QueryListResult:
+    properties:
+      list:
+        items:
+          $ref: '#/definitions/dst.ServerInfo'
+        type: array
+      total:
+        type: integer
+    type: object
+  dst.ServerInfo:
+    properties:
+      address:
+        type: string
+      allowNewPlayers:
+        type: boolean
+      city:
+        type: string
+      clanOnly:
+        type: boolean
+      clientHosted:
+        type: boolean
+      continent:
+        type: string
+      country:
+        description: geo info
+        type: string
+      countryCode:
+        type: string
+      dedicated:
+        type: boolean
+      friendOnly:
+        type: boolean
+      gameMode:
+        type: string
+      guid:
+        description: network info
+        type: string
+      host:
+        type: string
+      intent:
+        type: string
+      lanOnly:
+        type: boolean
+      level:
+        type: integer
+      maxOnline:
+        type: integer
+      mod:
+        description: switch options
+        type: boolean
+      name:
+        description: game info
+        type: string
+      online:
+        type: integer
+      ownerID:
+        type: string
+      password:
+        type: boolean
+      platform:
+        type: string
+      port:
+        type: integer
+      pvp:
+        type: boolean
+      region:
+        type: string
+      rowID:
+        type: string
+      season:
+        type: string
+      secondaries:
+        additionalProperties:
+          $ref: '#/definitions/lobbyapi.Secondaries'
+        type: object
+      serverPaused:
+        type: boolean
+      session:
+        type: string
+      steamClanID:
+        type: string
+      steamID:
+        type: string
+      steamRoom:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+      version:
+        type: integer
+    type: object
+  dst.ServerType:
+    enum:
+    - 0
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    type: integer
+    x-enum-varnames:
+    - TypeAny
+    - TypeDedicated
+    - TypeClientHosted
+    - TypeOfficial
+    - TypeSteamClan
+    - TypeSteamClanOnly
+    - TypeFriendOnly
+  dst.SortType:
+    enum:
+    - 0
+    - 1
+    - 2
+    - 3
+    - 4
+    type: integer
+    x-enum-varnames:
+    - SortByName
+    - SortByCountry
+    - SortByVersion
+    - SortByOnline
+    - SortByLevel
+  lobbyapi.Mod:
+    properties:
+      enabled:
+        type: boolean
+      id:
+        type: string
+      name:
+        type: string
+      version1:
+        type: string
+      version2:
+        type: string
+    type: object
+  lobbyapi.Player:
+    properties:
+      colour:
+        description: hex color code
+        type: string
+      level:
+        description: shard level
+        type: integer
+      name:
+        type: string
+      prefab:
+        type: string
+      steamId:
+        type: string
+    type: object
+  lobbyapi.Secondaries:
+    properties:
+      __addr:
+        type: string
+      id:
+        type: string
+      port:
+        type: integer
+      steamid:
+        type: string
+    type: object
   types.Response:
     properties:
       code:
@@ -252,6 +512,189 @@ paths:
       summary: ResetPassword
       tags:
       - auth
+  /lobby/info:
+    get:
+      consumes:
+      - application/json
+      description: returns details information about the server
+      parameters:
+      - in: query
+        name: region
+        required: true
+        type: string
+      - in: query
+        name: rowId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/types.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dst.QueryDetailsResult'
+              type: object
+      summary: Details
+      tags:
+      - dst/lobby
+  /lobby/search:
+    get:
+      consumes:
+      - application/json
+      description: return a list of servers filtered by search parameters
+      parameters:
+      - description: ip address
+        in: query
+        name: address
+        type: string
+      - description: continent name
+        in: query
+        name: continent
+        type: string
+      - description: country name
+        in: query
+        name: country
+        type: string
+      - description: iso country code, eg. CN
+        in: query
+        name: countryCode
+        type: string
+      - description: descending order
+        in: query
+        name: desc
+        type: boolean
+      - description: mode for dst
+        in: query
+        name: gameMode
+        type: string
+      - description: intent for dst
+        in: query
+        name: intent
+        type: string
+      - description: world level of server
+        in: query
+        name: level
+        type: integer
+      - description: -1-off 0-all 1-on
+        in: query
+        name: mod
+        type: integer
+      - description: n page to search
+        in: query
+        name: page
+        type: integer
+      - description: -1-off 0-all 1-on
+        in: query
+        name: password
+        type: integer
+      - description: platform name, Steam | WeGame | PSN | XBone | PS4Official | Rail
+          | Switch
+        in: query
+        name: platform
+        type: string
+      - description: -1-off 0-all 1-on
+        in: query
+        name: pvp
+        type: integer
+      - description: season spring | summer | autumn | winter or other mods season
+        in: query
+        name: season
+        type: string
+      - description: 0-any 1-dedicated 2-client hosted 3-official 4-steam group 5-steam
+          group only 6-friend only
+        enum:
+        - 0
+        - 1
+        - 2
+        - 3
+        - 4
+        - 5
+        - 6
+        in: query
+        maximum: 6
+        minimum: 0
+        name: server_type
+        type: integer
+        x-enum-varnames:
+        - TypeAny
+        - TypeDedicated
+        - TypeClientHosted
+        - TypeOfficial
+        - TypeSteamClan
+        - TypeSteamClanOnly
+        - TypeFriendOnly
+      - description: size of page
+        in: query
+        name: size
+        type: integer
+      - description: 0-name 1-country 2-version 3-online 4-level
+        enum:
+        - 0
+        - 1
+        - 2
+        - 3
+        - 4
+        in: query
+        maximum: 4
+        minimum: 0
+        name: sort
+        type: integer
+        x-enum-varnames:
+        - SortByName
+        - SortByCountry
+        - SortByVersion
+        - SortByOnline
+        - SortByLevel
+      - collectionFormat: csv
+        description: tags of server
+        in: query
+        items:
+          type: string
+        name: tags
+        type: array
+      - description: search content
+        in: query
+        name: text
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/types.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dst.QueryListResult'
+              type: object
+      summary: Search
+      tags:
+      - dst/lobby
+  /lobby/version:
+    get:
+      consumes:
+      - application/json
+      description: return latest version of server
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/types.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Version
+      tags:
+      - dst/lobby
   /ping:
     get:
       consumes:

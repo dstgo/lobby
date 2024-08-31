@@ -14,8 +14,11 @@ var Provider = wire.NewSet(
 	cache.NewRedisCodeCache,
 	wire.Bind(new(cache.VerifyCodeCache), new(*cache.RedisCodeCache)),
 
-	// repo
+	// user
 	repo.NewUserRepo,
+
+	// server
+	repo.NewServerRepo,
 
 	// mq
 	mq.NewStreamQueue,

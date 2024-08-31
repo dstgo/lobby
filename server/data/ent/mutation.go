@@ -11,6 +11,9 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/dstgo/lobby/server/data/ent/predicate"
+	"github.com/dstgo/lobby/server/data/ent/secondary"
+	"github.com/dstgo/lobby/server/data/ent/server"
+	"github.com/dstgo/lobby/server/data/ent/tag"
 	"github.com/dstgo/lobby/server/data/ent/user"
 )
 
@@ -23,8 +26,3645 @@ const (
 	OpUpdateOne = ent.OpUpdateOne
 
 	// Node types.
-	TypeUser = "User"
+	TypeSecondary = "Secondary"
+	TypeServer    = "Server"
+	TypeTag       = "Tag"
+	TypeUser      = "User"
 )
+
+// SecondaryMutation represents an operation that mutates the Secondary nodes in the graph.
+type SecondaryMutation struct {
+	config
+	op             Op
+	typ            string
+	id             *int
+	sid            *string
+	steam_id       *string
+	address        *string
+	port           *int
+	addport        *int
+	clearedFields  map[string]struct{}
+	servers        *int
+	clearedservers bool
+	done           bool
+	oldValue       func(context.Context) (*Secondary, error)
+	predicates     []predicate.Secondary
+}
+
+var _ ent.Mutation = (*SecondaryMutation)(nil)
+
+// secondaryOption allows management of the mutation configuration using functional options.
+type secondaryOption func(*SecondaryMutation)
+
+// newSecondaryMutation creates new mutation for the Secondary entity.
+func newSecondaryMutation(c config, op Op, opts ...secondaryOption) *SecondaryMutation {
+	m := &SecondaryMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeSecondary,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withSecondaryID sets the ID field of the mutation.
+func withSecondaryID(id int) secondaryOption {
+	return func(m *SecondaryMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *Secondary
+		)
+		m.oldValue = func(ctx context.Context) (*Secondary, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().Secondary.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withSecondary sets the old Secondary of the mutation.
+func withSecondary(node *Secondary) secondaryOption {
+	return func(m *SecondaryMutation) {
+		m.oldValue = func(context.Context) (*Secondary, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m SecondaryMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m SecondaryMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *SecondaryMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *SecondaryMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().Secondary.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetSid sets the "sid" field.
+func (m *SecondaryMutation) SetSid(s string) {
+	m.sid = &s
+}
+
+// Sid returns the value of the "sid" field in the mutation.
+func (m *SecondaryMutation) Sid() (r string, exists bool) {
+	v := m.sid
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSid returns the old "sid" field's value of the Secondary entity.
+// If the Secondary object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SecondaryMutation) OldSid(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSid is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSid requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSid: %w", err)
+	}
+	return oldValue.Sid, nil
+}
+
+// ResetSid resets all changes to the "sid" field.
+func (m *SecondaryMutation) ResetSid() {
+	m.sid = nil
+}
+
+// SetSteamID sets the "steam_id" field.
+func (m *SecondaryMutation) SetSteamID(s string) {
+	m.steam_id = &s
+}
+
+// SteamID returns the value of the "steam_id" field in the mutation.
+func (m *SecondaryMutation) SteamID() (r string, exists bool) {
+	v := m.steam_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSteamID returns the old "steam_id" field's value of the Secondary entity.
+// If the Secondary object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SecondaryMutation) OldSteamID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSteamID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSteamID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSteamID: %w", err)
+	}
+	return oldValue.SteamID, nil
+}
+
+// ResetSteamID resets all changes to the "steam_id" field.
+func (m *SecondaryMutation) ResetSteamID() {
+	m.steam_id = nil
+}
+
+// SetAddress sets the "address" field.
+func (m *SecondaryMutation) SetAddress(s string) {
+	m.address = &s
+}
+
+// Address returns the value of the "address" field in the mutation.
+func (m *SecondaryMutation) Address() (r string, exists bool) {
+	v := m.address
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAddress returns the old "address" field's value of the Secondary entity.
+// If the Secondary object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SecondaryMutation) OldAddress(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAddress is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAddress requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAddress: %w", err)
+	}
+	return oldValue.Address, nil
+}
+
+// ResetAddress resets all changes to the "address" field.
+func (m *SecondaryMutation) ResetAddress() {
+	m.address = nil
+}
+
+// SetPort sets the "port" field.
+func (m *SecondaryMutation) SetPort(i int) {
+	m.port = &i
+	m.addport = nil
+}
+
+// Port returns the value of the "port" field in the mutation.
+func (m *SecondaryMutation) Port() (r int, exists bool) {
+	v := m.port
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPort returns the old "port" field's value of the Secondary entity.
+// If the Secondary object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SecondaryMutation) OldPort(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPort is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPort requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPort: %w", err)
+	}
+	return oldValue.Port, nil
+}
+
+// AddPort adds i to the "port" field.
+func (m *SecondaryMutation) AddPort(i int) {
+	if m.addport != nil {
+		*m.addport += i
+	} else {
+		m.addport = &i
+	}
+}
+
+// AddedPort returns the value that was added to the "port" field in this mutation.
+func (m *SecondaryMutation) AddedPort() (r int, exists bool) {
+	v := m.addport
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetPort resets all changes to the "port" field.
+func (m *SecondaryMutation) ResetPort() {
+	m.port = nil
+	m.addport = nil
+}
+
+// SetOwnerID sets the "owner_id" field.
+func (m *SecondaryMutation) SetOwnerID(i int) {
+	m.servers = &i
+}
+
+// OwnerID returns the value of the "owner_id" field in the mutation.
+func (m *SecondaryMutation) OwnerID() (r int, exists bool) {
+	v := m.servers
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOwnerID returns the old "owner_id" field's value of the Secondary entity.
+// If the Secondary object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SecondaryMutation) OldOwnerID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOwnerID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOwnerID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOwnerID: %w", err)
+	}
+	return oldValue.OwnerID, nil
+}
+
+// ResetOwnerID resets all changes to the "owner_id" field.
+func (m *SecondaryMutation) ResetOwnerID() {
+	m.servers = nil
+}
+
+// SetServersID sets the "servers" edge to the Server entity by id.
+func (m *SecondaryMutation) SetServersID(id int) {
+	m.servers = &id
+}
+
+// ClearServers clears the "servers" edge to the Server entity.
+func (m *SecondaryMutation) ClearServers() {
+	m.clearedservers = true
+	m.clearedFields[secondary.FieldOwnerID] = struct{}{}
+}
+
+// ServersCleared reports if the "servers" edge to the Server entity was cleared.
+func (m *SecondaryMutation) ServersCleared() bool {
+	return m.clearedservers
+}
+
+// ServersID returns the "servers" edge ID in the mutation.
+func (m *SecondaryMutation) ServersID() (id int, exists bool) {
+	if m.servers != nil {
+		return *m.servers, true
+	}
+	return
+}
+
+// ServersIDs returns the "servers" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ServersID instead. It exists only for internal usage by the builders.
+func (m *SecondaryMutation) ServersIDs() (ids []int) {
+	if id := m.servers; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetServers resets all changes to the "servers" edge.
+func (m *SecondaryMutation) ResetServers() {
+	m.servers = nil
+	m.clearedservers = false
+}
+
+// Where appends a list predicates to the SecondaryMutation builder.
+func (m *SecondaryMutation) Where(ps ...predicate.Secondary) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the SecondaryMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *SecondaryMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.Secondary, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *SecondaryMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *SecondaryMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (Secondary).
+func (m *SecondaryMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *SecondaryMutation) Fields() []string {
+	fields := make([]string, 0, 5)
+	if m.sid != nil {
+		fields = append(fields, secondary.FieldSid)
+	}
+	if m.steam_id != nil {
+		fields = append(fields, secondary.FieldSteamID)
+	}
+	if m.address != nil {
+		fields = append(fields, secondary.FieldAddress)
+	}
+	if m.port != nil {
+		fields = append(fields, secondary.FieldPort)
+	}
+	if m.servers != nil {
+		fields = append(fields, secondary.FieldOwnerID)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *SecondaryMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case secondary.FieldSid:
+		return m.Sid()
+	case secondary.FieldSteamID:
+		return m.SteamID()
+	case secondary.FieldAddress:
+		return m.Address()
+	case secondary.FieldPort:
+		return m.Port()
+	case secondary.FieldOwnerID:
+		return m.OwnerID()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *SecondaryMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case secondary.FieldSid:
+		return m.OldSid(ctx)
+	case secondary.FieldSteamID:
+		return m.OldSteamID(ctx)
+	case secondary.FieldAddress:
+		return m.OldAddress(ctx)
+	case secondary.FieldPort:
+		return m.OldPort(ctx)
+	case secondary.FieldOwnerID:
+		return m.OldOwnerID(ctx)
+	}
+	return nil, fmt.Errorf("unknown Secondary field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *SecondaryMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case secondary.FieldSid:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSid(v)
+		return nil
+	case secondary.FieldSteamID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSteamID(v)
+		return nil
+	case secondary.FieldAddress:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAddress(v)
+		return nil
+	case secondary.FieldPort:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPort(v)
+		return nil
+	case secondary.FieldOwnerID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOwnerID(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Secondary field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *SecondaryMutation) AddedFields() []string {
+	var fields []string
+	if m.addport != nil {
+		fields = append(fields, secondary.FieldPort)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *SecondaryMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case secondary.FieldPort:
+		return m.AddedPort()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *SecondaryMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case secondary.FieldPort:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddPort(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Secondary numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *SecondaryMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *SecondaryMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *SecondaryMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown Secondary nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *SecondaryMutation) ResetField(name string) error {
+	switch name {
+	case secondary.FieldSid:
+		m.ResetSid()
+		return nil
+	case secondary.FieldSteamID:
+		m.ResetSteamID()
+		return nil
+	case secondary.FieldAddress:
+		m.ResetAddress()
+		return nil
+	case secondary.FieldPort:
+		m.ResetPort()
+		return nil
+	case secondary.FieldOwnerID:
+		m.ResetOwnerID()
+		return nil
+	}
+	return fmt.Errorf("unknown Secondary field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *SecondaryMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.servers != nil {
+		edges = append(edges, secondary.EdgeServers)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *SecondaryMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case secondary.EdgeServers:
+		if id := m.servers; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *SecondaryMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *SecondaryMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *SecondaryMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedservers {
+		edges = append(edges, secondary.EdgeServers)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *SecondaryMutation) EdgeCleared(name string) bool {
+	switch name {
+	case secondary.EdgeServers:
+		return m.clearedservers
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *SecondaryMutation) ClearEdge(name string) error {
+	switch name {
+	case secondary.EdgeServers:
+		m.ClearServers()
+		return nil
+	}
+	return fmt.Errorf("unknown Secondary unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *SecondaryMutation) ResetEdge(name string) error {
+	switch name {
+	case secondary.EdgeServers:
+		m.ResetServers()
+		return nil
+	}
+	return fmt.Errorf("unknown Secondary edge %s", name)
+}
+
+// ServerMutation represents an operation that mutates the Server nodes in the graph.
+type ServerMutation struct {
+	config
+	op                 Op
+	typ                string
+	id                 *int
+	guid               *string
+	row_id             *string
+	steam_id           *string
+	steam_clan_id      *string
+	owner_id           *string
+	steam_room         *string
+	session            *string
+	address            *string
+	port               *int
+	addport            *int
+	host               *string
+	platform           *string
+	clan_only          *bool
+	lan_only           *bool
+	name               *string
+	game_mode          *string
+	intent             *string
+	season             *string
+	version            *int
+	addversion         *int
+	max_online         *int
+	addmax_online      *int
+	online             *int
+	addonline          *int
+	level              *int
+	addlevel           *int
+	mod                *bool
+	pvp                *bool
+	password           *bool
+	dedicated          *bool
+	client_hosted      *bool
+	allow_new_players  *bool
+	server_paused      *bool
+	friend_only        *bool
+	query_version      *int64
+	addquery_version   *int64
+	country            *string
+	continent          *string
+	country_code       *string
+	city               *string
+	region             *string
+	clearedFields      map[string]struct{}
+	tags               map[int]struct{}
+	removedtags        map[int]struct{}
+	clearedtags        bool
+	secondaries        map[int]struct{}
+	removedsecondaries map[int]struct{}
+	clearedsecondaries bool
+	done               bool
+	oldValue           func(context.Context) (*Server, error)
+	predicates         []predicate.Server
+}
+
+var _ ent.Mutation = (*ServerMutation)(nil)
+
+// serverOption allows management of the mutation configuration using functional options.
+type serverOption func(*ServerMutation)
+
+// newServerMutation creates new mutation for the Server entity.
+func newServerMutation(c config, op Op, opts ...serverOption) *ServerMutation {
+	m := &ServerMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeServer,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withServerID sets the ID field of the mutation.
+func withServerID(id int) serverOption {
+	return func(m *ServerMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *Server
+		)
+		m.oldValue = func(ctx context.Context) (*Server, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().Server.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withServer sets the old Server of the mutation.
+func withServer(node *Server) serverOption {
+	return func(m *ServerMutation) {
+		m.oldValue = func(context.Context) (*Server, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m ServerMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m ServerMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *ServerMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *ServerMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().Server.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetGUID sets the "guid" field.
+func (m *ServerMutation) SetGUID(s string) {
+	m.guid = &s
+}
+
+// GUID returns the value of the "guid" field in the mutation.
+func (m *ServerMutation) GUID() (r string, exists bool) {
+	v := m.guid
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldGUID returns the old "guid" field's value of the Server entity.
+// If the Server object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ServerMutation) OldGUID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldGUID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldGUID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldGUID: %w", err)
+	}
+	return oldValue.GUID, nil
+}
+
+// ResetGUID resets all changes to the "guid" field.
+func (m *ServerMutation) ResetGUID() {
+	m.guid = nil
+}
+
+// SetRowID sets the "row_id" field.
+func (m *ServerMutation) SetRowID(s string) {
+	m.row_id = &s
+}
+
+// RowID returns the value of the "row_id" field in the mutation.
+func (m *ServerMutation) RowID() (r string, exists bool) {
+	v := m.row_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRowID returns the old "row_id" field's value of the Server entity.
+// If the Server object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ServerMutation) OldRowID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRowID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRowID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRowID: %w", err)
+	}
+	return oldValue.RowID, nil
+}
+
+// ResetRowID resets all changes to the "row_id" field.
+func (m *ServerMutation) ResetRowID() {
+	m.row_id = nil
+}
+
+// SetSteamID sets the "steam_id" field.
+func (m *ServerMutation) SetSteamID(s string) {
+	m.steam_id = &s
+}
+
+// SteamID returns the value of the "steam_id" field in the mutation.
+func (m *ServerMutation) SteamID() (r string, exists bool) {
+	v := m.steam_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSteamID returns the old "steam_id" field's value of the Server entity.
+// If the Server object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ServerMutation) OldSteamID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSteamID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSteamID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSteamID: %w", err)
+	}
+	return oldValue.SteamID, nil
+}
+
+// ResetSteamID resets all changes to the "steam_id" field.
+func (m *ServerMutation) ResetSteamID() {
+	m.steam_id = nil
+}
+
+// SetSteamClanID sets the "steam_clan_id" field.
+func (m *ServerMutation) SetSteamClanID(s string) {
+	m.steam_clan_id = &s
+}
+
+// SteamClanID returns the value of the "steam_clan_id" field in the mutation.
+func (m *ServerMutation) SteamClanID() (r string, exists bool) {
+	v := m.steam_clan_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSteamClanID returns the old "steam_clan_id" field's value of the Server entity.
+// If the Server object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ServerMutation) OldSteamClanID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSteamClanID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSteamClanID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSteamClanID: %w", err)
+	}
+	return oldValue.SteamClanID, nil
+}
+
+// ResetSteamClanID resets all changes to the "steam_clan_id" field.
+func (m *ServerMutation) ResetSteamClanID() {
+	m.steam_clan_id = nil
+}
+
+// SetOwnerID sets the "owner_id" field.
+func (m *ServerMutation) SetOwnerID(s string) {
+	m.owner_id = &s
+}
+
+// OwnerID returns the value of the "owner_id" field in the mutation.
+func (m *ServerMutation) OwnerID() (r string, exists bool) {
+	v := m.owner_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOwnerID returns the old "owner_id" field's value of the Server entity.
+// If the Server object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ServerMutation) OldOwnerID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOwnerID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOwnerID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOwnerID: %w", err)
+	}
+	return oldValue.OwnerID, nil
+}
+
+// ResetOwnerID resets all changes to the "owner_id" field.
+func (m *ServerMutation) ResetOwnerID() {
+	m.owner_id = nil
+}
+
+// SetSteamRoom sets the "steam_room" field.
+func (m *ServerMutation) SetSteamRoom(s string) {
+	m.steam_room = &s
+}
+
+// SteamRoom returns the value of the "steam_room" field in the mutation.
+func (m *ServerMutation) SteamRoom() (r string, exists bool) {
+	v := m.steam_room
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSteamRoom returns the old "steam_room" field's value of the Server entity.
+// If the Server object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ServerMutation) OldSteamRoom(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSteamRoom is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSteamRoom requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSteamRoom: %w", err)
+	}
+	return oldValue.SteamRoom, nil
+}
+
+// ResetSteamRoom resets all changes to the "steam_room" field.
+func (m *ServerMutation) ResetSteamRoom() {
+	m.steam_room = nil
+}
+
+// SetSession sets the "session" field.
+func (m *ServerMutation) SetSession(s string) {
+	m.session = &s
+}
+
+// Session returns the value of the "session" field in the mutation.
+func (m *ServerMutation) Session() (r string, exists bool) {
+	v := m.session
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSession returns the old "session" field's value of the Server entity.
+// If the Server object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ServerMutation) OldSession(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSession is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSession requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSession: %w", err)
+	}
+	return oldValue.Session, nil
+}
+
+// ResetSession resets all changes to the "session" field.
+func (m *ServerMutation) ResetSession() {
+	m.session = nil
+}
+
+// SetAddress sets the "address" field.
+func (m *ServerMutation) SetAddress(s string) {
+	m.address = &s
+}
+
+// Address returns the value of the "address" field in the mutation.
+func (m *ServerMutation) Address() (r string, exists bool) {
+	v := m.address
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAddress returns the old "address" field's value of the Server entity.
+// If the Server object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ServerMutation) OldAddress(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAddress is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAddress requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAddress: %w", err)
+	}
+	return oldValue.Address, nil
+}
+
+// ResetAddress resets all changes to the "address" field.
+func (m *ServerMutation) ResetAddress() {
+	m.address = nil
+}
+
+// SetPort sets the "port" field.
+func (m *ServerMutation) SetPort(i int) {
+	m.port = &i
+	m.addport = nil
+}
+
+// Port returns the value of the "port" field in the mutation.
+func (m *ServerMutation) Port() (r int, exists bool) {
+	v := m.port
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPort returns the old "port" field's value of the Server entity.
+// If the Server object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ServerMutation) OldPort(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPort is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPort requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPort: %w", err)
+	}
+	return oldValue.Port, nil
+}
+
+// AddPort adds i to the "port" field.
+func (m *ServerMutation) AddPort(i int) {
+	if m.addport != nil {
+		*m.addport += i
+	} else {
+		m.addport = &i
+	}
+}
+
+// AddedPort returns the value that was added to the "port" field in this mutation.
+func (m *ServerMutation) AddedPort() (r int, exists bool) {
+	v := m.addport
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetPort resets all changes to the "port" field.
+func (m *ServerMutation) ResetPort() {
+	m.port = nil
+	m.addport = nil
+}
+
+// SetHost sets the "host" field.
+func (m *ServerMutation) SetHost(s string) {
+	m.host = &s
+}
+
+// Host returns the value of the "host" field in the mutation.
+func (m *ServerMutation) Host() (r string, exists bool) {
+	v := m.host
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldHost returns the old "host" field's value of the Server entity.
+// If the Server object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ServerMutation) OldHost(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldHost is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldHost requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldHost: %w", err)
+	}
+	return oldValue.Host, nil
+}
+
+// ResetHost resets all changes to the "host" field.
+func (m *ServerMutation) ResetHost() {
+	m.host = nil
+}
+
+// SetPlatform sets the "platform" field.
+func (m *ServerMutation) SetPlatform(s string) {
+	m.platform = &s
+}
+
+// Platform returns the value of the "platform" field in the mutation.
+func (m *ServerMutation) Platform() (r string, exists bool) {
+	v := m.platform
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPlatform returns the old "platform" field's value of the Server entity.
+// If the Server object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ServerMutation) OldPlatform(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPlatform is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPlatform requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPlatform: %w", err)
+	}
+	return oldValue.Platform, nil
+}
+
+// ResetPlatform resets all changes to the "platform" field.
+func (m *ServerMutation) ResetPlatform() {
+	m.platform = nil
+}
+
+// SetClanOnly sets the "clan_only" field.
+func (m *ServerMutation) SetClanOnly(b bool) {
+	m.clan_only = &b
+}
+
+// ClanOnly returns the value of the "clan_only" field in the mutation.
+func (m *ServerMutation) ClanOnly() (r bool, exists bool) {
+	v := m.clan_only
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldClanOnly returns the old "clan_only" field's value of the Server entity.
+// If the Server object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ServerMutation) OldClanOnly(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldClanOnly is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldClanOnly requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldClanOnly: %w", err)
+	}
+	return oldValue.ClanOnly, nil
+}
+
+// ResetClanOnly resets all changes to the "clan_only" field.
+func (m *ServerMutation) ResetClanOnly() {
+	m.clan_only = nil
+}
+
+// SetLanOnly sets the "lan_only" field.
+func (m *ServerMutation) SetLanOnly(b bool) {
+	m.lan_only = &b
+}
+
+// LanOnly returns the value of the "lan_only" field in the mutation.
+func (m *ServerMutation) LanOnly() (r bool, exists bool) {
+	v := m.lan_only
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLanOnly returns the old "lan_only" field's value of the Server entity.
+// If the Server object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ServerMutation) OldLanOnly(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLanOnly is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLanOnly requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLanOnly: %w", err)
+	}
+	return oldValue.LanOnly, nil
+}
+
+// ResetLanOnly resets all changes to the "lan_only" field.
+func (m *ServerMutation) ResetLanOnly() {
+	m.lan_only = nil
+}
+
+// SetName sets the "name" field.
+func (m *ServerMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *ServerMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the Server entity.
+// If the Server object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ServerMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *ServerMutation) ResetName() {
+	m.name = nil
+}
+
+// SetGameMode sets the "game_mode" field.
+func (m *ServerMutation) SetGameMode(s string) {
+	m.game_mode = &s
+}
+
+// GameMode returns the value of the "game_mode" field in the mutation.
+func (m *ServerMutation) GameMode() (r string, exists bool) {
+	v := m.game_mode
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldGameMode returns the old "game_mode" field's value of the Server entity.
+// If the Server object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ServerMutation) OldGameMode(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldGameMode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldGameMode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldGameMode: %w", err)
+	}
+	return oldValue.GameMode, nil
+}
+
+// ResetGameMode resets all changes to the "game_mode" field.
+func (m *ServerMutation) ResetGameMode() {
+	m.game_mode = nil
+}
+
+// SetIntent sets the "intent" field.
+func (m *ServerMutation) SetIntent(s string) {
+	m.intent = &s
+}
+
+// Intent returns the value of the "intent" field in the mutation.
+func (m *ServerMutation) Intent() (r string, exists bool) {
+	v := m.intent
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIntent returns the old "intent" field's value of the Server entity.
+// If the Server object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ServerMutation) OldIntent(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIntent is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIntent requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIntent: %w", err)
+	}
+	return oldValue.Intent, nil
+}
+
+// ResetIntent resets all changes to the "intent" field.
+func (m *ServerMutation) ResetIntent() {
+	m.intent = nil
+}
+
+// SetSeason sets the "season" field.
+func (m *ServerMutation) SetSeason(s string) {
+	m.season = &s
+}
+
+// Season returns the value of the "season" field in the mutation.
+func (m *ServerMutation) Season() (r string, exists bool) {
+	v := m.season
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSeason returns the old "season" field's value of the Server entity.
+// If the Server object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ServerMutation) OldSeason(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSeason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSeason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSeason: %w", err)
+	}
+	return oldValue.Season, nil
+}
+
+// ResetSeason resets all changes to the "season" field.
+func (m *ServerMutation) ResetSeason() {
+	m.season = nil
+}
+
+// SetVersion sets the "version" field.
+func (m *ServerMutation) SetVersion(i int) {
+	m.version = &i
+	m.addversion = nil
+}
+
+// Version returns the value of the "version" field in the mutation.
+func (m *ServerMutation) Version() (r int, exists bool) {
+	v := m.version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersion returns the old "version" field's value of the Server entity.
+// If the Server object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ServerMutation) OldVersion(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersion: %w", err)
+	}
+	return oldValue.Version, nil
+}
+
+// AddVersion adds i to the "version" field.
+func (m *ServerMutation) AddVersion(i int) {
+	if m.addversion != nil {
+		*m.addversion += i
+	} else {
+		m.addversion = &i
+	}
+}
+
+// AddedVersion returns the value that was added to the "version" field in this mutation.
+func (m *ServerMutation) AddedVersion() (r int, exists bool) {
+	v := m.addversion
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVersion resets all changes to the "version" field.
+func (m *ServerMutation) ResetVersion() {
+	m.version = nil
+	m.addversion = nil
+}
+
+// SetMaxOnline sets the "max_online" field.
+func (m *ServerMutation) SetMaxOnline(i int) {
+	m.max_online = &i
+	m.addmax_online = nil
+}
+
+// MaxOnline returns the value of the "max_online" field in the mutation.
+func (m *ServerMutation) MaxOnline() (r int, exists bool) {
+	v := m.max_online
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMaxOnline returns the old "max_online" field's value of the Server entity.
+// If the Server object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ServerMutation) OldMaxOnline(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMaxOnline is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMaxOnline requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMaxOnline: %w", err)
+	}
+	return oldValue.MaxOnline, nil
+}
+
+// AddMaxOnline adds i to the "max_online" field.
+func (m *ServerMutation) AddMaxOnline(i int) {
+	if m.addmax_online != nil {
+		*m.addmax_online += i
+	} else {
+		m.addmax_online = &i
+	}
+}
+
+// AddedMaxOnline returns the value that was added to the "max_online" field in this mutation.
+func (m *ServerMutation) AddedMaxOnline() (r int, exists bool) {
+	v := m.addmax_online
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetMaxOnline resets all changes to the "max_online" field.
+func (m *ServerMutation) ResetMaxOnline() {
+	m.max_online = nil
+	m.addmax_online = nil
+}
+
+// SetOnline sets the "online" field.
+func (m *ServerMutation) SetOnline(i int) {
+	m.online = &i
+	m.addonline = nil
+}
+
+// Online returns the value of the "online" field in the mutation.
+func (m *ServerMutation) Online() (r int, exists bool) {
+	v := m.online
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOnline returns the old "online" field's value of the Server entity.
+// If the Server object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ServerMutation) OldOnline(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOnline is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOnline requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOnline: %w", err)
+	}
+	return oldValue.Online, nil
+}
+
+// AddOnline adds i to the "online" field.
+func (m *ServerMutation) AddOnline(i int) {
+	if m.addonline != nil {
+		*m.addonline += i
+	} else {
+		m.addonline = &i
+	}
+}
+
+// AddedOnline returns the value that was added to the "online" field in this mutation.
+func (m *ServerMutation) AddedOnline() (r int, exists bool) {
+	v := m.addonline
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetOnline resets all changes to the "online" field.
+func (m *ServerMutation) ResetOnline() {
+	m.online = nil
+	m.addonline = nil
+}
+
+// SetLevel sets the "level" field.
+func (m *ServerMutation) SetLevel(i int) {
+	m.level = &i
+	m.addlevel = nil
+}
+
+// Level returns the value of the "level" field in the mutation.
+func (m *ServerMutation) Level() (r int, exists bool) {
+	v := m.level
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLevel returns the old "level" field's value of the Server entity.
+// If the Server object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ServerMutation) OldLevel(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLevel is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLevel requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLevel: %w", err)
+	}
+	return oldValue.Level, nil
+}
+
+// AddLevel adds i to the "level" field.
+func (m *ServerMutation) AddLevel(i int) {
+	if m.addlevel != nil {
+		*m.addlevel += i
+	} else {
+		m.addlevel = &i
+	}
+}
+
+// AddedLevel returns the value that was added to the "level" field in this mutation.
+func (m *ServerMutation) AddedLevel() (r int, exists bool) {
+	v := m.addlevel
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetLevel resets all changes to the "level" field.
+func (m *ServerMutation) ResetLevel() {
+	m.level = nil
+	m.addlevel = nil
+}
+
+// SetMod sets the "mod" field.
+func (m *ServerMutation) SetMod(b bool) {
+	m.mod = &b
+}
+
+// Mod returns the value of the "mod" field in the mutation.
+func (m *ServerMutation) Mod() (r bool, exists bool) {
+	v := m.mod
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMod returns the old "mod" field's value of the Server entity.
+// If the Server object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ServerMutation) OldMod(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMod is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMod requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMod: %w", err)
+	}
+	return oldValue.Mod, nil
+}
+
+// ResetMod resets all changes to the "mod" field.
+func (m *ServerMutation) ResetMod() {
+	m.mod = nil
+}
+
+// SetPvp sets the "pvp" field.
+func (m *ServerMutation) SetPvp(b bool) {
+	m.pvp = &b
+}
+
+// Pvp returns the value of the "pvp" field in the mutation.
+func (m *ServerMutation) Pvp() (r bool, exists bool) {
+	v := m.pvp
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPvp returns the old "pvp" field's value of the Server entity.
+// If the Server object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ServerMutation) OldPvp(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPvp is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPvp requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPvp: %w", err)
+	}
+	return oldValue.Pvp, nil
+}
+
+// ResetPvp resets all changes to the "pvp" field.
+func (m *ServerMutation) ResetPvp() {
+	m.pvp = nil
+}
+
+// SetPassword sets the "password" field.
+func (m *ServerMutation) SetPassword(b bool) {
+	m.password = &b
+}
+
+// Password returns the value of the "password" field in the mutation.
+func (m *ServerMutation) Password() (r bool, exists bool) {
+	v := m.password
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPassword returns the old "password" field's value of the Server entity.
+// If the Server object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ServerMutation) OldPassword(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPassword is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPassword requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPassword: %w", err)
+	}
+	return oldValue.Password, nil
+}
+
+// ResetPassword resets all changes to the "password" field.
+func (m *ServerMutation) ResetPassword() {
+	m.password = nil
+}
+
+// SetDedicated sets the "dedicated" field.
+func (m *ServerMutation) SetDedicated(b bool) {
+	m.dedicated = &b
+}
+
+// Dedicated returns the value of the "dedicated" field in the mutation.
+func (m *ServerMutation) Dedicated() (r bool, exists bool) {
+	v := m.dedicated
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDedicated returns the old "dedicated" field's value of the Server entity.
+// If the Server object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ServerMutation) OldDedicated(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDedicated is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDedicated requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDedicated: %w", err)
+	}
+	return oldValue.Dedicated, nil
+}
+
+// ResetDedicated resets all changes to the "dedicated" field.
+func (m *ServerMutation) ResetDedicated() {
+	m.dedicated = nil
+}
+
+// SetClientHosted sets the "client_hosted" field.
+func (m *ServerMutation) SetClientHosted(b bool) {
+	m.client_hosted = &b
+}
+
+// ClientHosted returns the value of the "client_hosted" field in the mutation.
+func (m *ServerMutation) ClientHosted() (r bool, exists bool) {
+	v := m.client_hosted
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldClientHosted returns the old "client_hosted" field's value of the Server entity.
+// If the Server object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ServerMutation) OldClientHosted(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldClientHosted is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldClientHosted requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldClientHosted: %w", err)
+	}
+	return oldValue.ClientHosted, nil
+}
+
+// ResetClientHosted resets all changes to the "client_hosted" field.
+func (m *ServerMutation) ResetClientHosted() {
+	m.client_hosted = nil
+}
+
+// SetAllowNewPlayers sets the "allow_new_players" field.
+func (m *ServerMutation) SetAllowNewPlayers(b bool) {
+	m.allow_new_players = &b
+}
+
+// AllowNewPlayers returns the value of the "allow_new_players" field in the mutation.
+func (m *ServerMutation) AllowNewPlayers() (r bool, exists bool) {
+	v := m.allow_new_players
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAllowNewPlayers returns the old "allow_new_players" field's value of the Server entity.
+// If the Server object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ServerMutation) OldAllowNewPlayers(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAllowNewPlayers is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAllowNewPlayers requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAllowNewPlayers: %w", err)
+	}
+	return oldValue.AllowNewPlayers, nil
+}
+
+// ResetAllowNewPlayers resets all changes to the "allow_new_players" field.
+func (m *ServerMutation) ResetAllowNewPlayers() {
+	m.allow_new_players = nil
+}
+
+// SetServerPaused sets the "server_paused" field.
+func (m *ServerMutation) SetServerPaused(b bool) {
+	m.server_paused = &b
+}
+
+// ServerPaused returns the value of the "server_paused" field in the mutation.
+func (m *ServerMutation) ServerPaused() (r bool, exists bool) {
+	v := m.server_paused
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldServerPaused returns the old "server_paused" field's value of the Server entity.
+// If the Server object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ServerMutation) OldServerPaused(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldServerPaused is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldServerPaused requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldServerPaused: %w", err)
+	}
+	return oldValue.ServerPaused, nil
+}
+
+// ResetServerPaused resets all changes to the "server_paused" field.
+func (m *ServerMutation) ResetServerPaused() {
+	m.server_paused = nil
+}
+
+// SetFriendOnly sets the "friend_only" field.
+func (m *ServerMutation) SetFriendOnly(b bool) {
+	m.friend_only = &b
+}
+
+// FriendOnly returns the value of the "friend_only" field in the mutation.
+func (m *ServerMutation) FriendOnly() (r bool, exists bool) {
+	v := m.friend_only
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldFriendOnly returns the old "friend_only" field's value of the Server entity.
+// If the Server object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ServerMutation) OldFriendOnly(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldFriendOnly is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldFriendOnly requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldFriendOnly: %w", err)
+	}
+	return oldValue.FriendOnly, nil
+}
+
+// ResetFriendOnly resets all changes to the "friend_only" field.
+func (m *ServerMutation) ResetFriendOnly() {
+	m.friend_only = nil
+}
+
+// SetQueryVersion sets the "query_version" field.
+func (m *ServerMutation) SetQueryVersion(i int64) {
+	m.query_version = &i
+	m.addquery_version = nil
+}
+
+// QueryVersion returns the value of the "query_version" field in the mutation.
+func (m *ServerMutation) QueryVersion() (r int64, exists bool) {
+	v := m.query_version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldQueryVersion returns the old "query_version" field's value of the Server entity.
+// If the Server object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ServerMutation) OldQueryVersion(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldQueryVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldQueryVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldQueryVersion: %w", err)
+	}
+	return oldValue.QueryVersion, nil
+}
+
+// AddQueryVersion adds i to the "query_version" field.
+func (m *ServerMutation) AddQueryVersion(i int64) {
+	if m.addquery_version != nil {
+		*m.addquery_version += i
+	} else {
+		m.addquery_version = &i
+	}
+}
+
+// AddedQueryVersion returns the value that was added to the "query_version" field in this mutation.
+func (m *ServerMutation) AddedQueryVersion() (r int64, exists bool) {
+	v := m.addquery_version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetQueryVersion resets all changes to the "query_version" field.
+func (m *ServerMutation) ResetQueryVersion() {
+	m.query_version = nil
+	m.addquery_version = nil
+}
+
+// SetCountry sets the "country" field.
+func (m *ServerMutation) SetCountry(s string) {
+	m.country = &s
+}
+
+// Country returns the value of the "country" field in the mutation.
+func (m *ServerMutation) Country() (r string, exists bool) {
+	v := m.country
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCountry returns the old "country" field's value of the Server entity.
+// If the Server object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ServerMutation) OldCountry(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCountry is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCountry requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCountry: %w", err)
+	}
+	return oldValue.Country, nil
+}
+
+// ResetCountry resets all changes to the "country" field.
+func (m *ServerMutation) ResetCountry() {
+	m.country = nil
+}
+
+// SetContinent sets the "continent" field.
+func (m *ServerMutation) SetContinent(s string) {
+	m.continent = &s
+}
+
+// Continent returns the value of the "continent" field in the mutation.
+func (m *ServerMutation) Continent() (r string, exists bool) {
+	v := m.continent
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldContinent returns the old "continent" field's value of the Server entity.
+// If the Server object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ServerMutation) OldContinent(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldContinent is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldContinent requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldContinent: %w", err)
+	}
+	return oldValue.Continent, nil
+}
+
+// ResetContinent resets all changes to the "continent" field.
+func (m *ServerMutation) ResetContinent() {
+	m.continent = nil
+}
+
+// SetCountryCode sets the "country_code" field.
+func (m *ServerMutation) SetCountryCode(s string) {
+	m.country_code = &s
+}
+
+// CountryCode returns the value of the "country_code" field in the mutation.
+func (m *ServerMutation) CountryCode() (r string, exists bool) {
+	v := m.country_code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCountryCode returns the old "country_code" field's value of the Server entity.
+// If the Server object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ServerMutation) OldCountryCode(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCountryCode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCountryCode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCountryCode: %w", err)
+	}
+	return oldValue.CountryCode, nil
+}
+
+// ResetCountryCode resets all changes to the "country_code" field.
+func (m *ServerMutation) ResetCountryCode() {
+	m.country_code = nil
+}
+
+// SetCity sets the "city" field.
+func (m *ServerMutation) SetCity(s string) {
+	m.city = &s
+}
+
+// City returns the value of the "city" field in the mutation.
+func (m *ServerMutation) City() (r string, exists bool) {
+	v := m.city
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCity returns the old "city" field's value of the Server entity.
+// If the Server object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ServerMutation) OldCity(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCity is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCity requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCity: %w", err)
+	}
+	return oldValue.City, nil
+}
+
+// ResetCity resets all changes to the "city" field.
+func (m *ServerMutation) ResetCity() {
+	m.city = nil
+}
+
+// SetRegion sets the "region" field.
+func (m *ServerMutation) SetRegion(s string) {
+	m.region = &s
+}
+
+// Region returns the value of the "region" field in the mutation.
+func (m *ServerMutation) Region() (r string, exists bool) {
+	v := m.region
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRegion returns the old "region" field's value of the Server entity.
+// If the Server object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ServerMutation) OldRegion(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRegion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRegion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRegion: %w", err)
+	}
+	return oldValue.Region, nil
+}
+
+// ResetRegion resets all changes to the "region" field.
+func (m *ServerMutation) ResetRegion() {
+	m.region = nil
+}
+
+// AddTagIDs adds the "tags" edge to the Tag entity by ids.
+func (m *ServerMutation) AddTagIDs(ids ...int) {
+	if m.tags == nil {
+		m.tags = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.tags[ids[i]] = struct{}{}
+	}
+}
+
+// ClearTags clears the "tags" edge to the Tag entity.
+func (m *ServerMutation) ClearTags() {
+	m.clearedtags = true
+}
+
+// TagsCleared reports if the "tags" edge to the Tag entity was cleared.
+func (m *ServerMutation) TagsCleared() bool {
+	return m.clearedtags
+}
+
+// RemoveTagIDs removes the "tags" edge to the Tag entity by IDs.
+func (m *ServerMutation) RemoveTagIDs(ids ...int) {
+	if m.removedtags == nil {
+		m.removedtags = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.tags, ids[i])
+		m.removedtags[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedTags returns the removed IDs of the "tags" edge to the Tag entity.
+func (m *ServerMutation) RemovedTagsIDs() (ids []int) {
+	for id := range m.removedtags {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// TagsIDs returns the "tags" edge IDs in the mutation.
+func (m *ServerMutation) TagsIDs() (ids []int) {
+	for id := range m.tags {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetTags resets all changes to the "tags" edge.
+func (m *ServerMutation) ResetTags() {
+	m.tags = nil
+	m.clearedtags = false
+	m.removedtags = nil
+}
+
+// AddSecondaryIDs adds the "secondaries" edge to the Secondary entity by ids.
+func (m *ServerMutation) AddSecondaryIDs(ids ...int) {
+	if m.secondaries == nil {
+		m.secondaries = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.secondaries[ids[i]] = struct{}{}
+	}
+}
+
+// ClearSecondaries clears the "secondaries" edge to the Secondary entity.
+func (m *ServerMutation) ClearSecondaries() {
+	m.clearedsecondaries = true
+}
+
+// SecondariesCleared reports if the "secondaries" edge to the Secondary entity was cleared.
+func (m *ServerMutation) SecondariesCleared() bool {
+	return m.clearedsecondaries
+}
+
+// RemoveSecondaryIDs removes the "secondaries" edge to the Secondary entity by IDs.
+func (m *ServerMutation) RemoveSecondaryIDs(ids ...int) {
+	if m.removedsecondaries == nil {
+		m.removedsecondaries = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.secondaries, ids[i])
+		m.removedsecondaries[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedSecondaries returns the removed IDs of the "secondaries" edge to the Secondary entity.
+func (m *ServerMutation) RemovedSecondariesIDs() (ids []int) {
+	for id := range m.removedsecondaries {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// SecondariesIDs returns the "secondaries" edge IDs in the mutation.
+func (m *ServerMutation) SecondariesIDs() (ids []int) {
+	for id := range m.secondaries {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetSecondaries resets all changes to the "secondaries" edge.
+func (m *ServerMutation) ResetSecondaries() {
+	m.secondaries = nil
+	m.clearedsecondaries = false
+	m.removedsecondaries = nil
+}
+
+// Where appends a list predicates to the ServerMutation builder.
+func (m *ServerMutation) Where(ps ...predicate.Server) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the ServerMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *ServerMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.Server, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *ServerMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *ServerMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (Server).
+func (m *ServerMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *ServerMutation) Fields() []string {
+	fields := make([]string, 0, 35)
+	if m.guid != nil {
+		fields = append(fields, server.FieldGUID)
+	}
+	if m.row_id != nil {
+		fields = append(fields, server.FieldRowID)
+	}
+	if m.steam_id != nil {
+		fields = append(fields, server.FieldSteamID)
+	}
+	if m.steam_clan_id != nil {
+		fields = append(fields, server.FieldSteamClanID)
+	}
+	if m.owner_id != nil {
+		fields = append(fields, server.FieldOwnerID)
+	}
+	if m.steam_room != nil {
+		fields = append(fields, server.FieldSteamRoom)
+	}
+	if m.session != nil {
+		fields = append(fields, server.FieldSession)
+	}
+	if m.address != nil {
+		fields = append(fields, server.FieldAddress)
+	}
+	if m.port != nil {
+		fields = append(fields, server.FieldPort)
+	}
+	if m.host != nil {
+		fields = append(fields, server.FieldHost)
+	}
+	if m.platform != nil {
+		fields = append(fields, server.FieldPlatform)
+	}
+	if m.clan_only != nil {
+		fields = append(fields, server.FieldClanOnly)
+	}
+	if m.lan_only != nil {
+		fields = append(fields, server.FieldLanOnly)
+	}
+	if m.name != nil {
+		fields = append(fields, server.FieldName)
+	}
+	if m.game_mode != nil {
+		fields = append(fields, server.FieldGameMode)
+	}
+	if m.intent != nil {
+		fields = append(fields, server.FieldIntent)
+	}
+	if m.season != nil {
+		fields = append(fields, server.FieldSeason)
+	}
+	if m.version != nil {
+		fields = append(fields, server.FieldVersion)
+	}
+	if m.max_online != nil {
+		fields = append(fields, server.FieldMaxOnline)
+	}
+	if m.online != nil {
+		fields = append(fields, server.FieldOnline)
+	}
+	if m.level != nil {
+		fields = append(fields, server.FieldLevel)
+	}
+	if m.mod != nil {
+		fields = append(fields, server.FieldMod)
+	}
+	if m.pvp != nil {
+		fields = append(fields, server.FieldPvp)
+	}
+	if m.password != nil {
+		fields = append(fields, server.FieldPassword)
+	}
+	if m.dedicated != nil {
+		fields = append(fields, server.FieldDedicated)
+	}
+	if m.client_hosted != nil {
+		fields = append(fields, server.FieldClientHosted)
+	}
+	if m.allow_new_players != nil {
+		fields = append(fields, server.FieldAllowNewPlayers)
+	}
+	if m.server_paused != nil {
+		fields = append(fields, server.FieldServerPaused)
+	}
+	if m.friend_only != nil {
+		fields = append(fields, server.FieldFriendOnly)
+	}
+	if m.query_version != nil {
+		fields = append(fields, server.FieldQueryVersion)
+	}
+	if m.country != nil {
+		fields = append(fields, server.FieldCountry)
+	}
+	if m.continent != nil {
+		fields = append(fields, server.FieldContinent)
+	}
+	if m.country_code != nil {
+		fields = append(fields, server.FieldCountryCode)
+	}
+	if m.city != nil {
+		fields = append(fields, server.FieldCity)
+	}
+	if m.region != nil {
+		fields = append(fields, server.FieldRegion)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *ServerMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case server.FieldGUID:
+		return m.GUID()
+	case server.FieldRowID:
+		return m.RowID()
+	case server.FieldSteamID:
+		return m.SteamID()
+	case server.FieldSteamClanID:
+		return m.SteamClanID()
+	case server.FieldOwnerID:
+		return m.OwnerID()
+	case server.FieldSteamRoom:
+		return m.SteamRoom()
+	case server.FieldSession:
+		return m.Session()
+	case server.FieldAddress:
+		return m.Address()
+	case server.FieldPort:
+		return m.Port()
+	case server.FieldHost:
+		return m.Host()
+	case server.FieldPlatform:
+		return m.Platform()
+	case server.FieldClanOnly:
+		return m.ClanOnly()
+	case server.FieldLanOnly:
+		return m.LanOnly()
+	case server.FieldName:
+		return m.Name()
+	case server.FieldGameMode:
+		return m.GameMode()
+	case server.FieldIntent:
+		return m.Intent()
+	case server.FieldSeason:
+		return m.Season()
+	case server.FieldVersion:
+		return m.Version()
+	case server.FieldMaxOnline:
+		return m.MaxOnline()
+	case server.FieldOnline:
+		return m.Online()
+	case server.FieldLevel:
+		return m.Level()
+	case server.FieldMod:
+		return m.Mod()
+	case server.FieldPvp:
+		return m.Pvp()
+	case server.FieldPassword:
+		return m.Password()
+	case server.FieldDedicated:
+		return m.Dedicated()
+	case server.FieldClientHosted:
+		return m.ClientHosted()
+	case server.FieldAllowNewPlayers:
+		return m.AllowNewPlayers()
+	case server.FieldServerPaused:
+		return m.ServerPaused()
+	case server.FieldFriendOnly:
+		return m.FriendOnly()
+	case server.FieldQueryVersion:
+		return m.QueryVersion()
+	case server.FieldCountry:
+		return m.Country()
+	case server.FieldContinent:
+		return m.Continent()
+	case server.FieldCountryCode:
+		return m.CountryCode()
+	case server.FieldCity:
+		return m.City()
+	case server.FieldRegion:
+		return m.Region()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *ServerMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case server.FieldGUID:
+		return m.OldGUID(ctx)
+	case server.FieldRowID:
+		return m.OldRowID(ctx)
+	case server.FieldSteamID:
+		return m.OldSteamID(ctx)
+	case server.FieldSteamClanID:
+		return m.OldSteamClanID(ctx)
+	case server.FieldOwnerID:
+		return m.OldOwnerID(ctx)
+	case server.FieldSteamRoom:
+		return m.OldSteamRoom(ctx)
+	case server.FieldSession:
+		return m.OldSession(ctx)
+	case server.FieldAddress:
+		return m.OldAddress(ctx)
+	case server.FieldPort:
+		return m.OldPort(ctx)
+	case server.FieldHost:
+		return m.OldHost(ctx)
+	case server.FieldPlatform:
+		return m.OldPlatform(ctx)
+	case server.FieldClanOnly:
+		return m.OldClanOnly(ctx)
+	case server.FieldLanOnly:
+		return m.OldLanOnly(ctx)
+	case server.FieldName:
+		return m.OldName(ctx)
+	case server.FieldGameMode:
+		return m.OldGameMode(ctx)
+	case server.FieldIntent:
+		return m.OldIntent(ctx)
+	case server.FieldSeason:
+		return m.OldSeason(ctx)
+	case server.FieldVersion:
+		return m.OldVersion(ctx)
+	case server.FieldMaxOnline:
+		return m.OldMaxOnline(ctx)
+	case server.FieldOnline:
+		return m.OldOnline(ctx)
+	case server.FieldLevel:
+		return m.OldLevel(ctx)
+	case server.FieldMod:
+		return m.OldMod(ctx)
+	case server.FieldPvp:
+		return m.OldPvp(ctx)
+	case server.FieldPassword:
+		return m.OldPassword(ctx)
+	case server.FieldDedicated:
+		return m.OldDedicated(ctx)
+	case server.FieldClientHosted:
+		return m.OldClientHosted(ctx)
+	case server.FieldAllowNewPlayers:
+		return m.OldAllowNewPlayers(ctx)
+	case server.FieldServerPaused:
+		return m.OldServerPaused(ctx)
+	case server.FieldFriendOnly:
+		return m.OldFriendOnly(ctx)
+	case server.FieldQueryVersion:
+		return m.OldQueryVersion(ctx)
+	case server.FieldCountry:
+		return m.OldCountry(ctx)
+	case server.FieldContinent:
+		return m.OldContinent(ctx)
+	case server.FieldCountryCode:
+		return m.OldCountryCode(ctx)
+	case server.FieldCity:
+		return m.OldCity(ctx)
+	case server.FieldRegion:
+		return m.OldRegion(ctx)
+	}
+	return nil, fmt.Errorf("unknown Server field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ServerMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case server.FieldGUID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetGUID(v)
+		return nil
+	case server.FieldRowID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRowID(v)
+		return nil
+	case server.FieldSteamID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSteamID(v)
+		return nil
+	case server.FieldSteamClanID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSteamClanID(v)
+		return nil
+	case server.FieldOwnerID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOwnerID(v)
+		return nil
+	case server.FieldSteamRoom:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSteamRoom(v)
+		return nil
+	case server.FieldSession:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSession(v)
+		return nil
+	case server.FieldAddress:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAddress(v)
+		return nil
+	case server.FieldPort:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPort(v)
+		return nil
+	case server.FieldHost:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetHost(v)
+		return nil
+	case server.FieldPlatform:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPlatform(v)
+		return nil
+	case server.FieldClanOnly:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetClanOnly(v)
+		return nil
+	case server.FieldLanOnly:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLanOnly(v)
+		return nil
+	case server.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
+	case server.FieldGameMode:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetGameMode(v)
+		return nil
+	case server.FieldIntent:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIntent(v)
+		return nil
+	case server.FieldSeason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSeason(v)
+		return nil
+	case server.FieldVersion:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersion(v)
+		return nil
+	case server.FieldMaxOnline:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMaxOnline(v)
+		return nil
+	case server.FieldOnline:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOnline(v)
+		return nil
+	case server.FieldLevel:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLevel(v)
+		return nil
+	case server.FieldMod:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMod(v)
+		return nil
+	case server.FieldPvp:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPvp(v)
+		return nil
+	case server.FieldPassword:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPassword(v)
+		return nil
+	case server.FieldDedicated:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDedicated(v)
+		return nil
+	case server.FieldClientHosted:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetClientHosted(v)
+		return nil
+	case server.FieldAllowNewPlayers:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAllowNewPlayers(v)
+		return nil
+	case server.FieldServerPaused:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetServerPaused(v)
+		return nil
+	case server.FieldFriendOnly:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetFriendOnly(v)
+		return nil
+	case server.FieldQueryVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetQueryVersion(v)
+		return nil
+	case server.FieldCountry:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCountry(v)
+		return nil
+	case server.FieldContinent:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetContinent(v)
+		return nil
+	case server.FieldCountryCode:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCountryCode(v)
+		return nil
+	case server.FieldCity:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCity(v)
+		return nil
+	case server.FieldRegion:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRegion(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Server field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *ServerMutation) AddedFields() []string {
+	var fields []string
+	if m.addport != nil {
+		fields = append(fields, server.FieldPort)
+	}
+	if m.addversion != nil {
+		fields = append(fields, server.FieldVersion)
+	}
+	if m.addmax_online != nil {
+		fields = append(fields, server.FieldMaxOnline)
+	}
+	if m.addonline != nil {
+		fields = append(fields, server.FieldOnline)
+	}
+	if m.addlevel != nil {
+		fields = append(fields, server.FieldLevel)
+	}
+	if m.addquery_version != nil {
+		fields = append(fields, server.FieldQueryVersion)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *ServerMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case server.FieldPort:
+		return m.AddedPort()
+	case server.FieldVersion:
+		return m.AddedVersion()
+	case server.FieldMaxOnline:
+		return m.AddedMaxOnline()
+	case server.FieldOnline:
+		return m.AddedOnline()
+	case server.FieldLevel:
+		return m.AddedLevel()
+	case server.FieldQueryVersion:
+		return m.AddedQueryVersion()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ServerMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case server.FieldPort:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddPort(v)
+		return nil
+	case server.FieldVersion:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVersion(v)
+		return nil
+	case server.FieldMaxOnline:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddMaxOnline(v)
+		return nil
+	case server.FieldOnline:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddOnline(v)
+		return nil
+	case server.FieldLevel:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddLevel(v)
+		return nil
+	case server.FieldQueryVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddQueryVersion(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Server numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *ServerMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *ServerMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *ServerMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown Server nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *ServerMutation) ResetField(name string) error {
+	switch name {
+	case server.FieldGUID:
+		m.ResetGUID()
+		return nil
+	case server.FieldRowID:
+		m.ResetRowID()
+		return nil
+	case server.FieldSteamID:
+		m.ResetSteamID()
+		return nil
+	case server.FieldSteamClanID:
+		m.ResetSteamClanID()
+		return nil
+	case server.FieldOwnerID:
+		m.ResetOwnerID()
+		return nil
+	case server.FieldSteamRoom:
+		m.ResetSteamRoom()
+		return nil
+	case server.FieldSession:
+		m.ResetSession()
+		return nil
+	case server.FieldAddress:
+		m.ResetAddress()
+		return nil
+	case server.FieldPort:
+		m.ResetPort()
+		return nil
+	case server.FieldHost:
+		m.ResetHost()
+		return nil
+	case server.FieldPlatform:
+		m.ResetPlatform()
+		return nil
+	case server.FieldClanOnly:
+		m.ResetClanOnly()
+		return nil
+	case server.FieldLanOnly:
+		m.ResetLanOnly()
+		return nil
+	case server.FieldName:
+		m.ResetName()
+		return nil
+	case server.FieldGameMode:
+		m.ResetGameMode()
+		return nil
+	case server.FieldIntent:
+		m.ResetIntent()
+		return nil
+	case server.FieldSeason:
+		m.ResetSeason()
+		return nil
+	case server.FieldVersion:
+		m.ResetVersion()
+		return nil
+	case server.FieldMaxOnline:
+		m.ResetMaxOnline()
+		return nil
+	case server.FieldOnline:
+		m.ResetOnline()
+		return nil
+	case server.FieldLevel:
+		m.ResetLevel()
+		return nil
+	case server.FieldMod:
+		m.ResetMod()
+		return nil
+	case server.FieldPvp:
+		m.ResetPvp()
+		return nil
+	case server.FieldPassword:
+		m.ResetPassword()
+		return nil
+	case server.FieldDedicated:
+		m.ResetDedicated()
+		return nil
+	case server.FieldClientHosted:
+		m.ResetClientHosted()
+		return nil
+	case server.FieldAllowNewPlayers:
+		m.ResetAllowNewPlayers()
+		return nil
+	case server.FieldServerPaused:
+		m.ResetServerPaused()
+		return nil
+	case server.FieldFriendOnly:
+		m.ResetFriendOnly()
+		return nil
+	case server.FieldQueryVersion:
+		m.ResetQueryVersion()
+		return nil
+	case server.FieldCountry:
+		m.ResetCountry()
+		return nil
+	case server.FieldContinent:
+		m.ResetContinent()
+		return nil
+	case server.FieldCountryCode:
+		m.ResetCountryCode()
+		return nil
+	case server.FieldCity:
+		m.ResetCity()
+		return nil
+	case server.FieldRegion:
+		m.ResetRegion()
+		return nil
+	}
+	return fmt.Errorf("unknown Server field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *ServerMutation) AddedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.tags != nil {
+		edges = append(edges, server.EdgeTags)
+	}
+	if m.secondaries != nil {
+		edges = append(edges, server.EdgeSecondaries)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *ServerMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case server.EdgeTags:
+		ids := make([]ent.Value, 0, len(m.tags))
+		for id := range m.tags {
+			ids = append(ids, id)
+		}
+		return ids
+	case server.EdgeSecondaries:
+		ids := make([]ent.Value, 0, len(m.secondaries))
+		for id := range m.secondaries {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *ServerMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.removedtags != nil {
+		edges = append(edges, server.EdgeTags)
+	}
+	if m.removedsecondaries != nil {
+		edges = append(edges, server.EdgeSecondaries)
+	}
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *ServerMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case server.EdgeTags:
+		ids := make([]ent.Value, 0, len(m.removedtags))
+		for id := range m.removedtags {
+			ids = append(ids, id)
+		}
+		return ids
+	case server.EdgeSecondaries:
+		ids := make([]ent.Value, 0, len(m.removedsecondaries))
+		for id := range m.removedsecondaries {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *ServerMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.clearedtags {
+		edges = append(edges, server.EdgeTags)
+	}
+	if m.clearedsecondaries {
+		edges = append(edges, server.EdgeSecondaries)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *ServerMutation) EdgeCleared(name string) bool {
+	switch name {
+	case server.EdgeTags:
+		return m.clearedtags
+	case server.EdgeSecondaries:
+		return m.clearedsecondaries
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *ServerMutation) ClearEdge(name string) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown Server unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *ServerMutation) ResetEdge(name string) error {
+	switch name {
+	case server.EdgeTags:
+		m.ResetTags()
+		return nil
+	case server.EdgeSecondaries:
+		m.ResetSecondaries()
+		return nil
+	}
+	return fmt.Errorf("unknown Server edge %s", name)
+}
+
+// TagMutation represents an operation that mutates the Tag nodes in the graph.
+type TagMutation struct {
+	config
+	op             Op
+	typ            string
+	id             *int
+	value          *string
+	clearedFields  map[string]struct{}
+	servers        *int
+	clearedservers bool
+	done           bool
+	oldValue       func(context.Context) (*Tag, error)
+	predicates     []predicate.Tag
+}
+
+var _ ent.Mutation = (*TagMutation)(nil)
+
+// tagOption allows management of the mutation configuration using functional options.
+type tagOption func(*TagMutation)
+
+// newTagMutation creates new mutation for the Tag entity.
+func newTagMutation(c config, op Op, opts ...tagOption) *TagMutation {
+	m := &TagMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeTag,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withTagID sets the ID field of the mutation.
+func withTagID(id int) tagOption {
+	return func(m *TagMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *Tag
+		)
+		m.oldValue = func(ctx context.Context) (*Tag, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().Tag.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withTag sets the old Tag of the mutation.
+func withTag(node *Tag) tagOption {
+	return func(m *TagMutation) {
+		m.oldValue = func(context.Context) (*Tag, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m TagMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m TagMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *TagMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *TagMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().Tag.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetValue sets the "value" field.
+func (m *TagMutation) SetValue(s string) {
+	m.value = &s
+}
+
+// Value returns the value of the "value" field in the mutation.
+func (m *TagMutation) Value() (r string, exists bool) {
+	v := m.value
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldValue returns the old "value" field's value of the Tag entity.
+// If the Tag object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TagMutation) OldValue(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldValue is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldValue requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldValue: %w", err)
+	}
+	return oldValue.Value, nil
+}
+
+// ResetValue resets all changes to the "value" field.
+func (m *TagMutation) ResetValue() {
+	m.value = nil
+}
+
+// SetOwnerID sets the "owner_id" field.
+func (m *TagMutation) SetOwnerID(i int) {
+	m.servers = &i
+}
+
+// OwnerID returns the value of the "owner_id" field in the mutation.
+func (m *TagMutation) OwnerID() (r int, exists bool) {
+	v := m.servers
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOwnerID returns the old "owner_id" field's value of the Tag entity.
+// If the Tag object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TagMutation) OldOwnerID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOwnerID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOwnerID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOwnerID: %w", err)
+	}
+	return oldValue.OwnerID, nil
+}
+
+// ResetOwnerID resets all changes to the "owner_id" field.
+func (m *TagMutation) ResetOwnerID() {
+	m.servers = nil
+}
+
+// SetServersID sets the "servers" edge to the Server entity by id.
+func (m *TagMutation) SetServersID(id int) {
+	m.servers = &id
+}
+
+// ClearServers clears the "servers" edge to the Server entity.
+func (m *TagMutation) ClearServers() {
+	m.clearedservers = true
+	m.clearedFields[tag.FieldOwnerID] = struct{}{}
+}
+
+// ServersCleared reports if the "servers" edge to the Server entity was cleared.
+func (m *TagMutation) ServersCleared() bool {
+	return m.clearedservers
+}
+
+// ServersID returns the "servers" edge ID in the mutation.
+func (m *TagMutation) ServersID() (id int, exists bool) {
+	if m.servers != nil {
+		return *m.servers, true
+	}
+	return
+}
+
+// ServersIDs returns the "servers" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ServersID instead. It exists only for internal usage by the builders.
+func (m *TagMutation) ServersIDs() (ids []int) {
+	if id := m.servers; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetServers resets all changes to the "servers" edge.
+func (m *TagMutation) ResetServers() {
+	m.servers = nil
+	m.clearedservers = false
+}
+
+// Where appends a list predicates to the TagMutation builder.
+func (m *TagMutation) Where(ps ...predicate.Tag) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the TagMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *TagMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.Tag, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *TagMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *TagMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (Tag).
+func (m *TagMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *TagMutation) Fields() []string {
+	fields := make([]string, 0, 2)
+	if m.value != nil {
+		fields = append(fields, tag.FieldValue)
+	}
+	if m.servers != nil {
+		fields = append(fields, tag.FieldOwnerID)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *TagMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case tag.FieldValue:
+		return m.Value()
+	case tag.FieldOwnerID:
+		return m.OwnerID()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *TagMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case tag.FieldValue:
+		return m.OldValue(ctx)
+	case tag.FieldOwnerID:
+		return m.OldOwnerID(ctx)
+	}
+	return nil, fmt.Errorf("unknown Tag field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *TagMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case tag.FieldValue:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetValue(v)
+		return nil
+	case tag.FieldOwnerID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOwnerID(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Tag field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *TagMutation) AddedFields() []string {
+	var fields []string
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *TagMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *TagMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown Tag numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *TagMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *TagMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *TagMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown Tag nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *TagMutation) ResetField(name string) error {
+	switch name {
+	case tag.FieldValue:
+		m.ResetValue()
+		return nil
+	case tag.FieldOwnerID:
+		m.ResetOwnerID()
+		return nil
+	}
+	return fmt.Errorf("unknown Tag field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *TagMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.servers != nil {
+		edges = append(edges, tag.EdgeServers)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *TagMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case tag.EdgeServers:
+		if id := m.servers; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *TagMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *TagMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *TagMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedservers {
+		edges = append(edges, tag.EdgeServers)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *TagMutation) EdgeCleared(name string) bool {
+	switch name {
+	case tag.EdgeServers:
+		return m.clearedservers
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *TagMutation) ClearEdge(name string) error {
+	switch name {
+	case tag.EdgeServers:
+		m.ClearServers()
+		return nil
+	}
+	return fmt.Errorf("unknown Tag unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *TagMutation) ResetEdge(name string) error {
+	switch name {
+	case tag.EdgeServers:
+		m.ResetServers()
+		return nil
+	}
+	return fmt.Errorf("unknown Tag edge %s", name)
+}
 
 // UserMutation represents an operation that mutates the User nodes in the graph.
 type UserMutation struct {

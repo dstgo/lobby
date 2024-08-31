@@ -8,7 +8,6 @@ import (
 	"github.com/ginx-contribs/ginx"
 	"github.com/spf13/cobra"
 	"log/slog"
-	"strings"
 )
 
 var (
@@ -65,7 +64,7 @@ func newLobbyServer(ctx context.Context, author, version, buildTime, configFile 
 	}
 
 	slog.SetDefault(logger.Slog())
-	slog.Info(fmt.Sprintf("logging in level: %s", strings.ToLower(appConf.Log.Level.String())))
+	slog.Info(fmt.Sprintf("logging in level: %s", appConf.Log.Level.String()))
 
 	// initialize app
 	app, err := server.NewApp(ctx, &appConf)

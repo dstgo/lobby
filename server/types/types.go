@@ -1,6 +1,7 @@
 package types
 
 import (
+	"github.com/dstgo/lobby/pkg/lobbyapi"
 	"github.com/dstgo/lobby/server/conf"
 	"github.com/dstgo/lobby/server/data/ent"
 	"github.com/ginx-contribs/ginx"
@@ -10,7 +11,7 @@ import (
 	"github.com/wneessen/go-mail"
 )
 
-// Response only used for documentation
+// Response it is only used for documentation, use package 'ginx/resp' to build response.
 type Response struct {
 	Code  int    `json:"code"`
 	Msg   string `json:"msg"`
@@ -25,6 +26,7 @@ type Env struct {
 	Redis   *redis.Client
 	Router  *ginx.RouterGroup
 	Email   *mail.Client
+	Lobby   *lobbyapi.Client
 }
 
 // custom code is composed of three parts: Order_Status_Code, it will be shown in the response body.

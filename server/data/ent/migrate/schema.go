@@ -9,6 +9,94 @@ import (
 )
 
 var (
+	// SecondariesColumns holds the columns for the "secondaries" table.
+	SecondariesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "sid", Type: field.TypeString},
+		{Name: "steam_id", Type: field.TypeString},
+		{Name: "address", Type: field.TypeString},
+		{Name: "port", Type: field.TypeInt},
+		{Name: "owner_id", Type: field.TypeInt},
+	}
+	// SecondariesTable holds the schema information for the "secondaries" table.
+	SecondariesTable = &schema.Table{
+		Name:       "secondaries",
+		Columns:    SecondariesColumns,
+		PrimaryKey: []*schema.Column{SecondariesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "secondaries_servers_secondaries",
+				Columns:    []*schema.Column{SecondariesColumns[5]},
+				RefColumns: []*schema.Column{ServersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
+	// ServersColumns holds the columns for the "servers" table.
+	ServersColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "guid", Type: field.TypeString},
+		{Name: "row_id", Type: field.TypeString},
+		{Name: "steam_id", Type: field.TypeString},
+		{Name: "steam_clan_id", Type: field.TypeString},
+		{Name: "owner_id", Type: field.TypeString},
+		{Name: "steam_room", Type: field.TypeString},
+		{Name: "session", Type: field.TypeString},
+		{Name: "address", Type: field.TypeString},
+		{Name: "port", Type: field.TypeInt},
+		{Name: "host", Type: field.TypeString},
+		{Name: "platform", Type: field.TypeString},
+		{Name: "clan_only", Type: field.TypeBool},
+		{Name: "lan_only", Type: field.TypeBool},
+		{Name: "name", Type: field.TypeString},
+		{Name: "game_mode", Type: field.TypeString},
+		{Name: "intent", Type: field.TypeString},
+		{Name: "season", Type: field.TypeString},
+		{Name: "version", Type: field.TypeInt},
+		{Name: "max_online", Type: field.TypeInt},
+		{Name: "online", Type: field.TypeInt},
+		{Name: "level", Type: field.TypeInt},
+		{Name: "mod", Type: field.TypeBool},
+		{Name: "pvp", Type: field.TypeBool},
+		{Name: "password", Type: field.TypeBool},
+		{Name: "dedicated", Type: field.TypeBool},
+		{Name: "client_hosted", Type: field.TypeBool},
+		{Name: "allow_new_players", Type: field.TypeBool},
+		{Name: "server_paused", Type: field.TypeBool},
+		{Name: "friend_only", Type: field.TypeBool},
+		{Name: "query_version", Type: field.TypeInt64},
+		{Name: "country", Type: field.TypeString},
+		{Name: "continent", Type: field.TypeString},
+		{Name: "country_code", Type: field.TypeString},
+		{Name: "city", Type: field.TypeString},
+		{Name: "region", Type: field.TypeString},
+	}
+	// ServersTable holds the schema information for the "servers" table.
+	ServersTable = &schema.Table{
+		Name:       "servers",
+		Columns:    ServersColumns,
+		PrimaryKey: []*schema.Column{ServersColumns[0]},
+	}
+	// TagsColumns holds the columns for the "tags" table.
+	TagsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "value", Type: field.TypeString},
+		{Name: "owner_id", Type: field.TypeInt},
+	}
+	// TagsTable holds the schema information for the "tags" table.
+	TagsTable = &schema.Table{
+		Name:       "tags",
+		Columns:    TagsColumns,
+		PrimaryKey: []*schema.Column{TagsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "tags_servers_tags",
+				Columns:    []*schema.Column{TagsColumns[2]},
+				RefColumns: []*schema.Column{ServersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -28,10 +116,15 @@ var (
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		SecondariesTable,
+		ServersTable,
+		TagsTable,
 		UsersTable,
 	}
 )
 
 func init() {
+	SecondariesTable.ForeignKeys[0].RefTable = ServersTable
+	TagsTable.ForeignKeys[0].RefTable = ServersTable
 	UsersTable.Annotation = &entsql.Annotation{}
 }

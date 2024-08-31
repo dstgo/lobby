@@ -9,12 +9,14 @@ package server
 import (
 	"github.com/dstgo/lobby/server/api"
 	auth2 "github.com/dstgo/lobby/server/api/auth"
+	dst2 "github.com/dstgo/lobby/server/api/dst"
 	"github.com/dstgo/lobby/server/api/system"
 	user2 "github.com/dstgo/lobby/server/api/user"
 	"github.com/dstgo/lobby/server/data/cache"
 	"github.com/dstgo/lobby/server/data/mq"
 	"github.com/dstgo/lobby/server/data/repo"
 	"github.com/dstgo/lobby/server/handler/auth"
+	"github.com/dstgo/lobby/server/handler/dst"
 	"github.com/dstgo/lobby/server/handler/email"
 	"github.com/dstgo/lobby/server/handler/user"
 	"github.com/dstgo/lobby/server/types"
@@ -53,10 +55,16 @@ func setup(env *types.Env) (api.Router, error) {
 	userHandler := user.NewUserHandler(userRepo)
 	userAPI := user2.NewUserAPI(userHandler)
 	userRouter := user2.NewRouter(routerGroup, userAPI)
+	serverRepo := repo.NewServerRepo(entClient)
+	lobbyapiClient := env.Lobby
+	lobbyHandler := dst.NewLobbyHandler(serverRepo, lobbyapiClient)
+	lobbyAPI := dst2.NewLobbyAPI(lobbyHandler)
+	dstRouter := dst2.NewRouter(routerGroup, lobbyAPI)
 	apiRouter := api.Router{
 		Auth:   router,
 		System: systemRouter,
 		User:   userRouter,
+		Dst:    dstRouter,
 	}
 	return apiRouter, nil
 }

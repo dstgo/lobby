@@ -6,7 +6,7 @@ import (
 	"github.com/dstgo/lobby/server/data/ent"
 	"github.com/dstgo/lobby/server/handler/dst"
 	"github.com/dstgo/lobby/server/pkg/geo"
-	lobbyapi2 "github.com/dstgo/lobby/server/pkg/lobbyapi"
+	"github.com/dstgo/lobby/server/pkg/lobbyapi"
 	"github.com/dstgo/lobby/server/pkg/maputil"
 	"github.com/dstgo/lobby/server/pkg/ts"
 	dstype "github.com/dstgo/lobby/server/types"
@@ -18,13 +18,13 @@ import (
 	"time"
 )
 
-func NewLobbyCollectJob(handler *dst.LobbyHandler, client *lobbyapi2.Client) *LobbyCollectJob {
+func NewLobbyCollectJob(handler *dst.LobbyHandler, client *lobbyapi.Client) *LobbyCollectJob {
 	return &LobbyCollectJob{handler: handler, client: client}
 }
 
 type LobbyCollectJob struct {
 	handler *dst.LobbyHandler
-	client  *lobbyapi2.Client
+	client  *lobbyapi.Client
 
 	count atomic.Int64
 }
@@ -78,7 +78,7 @@ func (l *LobbyCollectJob) Collect(v int64, limit int) (collected []*ent.Server, 
 	group.SetLimit(limit)
 
 	for _, region := range regions.Regions {
-		for _, platform := range lobbyapi2.ExplicitPlatforms {
+		for _, platform := range lobbyapi.OriginalPlatforms {
 			// Collect servers concurrently
 			group.Go(func() error {
 				gstart := ts.Now()
@@ -115,7 +115,7 @@ func (l *LobbyCollectJob) getLobbyServers(region string, platform string, qv int
 }
 
 // ProcessServers converts lobbyapi.Server to *ent.Server
-func (l *LobbyCollectJob) ProcessServers(qv int64, servers []lobbyapi2.Server) ([]*ent.Server, error) {
+func (l *LobbyCollectJob) ProcessServers(qv int64, servers []lobbyapi.Server) ([]*ent.Server, error) {
 	var entServers []*ent.Server
 	for _, server := range servers {
 		createdServer := dstype.LobbyServerToEntServer(server)
@@ -149,7 +149,7 @@ func (l *LobbyCollectJob) ProcessServers(qv int64, servers []lobbyapi2.Server) (
 		createdServer.Country = maputil.GetFallBack("zh-CN", "en", ipAddress.Country.Names)
 		createdServer.City = maputil.GetFallBack("zh-CN", "en", ipAddress.City.Names)
 		createdServer.Continent = maputil.GetFallBack("zh-CN", "en", ipAddress.Continent.Names)
-		if createdServer.Platform == "WeGame" {
+		if createdServer.Platform == lobbyapi.WeGame.String() {
 			createdServer.CountryCode = "CN"
 			createdServer.Continent = "亚洲"
 			createdServer.Country = "中国"

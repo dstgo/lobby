@@ -2,18 +2,21 @@ package lobbyapi
 
 const GameId = "DontStarveTogether"
 
-// ExplicitPlatforms means that platforms could be used as query params in klei api.
-var ExplicitPlatforms = []string{Steam.String(), PSN.String(), Rail.String(), XBOne.String(), Switch.String()}
+// OriginalPlatforms returns the original platforms name got from klei api
+var OriginalPlatforms = []string{Steam.String(), PSN.String(), Rail.String(), XBOne.String(), Switch.String()}
 
 const (
-	Steam Platform = 1
-	PSN   Platform = 2
-	// Rail is alias of WeGame, only serve at ap-east-1
-	Rail  Platform = 4
-	XBOne Platform = 16
+	Any Platform = iota
+	Steam
+	// WeGame just a helper name, actually it is not exist
+	WeGame
+	PSN
 	// PS4Official can not be use in api query params
-	PS4Official Platform = 19
-	Switch      Platform = 32
+	PS4Official
+	XBOne
+	Switch
+	// Rail is alias of WeGame, only serve at ap-east-1
+	Rail
 )
 
 // Platform represents dst server platform, it may be updated by klei in the future
@@ -21,20 +24,23 @@ type Platform uint
 
 func (p Platform) String() string {
 	switch p {
-	case 1:
+	case Steam:
 		return "Steam"
-	case 2:
+	case PSN:
 		return "PSN"
-	case 4:
+	case Rail:
 		return "Rail"
-	case 16:
+	case XBOne:
 		return "XBone"
-	case 19:
+	case PS4Official:
 		return "PS4Official"
-	case 32:
+	case Switch:
 		return "Switch"
+	case WeGame:
+		return "WeGame"
+	default:
+		panic("unhandled default case")
 	}
-	return "unknown platform"
 }
 
 // Region represents dst lobby server region, it may be updated by klei in the future

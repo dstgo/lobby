@@ -13,6 +13,26 @@ definitions:
       version2:
         type: string
     type: object
+  lobbyapi.Platform:
+    enum:
+    - 0
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    type: integer
+    x-enum-varnames:
+    - Any
+    - Steam
+    - WeGame
+    - PSN
+    - PS4Official
+    - XBOne
+    - Switch
+    - Rail
   lobbyapi.Player:
     properties:
       colour:
@@ -579,7 +599,7 @@ paths:
         in: query
         name: level
         type: integer
-      - description: -1-off 0-all 1-on
+      - description: -1-off, 0-any, 1-on
         in: query
         name: mod
         type: integer
@@ -587,25 +607,45 @@ paths:
         in: query
         name: page
         type: integer
-      - description: -1-off 0-all 1-on
+      - description: -1-off, 0-any, 1-on
         in: query
         name: password
         type: integer
-      - description: platform name, Steam | WeGame | PSN | XBone | PS4Official | Rail
-          | Switch
+      - description: server platform, 0-Any, 1-Steam, 2-WeGame, 3-PSN, 4-PS4Official,
+          5-XBone, 6-Switch
+        enum:
+        - 0
+        - 1
+        - 2
+        - 3
+        - 4
+        - 5
+        - 6
+        - 7
         in: query
+        maximum: 7
+        minimum: 0
         name: platform
-        type: string
-      - description: -1-off 0-all 1-on
+        type: integer
+        x-enum-varnames:
+        - Any
+        - Steam
+        - WeGame
+        - PSN
+        - PS4Official
+        - XBOne
+        - Switch
+        - Rail
+      - description: -1-off, 0-any, 1-on
         in: query
         name: pvp
         type: integer
-      - description: season spring | summer | autumn | winter or other mods season
+      - description: season spring | summer | autumn | winter | other mods season
         in: query
         name: season
         type: string
-      - description: 0-any 1-dedicated 2-client hosted 3-official 4-steam group 5-steam
-          group only 6-friend only
+      - description: 0-any 1-dedicated 2-client, hosted, 3-official, 4-steam group,
+          5-steam group only, 6-friend only
         enum:
         - 0
         - 1

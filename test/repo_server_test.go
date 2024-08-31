@@ -5,6 +5,7 @@ import (
 	"github.com/dstgo/lobby/server"
 	"github.com/dstgo/lobby/server/data/ent"
 	"github.com/dstgo/lobby/server/data/repo"
+	"github.com/dstgo/lobby/server/pkg/lobbyapi"
 	"github.com/dstgo/lobby/server/types"
 	"github.com/dstgo/lobby/test/testuitl"
 	"github.com/stretchr/testify/assert"
@@ -213,6 +214,42 @@ func TestPageQueryByOptionsWithServerType(t *testing.T) {
 	}
 }
 
+func TestPageQueryByOptionsWithPlatform(t *testing.T) {
+	ctx := context.Background()
+	serverRepo, err := newServerRepo()
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	samples := []lobbyapi.Platform{
+		lobbyapi.PSN,
+		lobbyapi.Steam,
+		lobbyapi.WeGame,
+		lobbyapi.PS4Official,
+		lobbyapi.Switch,
+		lobbyapi.XBOne,
+	}
+
+	for i, platform := range samples {
+		page := 1
+		size := 100
+		list, total, err := serverRepo.PageQueryByOption(ctx, types.LobbyServerSearchOptions{
+			Page:     page,
+			Size:     size,
+			Platform: platform,
+		})
+		if !assert.NoError(t, err) {
+			return
+		}
+		t.Logf("#%d - %s", i, platform)
+		t.Logf("total: %d page: %d size: %d list:%d", total, page, size, len(list))
+		for _, e := range list {
+			assert.Equal(t, e.Platform, platform.String())
+			t.Log(e)
+		}
+	}
+}
+
 func TestPageQueryByOptionsWithManyCondition(t *testing.T) {
 	ctx := context.Background()
 	serverRepo, err := newServerRepo()
@@ -226,7 +263,7 @@ func TestPageQueryByOptionsWithManyCondition(t *testing.T) {
 		{Page: 1, Size: 100, Sort: types.DstSortByOnline, Desc: true},
 		{Page: 1, Size: 100, Address: "45.74.14.148"},
 		{Page: 1, Size: 100, Season: "spring"},
-		{Page: 1, Size: 100, Platform: "Steam", Season: "summer", CountryCode: "CN", ModEnabled: 1},
+		{Page: 1, Size: 100, Platform: lobbyapi.Steam, Season: "summer", CountryCode: "CN", ModEnabled: 1},
 		{Page: 1, Size: 100, Level: 6},
 	}
 

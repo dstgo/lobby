@@ -55,12 +55,12 @@ type LobbyServerSearchOptions struct {
 	CountryCode string `form:"countryCode"`
 	// continent name
 	Continent string `form:"continent"`
-	// platform name, Steam | WeGame | PSN | XBone | PS4Official | Rail | Switch
-	Platform string `form:"platform"`
-	// 0-any 1-dedicated 2-client hosted 3-official 4-steam group 5-steam group only 6-friend only
+	// server platform, 0-Any, 1-Steam, 2-WeGame, 3-PSN, 4-PS4Official, 5-XBone, 6-Switch
+	Platform lobbyapi.Platform `form:"platform" binding:"gte=0,lte=7"`
+	// 0-any 1-dedicated 2-client, hosted, 3-official, 4-steam group, 5-steam group only, 6-friend only
 	ServerType DstServerType `form:"serverType" binding:"gte=0,lte=6"`
 
-	// season spring | summer | autumn | winter or other mods season
+	// season spring | summer | autumn | winter | other mods season
 	Season string `form:"season"`
 	// tags of server
 	Tags []string `form:"tags"`
@@ -71,11 +71,11 @@ type LobbyServerSearchOptions struct {
 	// world level of server
 	Level int `form:"level"`
 
-	// -1-off 0-all 1-on
+	// -1-off, 0-any, 1-on
 	PvpEnabled int `form:"pvp"`
-	// -1-off 0-all 1-on
+	// -1-off, 0-any, 1-on
 	ModEnabled int `form:"mod"`
-	// -1-off 0-all 1-on
+	// -1-off, 0-any, 1-on
 	HasPassword int `form:"password"`
 }
 

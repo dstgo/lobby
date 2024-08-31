@@ -1,7 +1,6 @@
 package dst
 
 import (
-	"cmp"
 	"context"
 	"github.com/dstgo/lobby/server/data/ent"
 	"github.com/dstgo/lobby/server/data/repo"
@@ -11,7 +10,6 @@ import (
 	"github.com/dstgo/lobby/server/types"
 	"github.com/ginx-contribs/ginx/pkg/resp/statuserr"
 	"net"
-	"slices"
 )
 
 func NewLobbyHandler(serverRepo *repo.ServerRepo, client *lobbyapi.Client) *LobbyHandler {
@@ -71,11 +69,6 @@ func (l *LobbyHandler) GetServerDetails(ctx context.Context, region, rowId strin
 
 // CreateServersBatch creates a list of servers in n batch
 func (l *LobbyHandler) CreateServersBatch(ctx context.Context, servers []*ent.Server, batchSize int) (int64, error) {
-	// sort by country code
-	slices.SortFunc(servers, func(a, b *ent.Server) int {
-		return cmp.Compare(a.CountryCode, b.CountryCode)
-	})
-
 	var created int64
 	for start := 0; start < len(servers); start += batchSize {
 		end := start + batchSize

@@ -5,7 +5,7 @@ import (
 	"github.com/dstgo/lobby/server/pkg/lobbyapi"
 )
 
-type DstServerType uint
+type DstServerType int
 
 const (
 	// TypeAny 任意类型
@@ -25,7 +25,7 @@ const (
 )
 
 // DstSortType represents the sort way of sorting server list
-type DstSortType uint
+type DstSortType int
 
 const (
 	DstSortByName DstSortType = iota

@@ -86,7 +86,12 @@ func NewApp(ctx context.Context, appConf *conf.App) (*ginx.Server, error) {
 			mids.TokenAuthenticator(authhandler.NewTokenHandler(appConf.Jwt, redisClient)),
 		),
 	)
-	ginx.DefaultValidateHandler = validatePramsHandler
+
+	// set validator for gin
+	err = setupHumanizedValidator()
+	if err != nil {
+		return nil, err
+	}
 
 	// whether to enable pprof program profiling
 	if appConf.Server.Pprof {

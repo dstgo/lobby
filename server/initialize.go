@@ -2,13 +2,11 @@ package server
 
 import (
 	entsql "entgo.io/ent/dialect/sql"
-	"errors"
 	"github.com/dstgo/lobby/server/conf"
 	"github.com/dstgo/lobby/server/data/ent"
 	"github.com/dstgo/lobby/server/types"
-	"github.com/gin-gonic/gin"
 	"github.com/ginx-contribs/dbx"
-	"github.com/ginx-contribs/ginx/pkg/resp"
+	"github.com/ginx-contribs/ginx"
 	"github.com/ginx-contribs/logx"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/wire"
@@ -59,15 +57,6 @@ func NewLogger(option conf.Log) (*logx.Logger, error) {
 		return nil, err
 	}
 	return logger, nil
-}
-
-// handler to process when params validating failed
-func validatePramsHandler(ctx *gin.Context, val any, err error) {
-	var validationErrors validator.ValidationErrors
-	if errors.As(err, &validationErrors) {
-		ctx.Error(err)
-		resp.Fail(ctx).Error(types.ErrBadParams).JSON()
-	}
 }
 
 // InitializeDB initialize database with ent
@@ -126,4 +115,16 @@ func InitializeEmail(ctx context.Context, emailConf conf.Email) (*mail.Client, e
 		return nil, err
 	}
 	return client, nil
+}
+
+func setupHumanizedValidator() error {
+	v := validator.New()
+	v.SetTagName("binding")
+	englishValidator, err := ginx.EnglishValidator(v)
+	if err != nil {
+		return err
+	}
+	ginx.SetValidator(englishValidator)
+	ginx.SetValidateHandler(englishValidator.HandleError)
+	return nil
 }

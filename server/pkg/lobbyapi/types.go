@@ -20,7 +20,7 @@ const (
 )
 
 // Platform represents dst server platform, it may be updated by klei in the future
-type Platform uint
+type Platform int
 
 func (p Platform) String() string {
 	switch p {

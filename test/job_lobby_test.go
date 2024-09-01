@@ -7,7 +7,7 @@ import (
 	"github.com/dstgo/lobby/server/handler/dst"
 	"github.com/dstgo/lobby/server/jobs"
 	"github.com/dstgo/lobby/server/pkg/lobbyapi"
-	"github.com/dstgo/lobby/test/testuitl"
+	"github.com/dstgo/lobby/test/testutil"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
@@ -15,7 +15,7 @@ import (
 
 func newLobbyCollectJob() (*jobs.LobbyCollectJob, error) {
 	ctx := context.Background()
-	cfg, err := testuitl.ReadConf()
+	cfg, err := testutil.ReadConf()
 	if err != nil {
 		return nil, err
 	}

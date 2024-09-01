@@ -1,9 +1,10 @@
-package testuitl
+package testutil
 
 import (
 	"github.com/dstgo/lobby/server/conf"
 	"log/slog"
 	"os"
+	"time"
 )
 
 func init() {
@@ -28,4 +29,21 @@ func ReadDBConf() (conf.DB, error) {
 		return conf.DB{}, err
 	}
 	return appConf.DB, err
+}
+
+// Timer is helper to calculate cost-time
+type Timer struct {
+	start time.Time
+}
+
+func (t Timer) Start() {
+	t.start = time.Now()
+}
+
+func (t Timer) Stop() time.Duration {
+	return t.start.Sub(time.Now())
+}
+
+func (t Timer) Reset() {
+	t.start = time.Time{}
 }

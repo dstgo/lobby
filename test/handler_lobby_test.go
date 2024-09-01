@@ -6,15 +6,16 @@ import (
 	"github.com/dstgo/lobby/server/data/repo"
 	"github.com/dstgo/lobby/server/handler/dst"
 	"github.com/dstgo/lobby/server/pkg/lobbyapi"
-	"github.com/dstgo/lobby/test/testuitl"
+	"github.com/dstgo/lobby/test/testutil"
 	"github.com/go-resty/resty/v2"
 	"github.com/stretchr/testify/assert"
 	"testing"
+	"time"
 )
 
 func newLobbyHandler() (*dst.LobbyHandler, error) {
 	ctx := context.Background()
-	appconf, err := testuitl.ReadConf()
+	appconf, err := testutil.ReadConf()
 	if err != nil {
 		return nil, err
 	}
@@ -51,4 +52,17 @@ func TestLobbyVersion(t *testing.T) {
 		return
 	}
 	t.Log(version)
+}
+
+func TestDeleteInBatch(t *testing.T) {
+	ctx := context.Background()
+	handler, err := newLobbyHandler()
+	if !assert.NoError(t, err) {
+		return
+	}
+	deleted, err := handler.DeleteServerBatch(ctx, time.Hour, 2000)
+	if !assert.NoError(t, err) {
+		return
+	}
+	t.Log(deleted)
 }

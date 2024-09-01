@@ -5,14 +5,14 @@ import (
 	"github.com/dstgo/lobby/server"
 	"github.com/dstgo/lobby/server/data/ent"
 	"github.com/dstgo/lobby/server/data/repo"
-	"github.com/dstgo/lobby/test/testuitl"
+	"github.com/dstgo/lobby/test/testutil"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
 func newJobRepo() (*repo.JobRepo, error) {
 	ctx := context.Background()
-	dbConf, err := testuitl.ReadDBConf()
+	dbConf, err := testutil.ReadDBConf()
 	if err != nil {
 		return nil, err
 	}

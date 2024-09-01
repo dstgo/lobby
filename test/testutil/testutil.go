@@ -31,19 +31,41 @@ func ReadDBConf() (conf.DB, error) {
 	return appConf.DB, err
 }
 
+func NewTimer() *Timer {
+	return &Timer{}
+}
+
 // Timer is helper to calculate cost-time
 type Timer struct {
 	start time.Time
 }
 
-func (t Timer) Start() {
+func (t *Timer) Start() {
 	t.start = time.Now()
 }
 
-func (t Timer) Stop() time.Duration {
-	return t.start.Sub(time.Now())
+func (t *Timer) Stop() time.Duration {
+	return time.Now().Sub(t.start)
 }
 
-func (t Timer) Reset() {
+func (t *Timer) Reset() {
 	t.start = time.Time{}
+}
+
+func NewRound() *Round {
+	return &Round{}
+}
+
+type Round struct {
+	r int64
+}
+
+func (r *Round) Round() int64 {
+	rr := r.r
+	r.r++
+	return rr
+}
+
+func (r *Round) Reset() {
+	r.r = 0
 }

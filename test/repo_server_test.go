@@ -5,7 +5,6 @@ import (
 	"github.com/dstgo/lobby/server"
 	"github.com/dstgo/lobby/server/data/ent"
 	"github.com/dstgo/lobby/server/data/repo"
-	"github.com/dstgo/lobby/server/pkg/lobbyapi"
 	"github.com/dstgo/lobby/server/types"
 	"github.com/dstgo/lobby/test/testuitl"
 	"github.com/stretchr/testify/assert"
@@ -221,13 +220,12 @@ func TestPageQueryByOptionsWithPlatform(t *testing.T) {
 		return
 	}
 
-	samples := []lobbyapi.Platform{
-		lobbyapi.PSN,
-		lobbyapi.Steam,
-		lobbyapi.WeGame,
-		lobbyapi.PS4Official,
-		lobbyapi.Switch,
-		lobbyapi.XBOne,
+	samples := []types.ServerPlatform{
+		types.PlatformSteam,
+		types.PlatformWeGame,
+		types.PlatformSwitch,
+		types.PlatformPSN,
+		types.PlatformXBOne,
 	}
 
 	for i, platform := range samples {
@@ -263,7 +261,7 @@ func TestPageQueryByOptionsWithManyCondition(t *testing.T) {
 		{Page: 1, Size: 100, Sort: types.DstSortByOnline, Desc: true},
 		{Page: 1, Size: 100, Address: "45.74.14.148"},
 		{Page: 1, Size: 100, Season: "spring"},
-		{Page: 1, Size: 100, Platform: lobbyapi.Steam, Season: "summer", CountryCode: "CN", ModEnabled: 1},
+		{Page: 1, Size: 100, Platform: types.PlatformSteam, Season: "summer", CountryCode: "CN", ModEnabled: 1},
 		{Page: 1, Size: 100, Level: 6},
 	}
 

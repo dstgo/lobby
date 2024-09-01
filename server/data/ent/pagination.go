@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/dstgo/lobby/server/data/ent/cronjob"
 	"github.com/dstgo/lobby/server/data/ent/secondary"
 	"github.com/dstgo/lobby/server/data/ent/server"
 	"github.com/dstgo/lobby/server/data/ent/tag"
@@ -57,6 +58,87 @@ func (o OrderDirection) reverse() OrderDirection {
 }
 
 const errInvalidPagination = "INVALID_PAGINATION"
+
+type CronJobPager struct {
+	Order  cronjob.OrderOption
+	Filter func(*CronJobQuery) (*CronJobQuery, error)
+}
+
+// CronJobPaginateOption enables pagination customization.
+type CronJobPaginateOption func(*CronJobPager)
+
+// DefaultCronJobOrder is the default ordering of CronJob.
+var DefaultCronJobOrder = Desc(cronjob.FieldID)
+
+func newCronJobPager(opts []CronJobPaginateOption) (*CronJobPager, error) {
+	pager := &CronJobPager{}
+	for _, opt := range opts {
+		opt(pager)
+	}
+	if pager.Order == nil {
+		pager.Order = DefaultCronJobOrder
+	}
+	return pager, nil
+}
+
+func (p *CronJobPager) ApplyFilter(query *CronJobQuery) (*CronJobQuery, error) {
+	if p.Filter != nil {
+		return p.Filter(query)
+	}
+	return query, nil
+}
+
+// CronJobPageList is CronJob PageList result.
+type CronJobPageList struct {
+	List        []*CronJob   `json:"list"`
+	PageDetails *PageDetails `json:"pageDetails"`
+}
+
+func (cj *CronJobQuery) Page(
+	ctx context.Context, pageNum uint64, pageSize uint64, opts ...CronJobPaginateOption,
+) (*CronJobPageList, error) {
+
+	pager, err := newCronJobPager(opts)
+	if err != nil {
+		return nil, err
+	}
+
+	if cj, err = pager.ApplyFilter(cj); err != nil {
+		return nil, err
+	}
+
+	ret := &CronJobPageList{}
+
+	ret.PageDetails = &PageDetails{
+		Page: pageNum,
+		Size: pageSize,
+	}
+
+	query := cj.Clone()
+	query.ctx.Fields = nil
+	count, err := query.Count(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	ret.PageDetails.Total = uint64(count)
+
+	if pager.Order != nil {
+		cj = cj.Order(pager.Order)
+	} else {
+		cj = cj.Order(DefaultCronJobOrder)
+	}
+
+	cj = cj.Offset(int((pageNum - 1) * pageSize)).Limit(int(pageSize))
+	list, err := cj.All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	ret.List = list
+
+	return ret, nil
+}
 
 type SecondaryPager struct {
 	Order  secondary.OrderOption

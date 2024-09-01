@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 
+	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/dstgo/lobby/server/data/ent/secondary"
@@ -18,6 +19,7 @@ type SecondaryCreate struct {
 	config
 	mutation *SecondaryMutation
 	hooks    []Hook
+	conflict []sql.ConflictOption
 }
 
 // SetSid sets the "sid" field.
@@ -139,6 +141,7 @@ func (sc *SecondaryCreate) createSpec() (*Secondary, *sqlgraph.CreateSpec) {
 		_node = &Secondary{config: sc.config}
 		_spec = sqlgraph.NewCreateSpec(secondary.Table, sqlgraph.NewFieldSpec(secondary.FieldID, field.TypeInt))
 	)
+	_spec.OnConflict = sc.conflict
 	if value, ok := sc.mutation.Sid(); ok {
 		_spec.SetField(secondary.FieldSid, field.TypeString, value)
 		_node.Sid = value
@@ -175,11 +178,277 @@ func (sc *SecondaryCreate) createSpec() (*Secondary, *sqlgraph.CreateSpec) {
 	return _node, _spec
 }
 
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.Secondary.Create().
+//		SetSid(v).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.SecondaryUpsert) {
+//			SetSid(v+v).
+//		}).
+//		Exec(ctx)
+func (sc *SecondaryCreate) OnConflict(opts ...sql.ConflictOption) *SecondaryUpsertOne {
+	sc.conflict = opts
+	return &SecondaryUpsertOne{
+		create: sc,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.Secondary.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (sc *SecondaryCreate) OnConflictColumns(columns ...string) *SecondaryUpsertOne {
+	sc.conflict = append(sc.conflict, sql.ConflictColumns(columns...))
+	return &SecondaryUpsertOne{
+		create: sc,
+	}
+}
+
+type (
+	// SecondaryUpsertOne is the builder for "upsert"-ing
+	//  one Secondary node.
+	SecondaryUpsertOne struct {
+		create *SecondaryCreate
+	}
+
+	// SecondaryUpsert is the "OnConflict" setter.
+	SecondaryUpsert struct {
+		*sql.UpdateSet
+	}
+)
+
+// SetSid sets the "sid" field.
+func (u *SecondaryUpsert) SetSid(v string) *SecondaryUpsert {
+	u.Set(secondary.FieldSid, v)
+	return u
+}
+
+// UpdateSid sets the "sid" field to the value that was provided on create.
+func (u *SecondaryUpsert) UpdateSid() *SecondaryUpsert {
+	u.SetExcluded(secondary.FieldSid)
+	return u
+}
+
+// SetSteamID sets the "steam_id" field.
+func (u *SecondaryUpsert) SetSteamID(v string) *SecondaryUpsert {
+	u.Set(secondary.FieldSteamID, v)
+	return u
+}
+
+// UpdateSteamID sets the "steam_id" field to the value that was provided on create.
+func (u *SecondaryUpsert) UpdateSteamID() *SecondaryUpsert {
+	u.SetExcluded(secondary.FieldSteamID)
+	return u
+}
+
+// SetAddress sets the "address" field.
+func (u *SecondaryUpsert) SetAddress(v string) *SecondaryUpsert {
+	u.Set(secondary.FieldAddress, v)
+	return u
+}
+
+// UpdateAddress sets the "address" field to the value that was provided on create.
+func (u *SecondaryUpsert) UpdateAddress() *SecondaryUpsert {
+	u.SetExcluded(secondary.FieldAddress)
+	return u
+}
+
+// SetPort sets the "port" field.
+func (u *SecondaryUpsert) SetPort(v int) *SecondaryUpsert {
+	u.Set(secondary.FieldPort, v)
+	return u
+}
+
+// UpdatePort sets the "port" field to the value that was provided on create.
+func (u *SecondaryUpsert) UpdatePort() *SecondaryUpsert {
+	u.SetExcluded(secondary.FieldPort)
+	return u
+}
+
+// AddPort adds v to the "port" field.
+func (u *SecondaryUpsert) AddPort(v int) *SecondaryUpsert {
+	u.Add(secondary.FieldPort, v)
+	return u
+}
+
+// SetOwnerID sets the "owner_id" field.
+func (u *SecondaryUpsert) SetOwnerID(v int) *SecondaryUpsert {
+	u.Set(secondary.FieldOwnerID, v)
+	return u
+}
+
+// UpdateOwnerID sets the "owner_id" field to the value that was provided on create.
+func (u *SecondaryUpsert) UpdateOwnerID() *SecondaryUpsert {
+	u.SetExcluded(secondary.FieldOwnerID)
+	return u
+}
+
+// UpdateNewValues updates the mutable fields using the new values that were set on create.
+// Using this option is equivalent to using:
+//
+//	client.Secondary.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//		).
+//		Exec(ctx)
+func (u *SecondaryUpsertOne) UpdateNewValues() *SecondaryUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.Secondary.Create().
+//	    OnConflict(sql.ResolveWithIgnore()).
+//	    Exec(ctx)
+func (u *SecondaryUpsertOne) Ignore() *SecondaryUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *SecondaryUpsertOne) DoNothing() *SecondaryUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the SecondaryCreate.OnConflict
+// documentation for more info.
+func (u *SecondaryUpsertOne) Update(set func(*SecondaryUpsert)) *SecondaryUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&SecondaryUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetSid sets the "sid" field.
+func (u *SecondaryUpsertOne) SetSid(v string) *SecondaryUpsertOne {
+	return u.Update(func(s *SecondaryUpsert) {
+		s.SetSid(v)
+	})
+}
+
+// UpdateSid sets the "sid" field to the value that was provided on create.
+func (u *SecondaryUpsertOne) UpdateSid() *SecondaryUpsertOne {
+	return u.Update(func(s *SecondaryUpsert) {
+		s.UpdateSid()
+	})
+}
+
+// SetSteamID sets the "steam_id" field.
+func (u *SecondaryUpsertOne) SetSteamID(v string) *SecondaryUpsertOne {
+	return u.Update(func(s *SecondaryUpsert) {
+		s.SetSteamID(v)
+	})
+}
+
+// UpdateSteamID sets the "steam_id" field to the value that was provided on create.
+func (u *SecondaryUpsertOne) UpdateSteamID() *SecondaryUpsertOne {
+	return u.Update(func(s *SecondaryUpsert) {
+		s.UpdateSteamID()
+	})
+}
+
+// SetAddress sets the "address" field.
+func (u *SecondaryUpsertOne) SetAddress(v string) *SecondaryUpsertOne {
+	return u.Update(func(s *SecondaryUpsert) {
+		s.SetAddress(v)
+	})
+}
+
+// UpdateAddress sets the "address" field to the value that was provided on create.
+func (u *SecondaryUpsertOne) UpdateAddress() *SecondaryUpsertOne {
+	return u.Update(func(s *SecondaryUpsert) {
+		s.UpdateAddress()
+	})
+}
+
+// SetPort sets the "port" field.
+func (u *SecondaryUpsertOne) SetPort(v int) *SecondaryUpsertOne {
+	return u.Update(func(s *SecondaryUpsert) {
+		s.SetPort(v)
+	})
+}
+
+// AddPort adds v to the "port" field.
+func (u *SecondaryUpsertOne) AddPort(v int) *SecondaryUpsertOne {
+	return u.Update(func(s *SecondaryUpsert) {
+		s.AddPort(v)
+	})
+}
+
+// UpdatePort sets the "port" field to the value that was provided on create.
+func (u *SecondaryUpsertOne) UpdatePort() *SecondaryUpsertOne {
+	return u.Update(func(s *SecondaryUpsert) {
+		s.UpdatePort()
+	})
+}
+
+// SetOwnerID sets the "owner_id" field.
+func (u *SecondaryUpsertOne) SetOwnerID(v int) *SecondaryUpsertOne {
+	return u.Update(func(s *SecondaryUpsert) {
+		s.SetOwnerID(v)
+	})
+}
+
+// UpdateOwnerID sets the "owner_id" field to the value that was provided on create.
+func (u *SecondaryUpsertOne) UpdateOwnerID() *SecondaryUpsertOne {
+	return u.Update(func(s *SecondaryUpsert) {
+		s.UpdateOwnerID()
+	})
+}
+
+// Exec executes the query.
+func (u *SecondaryUpsertOne) Exec(ctx context.Context) error {
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for SecondaryCreate.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *SecondaryUpsertOne) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// Exec executes the UPSERT query and returns the inserted/updated ID.
+func (u *SecondaryUpsertOne) ID(ctx context.Context) (id int, err error) {
+	node, err := u.create.Save(ctx)
+	if err != nil {
+		return id, err
+	}
+	return node.ID, nil
+}
+
+// IDX is like ID, but panics if an error occurs.
+func (u *SecondaryUpsertOne) IDX(ctx context.Context) int {
+	id, err := u.ID(ctx)
+	if err != nil {
+		panic(err)
+	}
+	return id
+}
+
 // SecondaryCreateBulk is the builder for creating many Secondary entities in bulk.
 type SecondaryCreateBulk struct {
 	config
 	err      error
 	builders []*SecondaryCreate
+	conflict []sql.ConflictOption
 }
 
 // Save creates the Secondary entities in the database.
@@ -208,6 +477,7 @@ func (scb *SecondaryCreateBulk) Save(ctx context.Context) ([]*Secondary, error) 
 					_, err = mutators[i+1].Mutate(root, scb.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
+					spec.OnConflict = scb.conflict
 					// Invoke the actual operation on the latest mutation in the chain.
 					if err = sqlgraph.BatchCreate(ctx, scb.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
@@ -258,6 +528,187 @@ func (scb *SecondaryCreateBulk) Exec(ctx context.Context) error {
 // ExecX is like Exec, but panics if an error occurs.
 func (scb *SecondaryCreateBulk) ExecX(ctx context.Context) {
 	if err := scb.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.Secondary.CreateBulk(builders...).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.SecondaryUpsert) {
+//			SetSid(v+v).
+//		}).
+//		Exec(ctx)
+func (scb *SecondaryCreateBulk) OnConflict(opts ...sql.ConflictOption) *SecondaryUpsertBulk {
+	scb.conflict = opts
+	return &SecondaryUpsertBulk{
+		create: scb,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.Secondary.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (scb *SecondaryCreateBulk) OnConflictColumns(columns ...string) *SecondaryUpsertBulk {
+	scb.conflict = append(scb.conflict, sql.ConflictColumns(columns...))
+	return &SecondaryUpsertBulk{
+		create: scb,
+	}
+}
+
+// SecondaryUpsertBulk is the builder for "upsert"-ing
+// a bulk of Secondary nodes.
+type SecondaryUpsertBulk struct {
+	create *SecondaryCreateBulk
+}
+
+// UpdateNewValues updates the mutable fields using the new values that
+// were set on create. Using this option is equivalent to using:
+//
+//	client.Secondary.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//		).
+//		Exec(ctx)
+func (u *SecondaryUpsertBulk) UpdateNewValues() *SecondaryUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.Secondary.Create().
+//		OnConflict(sql.ResolveWithIgnore()).
+//		Exec(ctx)
+func (u *SecondaryUpsertBulk) Ignore() *SecondaryUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *SecondaryUpsertBulk) DoNothing() *SecondaryUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the SecondaryCreateBulk.OnConflict
+// documentation for more info.
+func (u *SecondaryUpsertBulk) Update(set func(*SecondaryUpsert)) *SecondaryUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&SecondaryUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetSid sets the "sid" field.
+func (u *SecondaryUpsertBulk) SetSid(v string) *SecondaryUpsertBulk {
+	return u.Update(func(s *SecondaryUpsert) {
+		s.SetSid(v)
+	})
+}
+
+// UpdateSid sets the "sid" field to the value that was provided on create.
+func (u *SecondaryUpsertBulk) UpdateSid() *SecondaryUpsertBulk {
+	return u.Update(func(s *SecondaryUpsert) {
+		s.UpdateSid()
+	})
+}
+
+// SetSteamID sets the "steam_id" field.
+func (u *SecondaryUpsertBulk) SetSteamID(v string) *SecondaryUpsertBulk {
+	return u.Update(func(s *SecondaryUpsert) {
+		s.SetSteamID(v)
+	})
+}
+
+// UpdateSteamID sets the "steam_id" field to the value that was provided on create.
+func (u *SecondaryUpsertBulk) UpdateSteamID() *SecondaryUpsertBulk {
+	return u.Update(func(s *SecondaryUpsert) {
+		s.UpdateSteamID()
+	})
+}
+
+// SetAddress sets the "address" field.
+func (u *SecondaryUpsertBulk) SetAddress(v string) *SecondaryUpsertBulk {
+	return u.Update(func(s *SecondaryUpsert) {
+		s.SetAddress(v)
+	})
+}
+
+// UpdateAddress sets the "address" field to the value that was provided on create.
+func (u *SecondaryUpsertBulk) UpdateAddress() *SecondaryUpsertBulk {
+	return u.Update(func(s *SecondaryUpsert) {
+		s.UpdateAddress()
+	})
+}
+
+// SetPort sets the "port" field.
+func (u *SecondaryUpsertBulk) SetPort(v int) *SecondaryUpsertBulk {
+	return u.Update(func(s *SecondaryUpsert) {
+		s.SetPort(v)
+	})
+}
+
+// AddPort adds v to the "port" field.
+func (u *SecondaryUpsertBulk) AddPort(v int) *SecondaryUpsertBulk {
+	return u.Update(func(s *SecondaryUpsert) {
+		s.AddPort(v)
+	})
+}
+
+// UpdatePort sets the "port" field to the value that was provided on create.
+func (u *SecondaryUpsertBulk) UpdatePort() *SecondaryUpsertBulk {
+	return u.Update(func(s *SecondaryUpsert) {
+		s.UpdatePort()
+	})
+}
+
+// SetOwnerID sets the "owner_id" field.
+func (u *SecondaryUpsertBulk) SetOwnerID(v int) *SecondaryUpsertBulk {
+	return u.Update(func(s *SecondaryUpsert) {
+		s.SetOwnerID(v)
+	})
+}
+
+// UpdateOwnerID sets the "owner_id" field to the value that was provided on create.
+func (u *SecondaryUpsertBulk) UpdateOwnerID() *SecondaryUpsertBulk {
+	return u.Update(func(s *SecondaryUpsert) {
+		s.UpdateOwnerID()
+	})
+}
+
+// Exec executes the query.
+func (u *SecondaryUpsertBulk) Exec(ctx context.Context) error {
+	if u.create.err != nil {
+		return u.create.err
+	}
+	for i, b := range u.create.builders {
+		if len(b.conflict) != 0 {
+			return fmt.Errorf("ent: OnConflict was set for builder %d. Set it on the SecondaryCreateBulk instead", i)
+		}
+	}
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for SecondaryCreateBulk.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *SecondaryUpsertBulk) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

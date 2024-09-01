@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 
+	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/dstgo/lobby/server/data/ent/secondary"
@@ -19,6 +20,7 @@ type ServerCreate struct {
 	config
 	mutation *ServerMutation
 	hooks    []Hook
+	conflict []sql.ConflictOption
 }
 
 // SetGUID sets the "guid" field.
@@ -426,6 +428,7 @@ func (sc *ServerCreate) createSpec() (*Server, *sqlgraph.CreateSpec) {
 		_node = &Server{config: sc.config}
 		_spec = sqlgraph.NewCreateSpec(server.Table, sqlgraph.NewFieldSpec(server.FieldID, field.TypeInt))
 	)
+	_spec.OnConflict = sc.conflict
 	if value, ok := sc.mutation.GUID(); ok {
 		_spec.SetField(server.FieldGUID, field.TypeString, value)
 		_node.GUID = value
@@ -601,11 +604,1122 @@ func (sc *ServerCreate) createSpec() (*Server, *sqlgraph.CreateSpec) {
 	return _node, _spec
 }
 
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.Server.Create().
+//		SetGUID(v).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.ServerUpsert) {
+//			SetGUID(v+v).
+//		}).
+//		Exec(ctx)
+func (sc *ServerCreate) OnConflict(opts ...sql.ConflictOption) *ServerUpsertOne {
+	sc.conflict = opts
+	return &ServerUpsertOne{
+		create: sc,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.Server.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (sc *ServerCreate) OnConflictColumns(columns ...string) *ServerUpsertOne {
+	sc.conflict = append(sc.conflict, sql.ConflictColumns(columns...))
+	return &ServerUpsertOne{
+		create: sc,
+	}
+}
+
+type (
+	// ServerUpsertOne is the builder for "upsert"-ing
+	//  one Server node.
+	ServerUpsertOne struct {
+		create *ServerCreate
+	}
+
+	// ServerUpsert is the "OnConflict" setter.
+	ServerUpsert struct {
+		*sql.UpdateSet
+	}
+)
+
+// SetGUID sets the "guid" field.
+func (u *ServerUpsert) SetGUID(v string) *ServerUpsert {
+	u.Set(server.FieldGUID, v)
+	return u
+}
+
+// UpdateGUID sets the "guid" field to the value that was provided on create.
+func (u *ServerUpsert) UpdateGUID() *ServerUpsert {
+	u.SetExcluded(server.FieldGUID)
+	return u
+}
+
+// SetRowID sets the "row_id" field.
+func (u *ServerUpsert) SetRowID(v string) *ServerUpsert {
+	u.Set(server.FieldRowID, v)
+	return u
+}
+
+// UpdateRowID sets the "row_id" field to the value that was provided on create.
+func (u *ServerUpsert) UpdateRowID() *ServerUpsert {
+	u.SetExcluded(server.FieldRowID)
+	return u
+}
+
+// SetSteamID sets the "steam_id" field.
+func (u *ServerUpsert) SetSteamID(v string) *ServerUpsert {
+	u.Set(server.FieldSteamID, v)
+	return u
+}
+
+// UpdateSteamID sets the "steam_id" field to the value that was provided on create.
+func (u *ServerUpsert) UpdateSteamID() *ServerUpsert {
+	u.SetExcluded(server.FieldSteamID)
+	return u
+}
+
+// SetSteamClanID sets the "steam_clan_id" field.
+func (u *ServerUpsert) SetSteamClanID(v string) *ServerUpsert {
+	u.Set(server.FieldSteamClanID, v)
+	return u
+}
+
+// UpdateSteamClanID sets the "steam_clan_id" field to the value that was provided on create.
+func (u *ServerUpsert) UpdateSteamClanID() *ServerUpsert {
+	u.SetExcluded(server.FieldSteamClanID)
+	return u
+}
+
+// SetOwnerID sets the "owner_id" field.
+func (u *ServerUpsert) SetOwnerID(v string) *ServerUpsert {
+	u.Set(server.FieldOwnerID, v)
+	return u
+}
+
+// UpdateOwnerID sets the "owner_id" field to the value that was provided on create.
+func (u *ServerUpsert) UpdateOwnerID() *ServerUpsert {
+	u.SetExcluded(server.FieldOwnerID)
+	return u
+}
+
+// SetSteamRoom sets the "steam_room" field.
+func (u *ServerUpsert) SetSteamRoom(v string) *ServerUpsert {
+	u.Set(server.FieldSteamRoom, v)
+	return u
+}
+
+// UpdateSteamRoom sets the "steam_room" field to the value that was provided on create.
+func (u *ServerUpsert) UpdateSteamRoom() *ServerUpsert {
+	u.SetExcluded(server.FieldSteamRoom)
+	return u
+}
+
+// SetSession sets the "session" field.
+func (u *ServerUpsert) SetSession(v string) *ServerUpsert {
+	u.Set(server.FieldSession, v)
+	return u
+}
+
+// UpdateSession sets the "session" field to the value that was provided on create.
+func (u *ServerUpsert) UpdateSession() *ServerUpsert {
+	u.SetExcluded(server.FieldSession)
+	return u
+}
+
+// SetAddress sets the "address" field.
+func (u *ServerUpsert) SetAddress(v string) *ServerUpsert {
+	u.Set(server.FieldAddress, v)
+	return u
+}
+
+// UpdateAddress sets the "address" field to the value that was provided on create.
+func (u *ServerUpsert) UpdateAddress() *ServerUpsert {
+	u.SetExcluded(server.FieldAddress)
+	return u
+}
+
+// SetPort sets the "port" field.
+func (u *ServerUpsert) SetPort(v int) *ServerUpsert {
+	u.Set(server.FieldPort, v)
+	return u
+}
+
+// UpdatePort sets the "port" field to the value that was provided on create.
+func (u *ServerUpsert) UpdatePort() *ServerUpsert {
+	u.SetExcluded(server.FieldPort)
+	return u
+}
+
+// AddPort adds v to the "port" field.
+func (u *ServerUpsert) AddPort(v int) *ServerUpsert {
+	u.Add(server.FieldPort, v)
+	return u
+}
+
+// SetHost sets the "host" field.
+func (u *ServerUpsert) SetHost(v string) *ServerUpsert {
+	u.Set(server.FieldHost, v)
+	return u
+}
+
+// UpdateHost sets the "host" field to the value that was provided on create.
+func (u *ServerUpsert) UpdateHost() *ServerUpsert {
+	u.SetExcluded(server.FieldHost)
+	return u
+}
+
+// SetPlatform sets the "platform" field.
+func (u *ServerUpsert) SetPlatform(v string) *ServerUpsert {
+	u.Set(server.FieldPlatform, v)
+	return u
+}
+
+// UpdatePlatform sets the "platform" field to the value that was provided on create.
+func (u *ServerUpsert) UpdatePlatform() *ServerUpsert {
+	u.SetExcluded(server.FieldPlatform)
+	return u
+}
+
+// SetClanOnly sets the "clan_only" field.
+func (u *ServerUpsert) SetClanOnly(v bool) *ServerUpsert {
+	u.Set(server.FieldClanOnly, v)
+	return u
+}
+
+// UpdateClanOnly sets the "clan_only" field to the value that was provided on create.
+func (u *ServerUpsert) UpdateClanOnly() *ServerUpsert {
+	u.SetExcluded(server.FieldClanOnly)
+	return u
+}
+
+// SetLanOnly sets the "lan_only" field.
+func (u *ServerUpsert) SetLanOnly(v bool) *ServerUpsert {
+	u.Set(server.FieldLanOnly, v)
+	return u
+}
+
+// UpdateLanOnly sets the "lan_only" field to the value that was provided on create.
+func (u *ServerUpsert) UpdateLanOnly() *ServerUpsert {
+	u.SetExcluded(server.FieldLanOnly)
+	return u
+}
+
+// SetName sets the "name" field.
+func (u *ServerUpsert) SetName(v string) *ServerUpsert {
+	u.Set(server.FieldName, v)
+	return u
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *ServerUpsert) UpdateName() *ServerUpsert {
+	u.SetExcluded(server.FieldName)
+	return u
+}
+
+// SetGameMode sets the "game_mode" field.
+func (u *ServerUpsert) SetGameMode(v string) *ServerUpsert {
+	u.Set(server.FieldGameMode, v)
+	return u
+}
+
+// UpdateGameMode sets the "game_mode" field to the value that was provided on create.
+func (u *ServerUpsert) UpdateGameMode() *ServerUpsert {
+	u.SetExcluded(server.FieldGameMode)
+	return u
+}
+
+// SetIntent sets the "intent" field.
+func (u *ServerUpsert) SetIntent(v string) *ServerUpsert {
+	u.Set(server.FieldIntent, v)
+	return u
+}
+
+// UpdateIntent sets the "intent" field to the value that was provided on create.
+func (u *ServerUpsert) UpdateIntent() *ServerUpsert {
+	u.SetExcluded(server.FieldIntent)
+	return u
+}
+
+// SetSeason sets the "season" field.
+func (u *ServerUpsert) SetSeason(v string) *ServerUpsert {
+	u.Set(server.FieldSeason, v)
+	return u
+}
+
+// UpdateSeason sets the "season" field to the value that was provided on create.
+func (u *ServerUpsert) UpdateSeason() *ServerUpsert {
+	u.SetExcluded(server.FieldSeason)
+	return u
+}
+
+// SetVersion sets the "version" field.
+func (u *ServerUpsert) SetVersion(v int) *ServerUpsert {
+	u.Set(server.FieldVersion, v)
+	return u
+}
+
+// UpdateVersion sets the "version" field to the value that was provided on create.
+func (u *ServerUpsert) UpdateVersion() *ServerUpsert {
+	u.SetExcluded(server.FieldVersion)
+	return u
+}
+
+// AddVersion adds v to the "version" field.
+func (u *ServerUpsert) AddVersion(v int) *ServerUpsert {
+	u.Add(server.FieldVersion, v)
+	return u
+}
+
+// SetMaxOnline sets the "max_online" field.
+func (u *ServerUpsert) SetMaxOnline(v int) *ServerUpsert {
+	u.Set(server.FieldMaxOnline, v)
+	return u
+}
+
+// UpdateMaxOnline sets the "max_online" field to the value that was provided on create.
+func (u *ServerUpsert) UpdateMaxOnline() *ServerUpsert {
+	u.SetExcluded(server.FieldMaxOnline)
+	return u
+}
+
+// AddMaxOnline adds v to the "max_online" field.
+func (u *ServerUpsert) AddMaxOnline(v int) *ServerUpsert {
+	u.Add(server.FieldMaxOnline, v)
+	return u
+}
+
+// SetOnline sets the "online" field.
+func (u *ServerUpsert) SetOnline(v int) *ServerUpsert {
+	u.Set(server.FieldOnline, v)
+	return u
+}
+
+// UpdateOnline sets the "online" field to the value that was provided on create.
+func (u *ServerUpsert) UpdateOnline() *ServerUpsert {
+	u.SetExcluded(server.FieldOnline)
+	return u
+}
+
+// AddOnline adds v to the "online" field.
+func (u *ServerUpsert) AddOnline(v int) *ServerUpsert {
+	u.Add(server.FieldOnline, v)
+	return u
+}
+
+// SetLevel sets the "level" field.
+func (u *ServerUpsert) SetLevel(v int) *ServerUpsert {
+	u.Set(server.FieldLevel, v)
+	return u
+}
+
+// UpdateLevel sets the "level" field to the value that was provided on create.
+func (u *ServerUpsert) UpdateLevel() *ServerUpsert {
+	u.SetExcluded(server.FieldLevel)
+	return u
+}
+
+// AddLevel adds v to the "level" field.
+func (u *ServerUpsert) AddLevel(v int) *ServerUpsert {
+	u.Add(server.FieldLevel, v)
+	return u
+}
+
+// SetMod sets the "mod" field.
+func (u *ServerUpsert) SetMod(v bool) *ServerUpsert {
+	u.Set(server.FieldMod, v)
+	return u
+}
+
+// UpdateMod sets the "mod" field to the value that was provided on create.
+func (u *ServerUpsert) UpdateMod() *ServerUpsert {
+	u.SetExcluded(server.FieldMod)
+	return u
+}
+
+// SetPvp sets the "pvp" field.
+func (u *ServerUpsert) SetPvp(v bool) *ServerUpsert {
+	u.Set(server.FieldPvp, v)
+	return u
+}
+
+// UpdatePvp sets the "pvp" field to the value that was provided on create.
+func (u *ServerUpsert) UpdatePvp() *ServerUpsert {
+	u.SetExcluded(server.FieldPvp)
+	return u
+}
+
+// SetPassword sets the "password" field.
+func (u *ServerUpsert) SetPassword(v bool) *ServerUpsert {
+	u.Set(server.FieldPassword, v)
+	return u
+}
+
+// UpdatePassword sets the "password" field to the value that was provided on create.
+func (u *ServerUpsert) UpdatePassword() *ServerUpsert {
+	u.SetExcluded(server.FieldPassword)
+	return u
+}
+
+// SetDedicated sets the "dedicated" field.
+func (u *ServerUpsert) SetDedicated(v bool) *ServerUpsert {
+	u.Set(server.FieldDedicated, v)
+	return u
+}
+
+// UpdateDedicated sets the "dedicated" field to the value that was provided on create.
+func (u *ServerUpsert) UpdateDedicated() *ServerUpsert {
+	u.SetExcluded(server.FieldDedicated)
+	return u
+}
+
+// SetClientHosted sets the "client_hosted" field.
+func (u *ServerUpsert) SetClientHosted(v bool) *ServerUpsert {
+	u.Set(server.FieldClientHosted, v)
+	return u
+}
+
+// UpdateClientHosted sets the "client_hosted" field to the value that was provided on create.
+func (u *ServerUpsert) UpdateClientHosted() *ServerUpsert {
+	u.SetExcluded(server.FieldClientHosted)
+	return u
+}
+
+// SetAllowNewPlayers sets the "allow_new_players" field.
+func (u *ServerUpsert) SetAllowNewPlayers(v bool) *ServerUpsert {
+	u.Set(server.FieldAllowNewPlayers, v)
+	return u
+}
+
+// UpdateAllowNewPlayers sets the "allow_new_players" field to the value that was provided on create.
+func (u *ServerUpsert) UpdateAllowNewPlayers() *ServerUpsert {
+	u.SetExcluded(server.FieldAllowNewPlayers)
+	return u
+}
+
+// SetServerPaused sets the "server_paused" field.
+func (u *ServerUpsert) SetServerPaused(v bool) *ServerUpsert {
+	u.Set(server.FieldServerPaused, v)
+	return u
+}
+
+// UpdateServerPaused sets the "server_paused" field to the value that was provided on create.
+func (u *ServerUpsert) UpdateServerPaused() *ServerUpsert {
+	u.SetExcluded(server.FieldServerPaused)
+	return u
+}
+
+// SetFriendOnly sets the "friend_only" field.
+func (u *ServerUpsert) SetFriendOnly(v bool) *ServerUpsert {
+	u.Set(server.FieldFriendOnly, v)
+	return u
+}
+
+// UpdateFriendOnly sets the "friend_only" field to the value that was provided on create.
+func (u *ServerUpsert) UpdateFriendOnly() *ServerUpsert {
+	u.SetExcluded(server.FieldFriendOnly)
+	return u
+}
+
+// SetQueryVersion sets the "query_version" field.
+func (u *ServerUpsert) SetQueryVersion(v int64) *ServerUpsert {
+	u.Set(server.FieldQueryVersion, v)
+	return u
+}
+
+// UpdateQueryVersion sets the "query_version" field to the value that was provided on create.
+func (u *ServerUpsert) UpdateQueryVersion() *ServerUpsert {
+	u.SetExcluded(server.FieldQueryVersion)
+	return u
+}
+
+// AddQueryVersion adds v to the "query_version" field.
+func (u *ServerUpsert) AddQueryVersion(v int64) *ServerUpsert {
+	u.Add(server.FieldQueryVersion, v)
+	return u
+}
+
+// SetCountry sets the "country" field.
+func (u *ServerUpsert) SetCountry(v string) *ServerUpsert {
+	u.Set(server.FieldCountry, v)
+	return u
+}
+
+// UpdateCountry sets the "country" field to the value that was provided on create.
+func (u *ServerUpsert) UpdateCountry() *ServerUpsert {
+	u.SetExcluded(server.FieldCountry)
+	return u
+}
+
+// SetContinent sets the "continent" field.
+func (u *ServerUpsert) SetContinent(v string) *ServerUpsert {
+	u.Set(server.FieldContinent, v)
+	return u
+}
+
+// UpdateContinent sets the "continent" field to the value that was provided on create.
+func (u *ServerUpsert) UpdateContinent() *ServerUpsert {
+	u.SetExcluded(server.FieldContinent)
+	return u
+}
+
+// SetCountryCode sets the "country_code" field.
+func (u *ServerUpsert) SetCountryCode(v string) *ServerUpsert {
+	u.Set(server.FieldCountryCode, v)
+	return u
+}
+
+// UpdateCountryCode sets the "country_code" field to the value that was provided on create.
+func (u *ServerUpsert) UpdateCountryCode() *ServerUpsert {
+	u.SetExcluded(server.FieldCountryCode)
+	return u
+}
+
+// SetCity sets the "city" field.
+func (u *ServerUpsert) SetCity(v string) *ServerUpsert {
+	u.Set(server.FieldCity, v)
+	return u
+}
+
+// UpdateCity sets the "city" field to the value that was provided on create.
+func (u *ServerUpsert) UpdateCity() *ServerUpsert {
+	u.SetExcluded(server.FieldCity)
+	return u
+}
+
+// SetRegion sets the "region" field.
+func (u *ServerUpsert) SetRegion(v string) *ServerUpsert {
+	u.Set(server.FieldRegion, v)
+	return u
+}
+
+// UpdateRegion sets the "region" field to the value that was provided on create.
+func (u *ServerUpsert) UpdateRegion() *ServerUpsert {
+	u.SetExcluded(server.FieldRegion)
+	return u
+}
+
+// UpdateNewValues updates the mutable fields using the new values that were set on create.
+// Using this option is equivalent to using:
+//
+//	client.Server.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//		).
+//		Exec(ctx)
+func (u *ServerUpsertOne) UpdateNewValues() *ServerUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.Server.Create().
+//	    OnConflict(sql.ResolveWithIgnore()).
+//	    Exec(ctx)
+func (u *ServerUpsertOne) Ignore() *ServerUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *ServerUpsertOne) DoNothing() *ServerUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the ServerCreate.OnConflict
+// documentation for more info.
+func (u *ServerUpsertOne) Update(set func(*ServerUpsert)) *ServerUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&ServerUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetGUID sets the "guid" field.
+func (u *ServerUpsertOne) SetGUID(v string) *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetGUID(v)
+	})
+}
+
+// UpdateGUID sets the "guid" field to the value that was provided on create.
+func (u *ServerUpsertOne) UpdateGUID() *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateGUID()
+	})
+}
+
+// SetRowID sets the "row_id" field.
+func (u *ServerUpsertOne) SetRowID(v string) *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetRowID(v)
+	})
+}
+
+// UpdateRowID sets the "row_id" field to the value that was provided on create.
+func (u *ServerUpsertOne) UpdateRowID() *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateRowID()
+	})
+}
+
+// SetSteamID sets the "steam_id" field.
+func (u *ServerUpsertOne) SetSteamID(v string) *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetSteamID(v)
+	})
+}
+
+// UpdateSteamID sets the "steam_id" field to the value that was provided on create.
+func (u *ServerUpsertOne) UpdateSteamID() *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateSteamID()
+	})
+}
+
+// SetSteamClanID sets the "steam_clan_id" field.
+func (u *ServerUpsertOne) SetSteamClanID(v string) *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetSteamClanID(v)
+	})
+}
+
+// UpdateSteamClanID sets the "steam_clan_id" field to the value that was provided on create.
+func (u *ServerUpsertOne) UpdateSteamClanID() *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateSteamClanID()
+	})
+}
+
+// SetOwnerID sets the "owner_id" field.
+func (u *ServerUpsertOne) SetOwnerID(v string) *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetOwnerID(v)
+	})
+}
+
+// UpdateOwnerID sets the "owner_id" field to the value that was provided on create.
+func (u *ServerUpsertOne) UpdateOwnerID() *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateOwnerID()
+	})
+}
+
+// SetSteamRoom sets the "steam_room" field.
+func (u *ServerUpsertOne) SetSteamRoom(v string) *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetSteamRoom(v)
+	})
+}
+
+// UpdateSteamRoom sets the "steam_room" field to the value that was provided on create.
+func (u *ServerUpsertOne) UpdateSteamRoom() *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateSteamRoom()
+	})
+}
+
+// SetSession sets the "session" field.
+func (u *ServerUpsertOne) SetSession(v string) *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetSession(v)
+	})
+}
+
+// UpdateSession sets the "session" field to the value that was provided on create.
+func (u *ServerUpsertOne) UpdateSession() *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateSession()
+	})
+}
+
+// SetAddress sets the "address" field.
+func (u *ServerUpsertOne) SetAddress(v string) *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetAddress(v)
+	})
+}
+
+// UpdateAddress sets the "address" field to the value that was provided on create.
+func (u *ServerUpsertOne) UpdateAddress() *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateAddress()
+	})
+}
+
+// SetPort sets the "port" field.
+func (u *ServerUpsertOne) SetPort(v int) *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetPort(v)
+	})
+}
+
+// AddPort adds v to the "port" field.
+func (u *ServerUpsertOne) AddPort(v int) *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.AddPort(v)
+	})
+}
+
+// UpdatePort sets the "port" field to the value that was provided on create.
+func (u *ServerUpsertOne) UpdatePort() *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdatePort()
+	})
+}
+
+// SetHost sets the "host" field.
+func (u *ServerUpsertOne) SetHost(v string) *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetHost(v)
+	})
+}
+
+// UpdateHost sets the "host" field to the value that was provided on create.
+func (u *ServerUpsertOne) UpdateHost() *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateHost()
+	})
+}
+
+// SetPlatform sets the "platform" field.
+func (u *ServerUpsertOne) SetPlatform(v string) *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetPlatform(v)
+	})
+}
+
+// UpdatePlatform sets the "platform" field to the value that was provided on create.
+func (u *ServerUpsertOne) UpdatePlatform() *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdatePlatform()
+	})
+}
+
+// SetClanOnly sets the "clan_only" field.
+func (u *ServerUpsertOne) SetClanOnly(v bool) *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetClanOnly(v)
+	})
+}
+
+// UpdateClanOnly sets the "clan_only" field to the value that was provided on create.
+func (u *ServerUpsertOne) UpdateClanOnly() *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateClanOnly()
+	})
+}
+
+// SetLanOnly sets the "lan_only" field.
+func (u *ServerUpsertOne) SetLanOnly(v bool) *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetLanOnly(v)
+	})
+}
+
+// UpdateLanOnly sets the "lan_only" field to the value that was provided on create.
+func (u *ServerUpsertOne) UpdateLanOnly() *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateLanOnly()
+	})
+}
+
+// SetName sets the "name" field.
+func (u *ServerUpsertOne) SetName(v string) *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetName(v)
+	})
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *ServerUpsertOne) UpdateName() *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateName()
+	})
+}
+
+// SetGameMode sets the "game_mode" field.
+func (u *ServerUpsertOne) SetGameMode(v string) *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetGameMode(v)
+	})
+}
+
+// UpdateGameMode sets the "game_mode" field to the value that was provided on create.
+func (u *ServerUpsertOne) UpdateGameMode() *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateGameMode()
+	})
+}
+
+// SetIntent sets the "intent" field.
+func (u *ServerUpsertOne) SetIntent(v string) *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetIntent(v)
+	})
+}
+
+// UpdateIntent sets the "intent" field to the value that was provided on create.
+func (u *ServerUpsertOne) UpdateIntent() *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateIntent()
+	})
+}
+
+// SetSeason sets the "season" field.
+func (u *ServerUpsertOne) SetSeason(v string) *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetSeason(v)
+	})
+}
+
+// UpdateSeason sets the "season" field to the value that was provided on create.
+func (u *ServerUpsertOne) UpdateSeason() *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateSeason()
+	})
+}
+
+// SetVersion sets the "version" field.
+func (u *ServerUpsertOne) SetVersion(v int) *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetVersion(v)
+	})
+}
+
+// AddVersion adds v to the "version" field.
+func (u *ServerUpsertOne) AddVersion(v int) *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.AddVersion(v)
+	})
+}
+
+// UpdateVersion sets the "version" field to the value that was provided on create.
+func (u *ServerUpsertOne) UpdateVersion() *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateVersion()
+	})
+}
+
+// SetMaxOnline sets the "max_online" field.
+func (u *ServerUpsertOne) SetMaxOnline(v int) *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetMaxOnline(v)
+	})
+}
+
+// AddMaxOnline adds v to the "max_online" field.
+func (u *ServerUpsertOne) AddMaxOnline(v int) *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.AddMaxOnline(v)
+	})
+}
+
+// UpdateMaxOnline sets the "max_online" field to the value that was provided on create.
+func (u *ServerUpsertOne) UpdateMaxOnline() *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateMaxOnline()
+	})
+}
+
+// SetOnline sets the "online" field.
+func (u *ServerUpsertOne) SetOnline(v int) *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetOnline(v)
+	})
+}
+
+// AddOnline adds v to the "online" field.
+func (u *ServerUpsertOne) AddOnline(v int) *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.AddOnline(v)
+	})
+}
+
+// UpdateOnline sets the "online" field to the value that was provided on create.
+func (u *ServerUpsertOne) UpdateOnline() *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateOnline()
+	})
+}
+
+// SetLevel sets the "level" field.
+func (u *ServerUpsertOne) SetLevel(v int) *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetLevel(v)
+	})
+}
+
+// AddLevel adds v to the "level" field.
+func (u *ServerUpsertOne) AddLevel(v int) *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.AddLevel(v)
+	})
+}
+
+// UpdateLevel sets the "level" field to the value that was provided on create.
+func (u *ServerUpsertOne) UpdateLevel() *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateLevel()
+	})
+}
+
+// SetMod sets the "mod" field.
+func (u *ServerUpsertOne) SetMod(v bool) *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetMod(v)
+	})
+}
+
+// UpdateMod sets the "mod" field to the value that was provided on create.
+func (u *ServerUpsertOne) UpdateMod() *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateMod()
+	})
+}
+
+// SetPvp sets the "pvp" field.
+func (u *ServerUpsertOne) SetPvp(v bool) *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetPvp(v)
+	})
+}
+
+// UpdatePvp sets the "pvp" field to the value that was provided on create.
+func (u *ServerUpsertOne) UpdatePvp() *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdatePvp()
+	})
+}
+
+// SetPassword sets the "password" field.
+func (u *ServerUpsertOne) SetPassword(v bool) *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetPassword(v)
+	})
+}
+
+// UpdatePassword sets the "password" field to the value that was provided on create.
+func (u *ServerUpsertOne) UpdatePassword() *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdatePassword()
+	})
+}
+
+// SetDedicated sets the "dedicated" field.
+func (u *ServerUpsertOne) SetDedicated(v bool) *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetDedicated(v)
+	})
+}
+
+// UpdateDedicated sets the "dedicated" field to the value that was provided on create.
+func (u *ServerUpsertOne) UpdateDedicated() *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateDedicated()
+	})
+}
+
+// SetClientHosted sets the "client_hosted" field.
+func (u *ServerUpsertOne) SetClientHosted(v bool) *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetClientHosted(v)
+	})
+}
+
+// UpdateClientHosted sets the "client_hosted" field to the value that was provided on create.
+func (u *ServerUpsertOne) UpdateClientHosted() *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateClientHosted()
+	})
+}
+
+// SetAllowNewPlayers sets the "allow_new_players" field.
+func (u *ServerUpsertOne) SetAllowNewPlayers(v bool) *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetAllowNewPlayers(v)
+	})
+}
+
+// UpdateAllowNewPlayers sets the "allow_new_players" field to the value that was provided on create.
+func (u *ServerUpsertOne) UpdateAllowNewPlayers() *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateAllowNewPlayers()
+	})
+}
+
+// SetServerPaused sets the "server_paused" field.
+func (u *ServerUpsertOne) SetServerPaused(v bool) *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetServerPaused(v)
+	})
+}
+
+// UpdateServerPaused sets the "server_paused" field to the value that was provided on create.
+func (u *ServerUpsertOne) UpdateServerPaused() *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateServerPaused()
+	})
+}
+
+// SetFriendOnly sets the "friend_only" field.
+func (u *ServerUpsertOne) SetFriendOnly(v bool) *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetFriendOnly(v)
+	})
+}
+
+// UpdateFriendOnly sets the "friend_only" field to the value that was provided on create.
+func (u *ServerUpsertOne) UpdateFriendOnly() *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateFriendOnly()
+	})
+}
+
+// SetQueryVersion sets the "query_version" field.
+func (u *ServerUpsertOne) SetQueryVersion(v int64) *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetQueryVersion(v)
+	})
+}
+
+// AddQueryVersion adds v to the "query_version" field.
+func (u *ServerUpsertOne) AddQueryVersion(v int64) *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.AddQueryVersion(v)
+	})
+}
+
+// UpdateQueryVersion sets the "query_version" field to the value that was provided on create.
+func (u *ServerUpsertOne) UpdateQueryVersion() *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateQueryVersion()
+	})
+}
+
+// SetCountry sets the "country" field.
+func (u *ServerUpsertOne) SetCountry(v string) *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetCountry(v)
+	})
+}
+
+// UpdateCountry sets the "country" field to the value that was provided on create.
+func (u *ServerUpsertOne) UpdateCountry() *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateCountry()
+	})
+}
+
+// SetContinent sets the "continent" field.
+func (u *ServerUpsertOne) SetContinent(v string) *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetContinent(v)
+	})
+}
+
+// UpdateContinent sets the "continent" field to the value that was provided on create.
+func (u *ServerUpsertOne) UpdateContinent() *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateContinent()
+	})
+}
+
+// SetCountryCode sets the "country_code" field.
+func (u *ServerUpsertOne) SetCountryCode(v string) *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetCountryCode(v)
+	})
+}
+
+// UpdateCountryCode sets the "country_code" field to the value that was provided on create.
+func (u *ServerUpsertOne) UpdateCountryCode() *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateCountryCode()
+	})
+}
+
+// SetCity sets the "city" field.
+func (u *ServerUpsertOne) SetCity(v string) *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetCity(v)
+	})
+}
+
+// UpdateCity sets the "city" field to the value that was provided on create.
+func (u *ServerUpsertOne) UpdateCity() *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateCity()
+	})
+}
+
+// SetRegion sets the "region" field.
+func (u *ServerUpsertOne) SetRegion(v string) *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetRegion(v)
+	})
+}
+
+// UpdateRegion sets the "region" field to the value that was provided on create.
+func (u *ServerUpsertOne) UpdateRegion() *ServerUpsertOne {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateRegion()
+	})
+}
+
+// Exec executes the query.
+func (u *ServerUpsertOne) Exec(ctx context.Context) error {
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for ServerCreate.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *ServerUpsertOne) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// Exec executes the UPSERT query and returns the inserted/updated ID.
+func (u *ServerUpsertOne) ID(ctx context.Context) (id int, err error) {
+	node, err := u.create.Save(ctx)
+	if err != nil {
+		return id, err
+	}
+	return node.ID, nil
+}
+
+// IDX is like ID, but panics if an error occurs.
+func (u *ServerUpsertOne) IDX(ctx context.Context) int {
+	id, err := u.ID(ctx)
+	if err != nil {
+		panic(err)
+	}
+	return id
+}
+
 // ServerCreateBulk is the builder for creating many Server entities in bulk.
 type ServerCreateBulk struct {
 	config
 	err      error
 	builders []*ServerCreate
+	conflict []sql.ConflictOption
 }
 
 // Save creates the Server entities in the database.
@@ -634,6 +1748,7 @@ func (scb *ServerCreateBulk) Save(ctx context.Context) ([]*Server, error) {
 					_, err = mutators[i+1].Mutate(root, scb.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
+					spec.OnConflict = scb.conflict
 					// Invoke the actual operation on the latest mutation in the chain.
 					if err = sqlgraph.BatchCreate(ctx, scb.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
@@ -684,6 +1799,642 @@ func (scb *ServerCreateBulk) Exec(ctx context.Context) error {
 // ExecX is like Exec, but panics if an error occurs.
 func (scb *ServerCreateBulk) ExecX(ctx context.Context) {
 	if err := scb.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.Server.CreateBulk(builders...).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.ServerUpsert) {
+//			SetGUID(v+v).
+//		}).
+//		Exec(ctx)
+func (scb *ServerCreateBulk) OnConflict(opts ...sql.ConflictOption) *ServerUpsertBulk {
+	scb.conflict = opts
+	return &ServerUpsertBulk{
+		create: scb,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.Server.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (scb *ServerCreateBulk) OnConflictColumns(columns ...string) *ServerUpsertBulk {
+	scb.conflict = append(scb.conflict, sql.ConflictColumns(columns...))
+	return &ServerUpsertBulk{
+		create: scb,
+	}
+}
+
+// ServerUpsertBulk is the builder for "upsert"-ing
+// a bulk of Server nodes.
+type ServerUpsertBulk struct {
+	create *ServerCreateBulk
+}
+
+// UpdateNewValues updates the mutable fields using the new values that
+// were set on create. Using this option is equivalent to using:
+//
+//	client.Server.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//		).
+//		Exec(ctx)
+func (u *ServerUpsertBulk) UpdateNewValues() *ServerUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.Server.Create().
+//		OnConflict(sql.ResolveWithIgnore()).
+//		Exec(ctx)
+func (u *ServerUpsertBulk) Ignore() *ServerUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *ServerUpsertBulk) DoNothing() *ServerUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the ServerCreateBulk.OnConflict
+// documentation for more info.
+func (u *ServerUpsertBulk) Update(set func(*ServerUpsert)) *ServerUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&ServerUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetGUID sets the "guid" field.
+func (u *ServerUpsertBulk) SetGUID(v string) *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetGUID(v)
+	})
+}
+
+// UpdateGUID sets the "guid" field to the value that was provided on create.
+func (u *ServerUpsertBulk) UpdateGUID() *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateGUID()
+	})
+}
+
+// SetRowID sets the "row_id" field.
+func (u *ServerUpsertBulk) SetRowID(v string) *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetRowID(v)
+	})
+}
+
+// UpdateRowID sets the "row_id" field to the value that was provided on create.
+func (u *ServerUpsertBulk) UpdateRowID() *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateRowID()
+	})
+}
+
+// SetSteamID sets the "steam_id" field.
+func (u *ServerUpsertBulk) SetSteamID(v string) *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetSteamID(v)
+	})
+}
+
+// UpdateSteamID sets the "steam_id" field to the value that was provided on create.
+func (u *ServerUpsertBulk) UpdateSteamID() *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateSteamID()
+	})
+}
+
+// SetSteamClanID sets the "steam_clan_id" field.
+func (u *ServerUpsertBulk) SetSteamClanID(v string) *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetSteamClanID(v)
+	})
+}
+
+// UpdateSteamClanID sets the "steam_clan_id" field to the value that was provided on create.
+func (u *ServerUpsertBulk) UpdateSteamClanID() *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateSteamClanID()
+	})
+}
+
+// SetOwnerID sets the "owner_id" field.
+func (u *ServerUpsertBulk) SetOwnerID(v string) *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetOwnerID(v)
+	})
+}
+
+// UpdateOwnerID sets the "owner_id" field to the value that was provided on create.
+func (u *ServerUpsertBulk) UpdateOwnerID() *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateOwnerID()
+	})
+}
+
+// SetSteamRoom sets the "steam_room" field.
+func (u *ServerUpsertBulk) SetSteamRoom(v string) *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetSteamRoom(v)
+	})
+}
+
+// UpdateSteamRoom sets the "steam_room" field to the value that was provided on create.
+func (u *ServerUpsertBulk) UpdateSteamRoom() *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateSteamRoom()
+	})
+}
+
+// SetSession sets the "session" field.
+func (u *ServerUpsertBulk) SetSession(v string) *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetSession(v)
+	})
+}
+
+// UpdateSession sets the "session" field to the value that was provided on create.
+func (u *ServerUpsertBulk) UpdateSession() *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateSession()
+	})
+}
+
+// SetAddress sets the "address" field.
+func (u *ServerUpsertBulk) SetAddress(v string) *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetAddress(v)
+	})
+}
+
+// UpdateAddress sets the "address" field to the value that was provided on create.
+func (u *ServerUpsertBulk) UpdateAddress() *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateAddress()
+	})
+}
+
+// SetPort sets the "port" field.
+func (u *ServerUpsertBulk) SetPort(v int) *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetPort(v)
+	})
+}
+
+// AddPort adds v to the "port" field.
+func (u *ServerUpsertBulk) AddPort(v int) *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.AddPort(v)
+	})
+}
+
+// UpdatePort sets the "port" field to the value that was provided on create.
+func (u *ServerUpsertBulk) UpdatePort() *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdatePort()
+	})
+}
+
+// SetHost sets the "host" field.
+func (u *ServerUpsertBulk) SetHost(v string) *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetHost(v)
+	})
+}
+
+// UpdateHost sets the "host" field to the value that was provided on create.
+func (u *ServerUpsertBulk) UpdateHost() *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateHost()
+	})
+}
+
+// SetPlatform sets the "platform" field.
+func (u *ServerUpsertBulk) SetPlatform(v string) *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetPlatform(v)
+	})
+}
+
+// UpdatePlatform sets the "platform" field to the value that was provided on create.
+func (u *ServerUpsertBulk) UpdatePlatform() *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdatePlatform()
+	})
+}
+
+// SetClanOnly sets the "clan_only" field.
+func (u *ServerUpsertBulk) SetClanOnly(v bool) *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetClanOnly(v)
+	})
+}
+
+// UpdateClanOnly sets the "clan_only" field to the value that was provided on create.
+func (u *ServerUpsertBulk) UpdateClanOnly() *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateClanOnly()
+	})
+}
+
+// SetLanOnly sets the "lan_only" field.
+func (u *ServerUpsertBulk) SetLanOnly(v bool) *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetLanOnly(v)
+	})
+}
+
+// UpdateLanOnly sets the "lan_only" field to the value that was provided on create.
+func (u *ServerUpsertBulk) UpdateLanOnly() *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateLanOnly()
+	})
+}
+
+// SetName sets the "name" field.
+func (u *ServerUpsertBulk) SetName(v string) *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetName(v)
+	})
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *ServerUpsertBulk) UpdateName() *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateName()
+	})
+}
+
+// SetGameMode sets the "game_mode" field.
+func (u *ServerUpsertBulk) SetGameMode(v string) *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetGameMode(v)
+	})
+}
+
+// UpdateGameMode sets the "game_mode" field to the value that was provided on create.
+func (u *ServerUpsertBulk) UpdateGameMode() *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateGameMode()
+	})
+}
+
+// SetIntent sets the "intent" field.
+func (u *ServerUpsertBulk) SetIntent(v string) *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetIntent(v)
+	})
+}
+
+// UpdateIntent sets the "intent" field to the value that was provided on create.
+func (u *ServerUpsertBulk) UpdateIntent() *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateIntent()
+	})
+}
+
+// SetSeason sets the "season" field.
+func (u *ServerUpsertBulk) SetSeason(v string) *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetSeason(v)
+	})
+}
+
+// UpdateSeason sets the "season" field to the value that was provided on create.
+func (u *ServerUpsertBulk) UpdateSeason() *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateSeason()
+	})
+}
+
+// SetVersion sets the "version" field.
+func (u *ServerUpsertBulk) SetVersion(v int) *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetVersion(v)
+	})
+}
+
+// AddVersion adds v to the "version" field.
+func (u *ServerUpsertBulk) AddVersion(v int) *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.AddVersion(v)
+	})
+}
+
+// UpdateVersion sets the "version" field to the value that was provided on create.
+func (u *ServerUpsertBulk) UpdateVersion() *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateVersion()
+	})
+}
+
+// SetMaxOnline sets the "max_online" field.
+func (u *ServerUpsertBulk) SetMaxOnline(v int) *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetMaxOnline(v)
+	})
+}
+
+// AddMaxOnline adds v to the "max_online" field.
+func (u *ServerUpsertBulk) AddMaxOnline(v int) *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.AddMaxOnline(v)
+	})
+}
+
+// UpdateMaxOnline sets the "max_online" field to the value that was provided on create.
+func (u *ServerUpsertBulk) UpdateMaxOnline() *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateMaxOnline()
+	})
+}
+
+// SetOnline sets the "online" field.
+func (u *ServerUpsertBulk) SetOnline(v int) *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetOnline(v)
+	})
+}
+
+// AddOnline adds v to the "online" field.
+func (u *ServerUpsertBulk) AddOnline(v int) *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.AddOnline(v)
+	})
+}
+
+// UpdateOnline sets the "online" field to the value that was provided on create.
+func (u *ServerUpsertBulk) UpdateOnline() *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateOnline()
+	})
+}
+
+// SetLevel sets the "level" field.
+func (u *ServerUpsertBulk) SetLevel(v int) *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetLevel(v)
+	})
+}
+
+// AddLevel adds v to the "level" field.
+func (u *ServerUpsertBulk) AddLevel(v int) *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.AddLevel(v)
+	})
+}
+
+// UpdateLevel sets the "level" field to the value that was provided on create.
+func (u *ServerUpsertBulk) UpdateLevel() *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateLevel()
+	})
+}
+
+// SetMod sets the "mod" field.
+func (u *ServerUpsertBulk) SetMod(v bool) *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetMod(v)
+	})
+}
+
+// UpdateMod sets the "mod" field to the value that was provided on create.
+func (u *ServerUpsertBulk) UpdateMod() *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateMod()
+	})
+}
+
+// SetPvp sets the "pvp" field.
+func (u *ServerUpsertBulk) SetPvp(v bool) *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetPvp(v)
+	})
+}
+
+// UpdatePvp sets the "pvp" field to the value that was provided on create.
+func (u *ServerUpsertBulk) UpdatePvp() *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdatePvp()
+	})
+}
+
+// SetPassword sets the "password" field.
+func (u *ServerUpsertBulk) SetPassword(v bool) *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetPassword(v)
+	})
+}
+
+// UpdatePassword sets the "password" field to the value that was provided on create.
+func (u *ServerUpsertBulk) UpdatePassword() *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdatePassword()
+	})
+}
+
+// SetDedicated sets the "dedicated" field.
+func (u *ServerUpsertBulk) SetDedicated(v bool) *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetDedicated(v)
+	})
+}
+
+// UpdateDedicated sets the "dedicated" field to the value that was provided on create.
+func (u *ServerUpsertBulk) UpdateDedicated() *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateDedicated()
+	})
+}
+
+// SetClientHosted sets the "client_hosted" field.
+func (u *ServerUpsertBulk) SetClientHosted(v bool) *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetClientHosted(v)
+	})
+}
+
+// UpdateClientHosted sets the "client_hosted" field to the value that was provided on create.
+func (u *ServerUpsertBulk) UpdateClientHosted() *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateClientHosted()
+	})
+}
+
+// SetAllowNewPlayers sets the "allow_new_players" field.
+func (u *ServerUpsertBulk) SetAllowNewPlayers(v bool) *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetAllowNewPlayers(v)
+	})
+}
+
+// UpdateAllowNewPlayers sets the "allow_new_players" field to the value that was provided on create.
+func (u *ServerUpsertBulk) UpdateAllowNewPlayers() *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateAllowNewPlayers()
+	})
+}
+
+// SetServerPaused sets the "server_paused" field.
+func (u *ServerUpsertBulk) SetServerPaused(v bool) *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetServerPaused(v)
+	})
+}
+
+// UpdateServerPaused sets the "server_paused" field to the value that was provided on create.
+func (u *ServerUpsertBulk) UpdateServerPaused() *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateServerPaused()
+	})
+}
+
+// SetFriendOnly sets the "friend_only" field.
+func (u *ServerUpsertBulk) SetFriendOnly(v bool) *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetFriendOnly(v)
+	})
+}
+
+// UpdateFriendOnly sets the "friend_only" field to the value that was provided on create.
+func (u *ServerUpsertBulk) UpdateFriendOnly() *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateFriendOnly()
+	})
+}
+
+// SetQueryVersion sets the "query_version" field.
+func (u *ServerUpsertBulk) SetQueryVersion(v int64) *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetQueryVersion(v)
+	})
+}
+
+// AddQueryVersion adds v to the "query_version" field.
+func (u *ServerUpsertBulk) AddQueryVersion(v int64) *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.AddQueryVersion(v)
+	})
+}
+
+// UpdateQueryVersion sets the "query_version" field to the value that was provided on create.
+func (u *ServerUpsertBulk) UpdateQueryVersion() *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateQueryVersion()
+	})
+}
+
+// SetCountry sets the "country" field.
+func (u *ServerUpsertBulk) SetCountry(v string) *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetCountry(v)
+	})
+}
+
+// UpdateCountry sets the "country" field to the value that was provided on create.
+func (u *ServerUpsertBulk) UpdateCountry() *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateCountry()
+	})
+}
+
+// SetContinent sets the "continent" field.
+func (u *ServerUpsertBulk) SetContinent(v string) *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetContinent(v)
+	})
+}
+
+// UpdateContinent sets the "continent" field to the value that was provided on create.
+func (u *ServerUpsertBulk) UpdateContinent() *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateContinent()
+	})
+}
+
+// SetCountryCode sets the "country_code" field.
+func (u *ServerUpsertBulk) SetCountryCode(v string) *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetCountryCode(v)
+	})
+}
+
+// UpdateCountryCode sets the "country_code" field to the value that was provided on create.
+func (u *ServerUpsertBulk) UpdateCountryCode() *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateCountryCode()
+	})
+}
+
+// SetCity sets the "city" field.
+func (u *ServerUpsertBulk) SetCity(v string) *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetCity(v)
+	})
+}
+
+// UpdateCity sets the "city" field to the value that was provided on create.
+func (u *ServerUpsertBulk) UpdateCity() *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateCity()
+	})
+}
+
+// SetRegion sets the "region" field.
+func (u *ServerUpsertBulk) SetRegion(v string) *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.SetRegion(v)
+	})
+}
+
+// UpdateRegion sets the "region" field to the value that was provided on create.
+func (u *ServerUpsertBulk) UpdateRegion() *ServerUpsertBulk {
+	return u.Update(func(s *ServerUpsert) {
+		s.UpdateRegion()
+	})
+}
+
+// Exec executes the query.
+func (u *ServerUpsertBulk) Exec(ctx context.Context) error {
+	if u.create.err != nil {
+		return u.create.err
+	}
+	for i, b := range u.create.builders {
+		if len(b.conflict) != 0 {
+			return fmt.Errorf("ent: OnConflict was set for builder %d. Set it on the ServerCreateBulk instead", i)
+		}
+	}
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for ServerCreateBulk.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *ServerUpsertBulk) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

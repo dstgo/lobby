@@ -25,6 +25,12 @@ func (sd *ServerDelete) Where(ps ...predicate.Server) *ServerDelete {
 	return sd
 }
 
+// Limit the number of records to be returned by this query.
+func (sd *ServerDelete) Limit(limit int) *ServerDelete {
+	sd.ctx.Limit = &limit
+	return sd
+}
+
 // Exec executes the deletion query and returns how many vertices were deleted.
 func (sd *ServerDelete) Exec(ctx context.Context) (int, error) {
 	return withHooks(ctx, sd.sqlExec, sd.mutation, sd.hooks)

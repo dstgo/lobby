@@ -18,8 +18,9 @@ import (
 // SecondaryUpdate is the builder for updating Secondary entities.
 type SecondaryUpdate struct {
 	config
-	hooks    []Hook
-	mutation *SecondaryMutation
+	hooks     []Hook
+	mutation  *SecondaryMutation
+	modifiers []func(*sql.UpdateBuilder)
 }
 
 // Where appends a list predicates to the SecondaryUpdate builder.
@@ -162,6 +163,12 @@ func (su *SecondaryUpdate) check() error {
 	return nil
 }
 
+// Modify adds a statement modifier for attaching custom logic to the UPDATE statement.
+func (su *SecondaryUpdate) Modify(modifiers ...func(u *sql.UpdateBuilder)) *SecondaryUpdate {
+	su.modifiers = append(su.modifiers, modifiers...)
+	return su
+}
+
 func (su *SecondaryUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if err := su.check(); err != nil {
 		return n, err
@@ -218,6 +225,7 @@ func (su *SecondaryUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	_spec.AddModifiers(su.modifiers...)
 	if n, err = sqlgraph.UpdateNodes(ctx, su.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{secondary.Label}
@@ -233,9 +241,10 @@ func (su *SecondaryUpdate) sqlSave(ctx context.Context) (n int, err error) {
 // SecondaryUpdateOne is the builder for updating a single Secondary entity.
 type SecondaryUpdateOne struct {
 	config
-	fields   []string
-	hooks    []Hook
-	mutation *SecondaryMutation
+	fields    []string
+	hooks     []Hook
+	mutation  *SecondaryMutation
+	modifiers []func(*sql.UpdateBuilder)
 }
 
 // SetSid sets the "sid" field.
@@ -385,6 +394,12 @@ func (suo *SecondaryUpdateOne) check() error {
 	return nil
 }
 
+// Modify adds a statement modifier for attaching custom logic to the UPDATE statement.
+func (suo *SecondaryUpdateOne) Modify(modifiers ...func(u *sql.UpdateBuilder)) *SecondaryUpdateOne {
+	suo.modifiers = append(suo.modifiers, modifiers...)
+	return suo
+}
+
 func (suo *SecondaryUpdateOne) sqlSave(ctx context.Context) (_node *Secondary, err error) {
 	if err := suo.check(); err != nil {
 		return _node, err
@@ -458,6 +473,7 @@ func (suo *SecondaryUpdateOne) sqlSave(ctx context.Context) (_node *Secondary, e
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	_spec.AddModifiers(suo.modifiers...)
 	_node = &Secondary{config: suo.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues

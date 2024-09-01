@@ -5,6 +5,8 @@ import (
 	"errors"
 	"github.com/dstgo/lobby/server/conf"
 	"github.com/dstgo/lobby/server/data/ent"
+	"github.com/dstgo/lobby/server/jobs"
+	"github.com/dstgo/lobby/server/svc"
 	"github.com/dstgo/lobby/server/types"
 	"github.com/gin-gonic/gin"
 	"github.com/ginx-contribs/dbx"
@@ -23,14 +25,14 @@ import (
 	_ "time/tzdata"
 )
 
-// EnvProvider only use for wire injection
-var EnvProvider = wire.NewSet(
-	wire.FieldsOf(new(*types.Context), "AppConf"),
-	wire.FieldsOf(new(*types.Context), "Ent"),
-	wire.FieldsOf(new(*types.Context), "Redis"),
-	wire.FieldsOf(new(*types.Context), "Router"),
-	wire.FieldsOf(new(*types.Context), "Email"),
-	wire.FieldsOf(new(*types.Context), "Lobby"),
+// ContextProvider only use for wire injection
+var ContextProvider = wire.NewSet(
+	wire.FieldsOf(new(types.Context), "AppConf"),
+	wire.FieldsOf(new(types.Context), "Ent"),
+	wire.FieldsOf(new(types.Context), "Redis"),
+	wire.FieldsOf(new(types.Context), "Router"),
+	wire.FieldsOf(new(types.Context), "Email"),
+	wire.FieldsOf(new(types.Context), "Lobby"),
 	wire.FieldsOf(new(*conf.App), "Jwt"),
 	wire.FieldsOf(new(*conf.App), "Email"),
 )
@@ -122,6 +124,21 @@ func InitializeEmail(ctx context.Context, emailConf conf.Email) (*mail.Client, e
 	return client, nil
 }
 
+// InitializeCronJob initialize cron jobs
+func InitializeCronJob(ctx context.Context, tc types.Context, sc svc.Context) (*jobs.CronJob, error) {
+	cronjob := jobs.NewCronJob()
+	err := cronjob.AddJob(newCollectJob(tc, sc))
+	if err != nil {
+		return nil, err
+	}
+	return cronjob, nil
+}
+
+func newCollectJob(tc types.Context, sc svc.Context) *jobs.LobbyCollectJob {
+	return jobs.NewLobbyCollectJob(sc.LobbyHandler, tc.Lobby, tc.AppConf.Job.Collect)
+}
+
+// override the default ginx validation error handler, see ginx.SetValidateHandler
 func setupHumanizedValidator() error {
 	v := validator.New()
 	v.SetTagName("binding")

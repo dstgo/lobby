@@ -19,8 +19,9 @@ import (
 // ServerUpdate is the builder for updating Server entities.
 type ServerUpdate struct {
 	config
-	hooks    []Hook
-	mutation *ServerMutation
+	hooks     []Hook
+	mutation  *ServerMutation
+	modifiers []func(*sql.UpdateBuilder)
 }
 
 // Where appends a list predicates to the ServerUpdate builder.
@@ -665,6 +666,12 @@ func (su *ServerUpdate) ExecX(ctx context.Context) {
 	}
 }
 
+// Modify adds a statement modifier for attaching custom logic to the UPDATE statement.
+func (su *ServerUpdate) Modify(modifiers ...func(u *sql.UpdateBuilder)) *ServerUpdate {
+	su.modifiers = append(su.modifiers, modifiers...)
+	return su
+}
+
 func (su *ServerUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	_spec := sqlgraph.NewUpdateSpec(server.Table, server.Columns, sqlgraph.NewFieldSpec(server.FieldID, field.TypeInt))
 	if ps := su.mutation.predicates; len(ps) > 0 {
@@ -887,6 +894,7 @@ func (su *ServerUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	_spec.AddModifiers(su.modifiers...)
 	if n, err = sqlgraph.UpdateNodes(ctx, su.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{server.Label}
@@ -902,9 +910,10 @@ func (su *ServerUpdate) sqlSave(ctx context.Context) (n int, err error) {
 // ServerUpdateOne is the builder for updating a single Server entity.
 type ServerUpdateOne struct {
 	config
-	fields   []string
-	hooks    []Hook
-	mutation *ServerMutation
+	fields    []string
+	hooks     []Hook
+	mutation  *ServerMutation
+	modifiers []func(*sql.UpdateBuilder)
 }
 
 // SetGUID sets the "guid" field.
@@ -1556,6 +1565,12 @@ func (suo *ServerUpdateOne) ExecX(ctx context.Context) {
 	}
 }
 
+// Modify adds a statement modifier for attaching custom logic to the UPDATE statement.
+func (suo *ServerUpdateOne) Modify(modifiers ...func(u *sql.UpdateBuilder)) *ServerUpdateOne {
+	suo.modifiers = append(suo.modifiers, modifiers...)
+	return suo
+}
+
 func (suo *ServerUpdateOne) sqlSave(ctx context.Context) (_node *Server, err error) {
 	_spec := sqlgraph.NewUpdateSpec(server.Table, server.Columns, sqlgraph.NewFieldSpec(server.FieldID, field.TypeInt))
 	id, ok := suo.mutation.ID()
@@ -1795,6 +1810,7 @@ func (suo *ServerUpdateOne) sqlSave(ctx context.Context) (_node *Server, err err
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	_spec.AddModifiers(suo.modifiers...)
 	_node = &Server{config: suo.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues

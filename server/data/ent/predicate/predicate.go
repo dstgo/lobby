@@ -6,6 +6,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
+// CronJob is the predicate function for cronjob builders.
+type CronJob func(*sql.Selector)
+
 // Secondary is the predicate function for secondary builders.
 type Secondary func(*sql.Selector)
 

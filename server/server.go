@@ -101,27 +101,38 @@ func NewApp(ctx context.Context, appConf *conf.App) (*ginx.Server, error) {
 		slog.Info("pprof profiling enabled")
 	}
 
-	// register shutdown hook
-	onShutdown := func(ctx context.Context) error {
-		logh.ErrorNotNil("db closed failed", db.Close())
-		logh.ErrorNotNil("redis closed failed", redisClient.Close())
-		return nil
-	}
-	server.OnShutdown = append(server.OnShutdown, onShutdown)
-
-	slog.Debug("setup api router")
-	// initialize api router
-	_, err = setup(&types.Context{
+	tc := types.Context{
 		AppConf: appConf,
 		Ent:     db,
 		Redis:   redisClient,
 		Router:  server.RouterGroup().Group("/api"),
 		Email:   emailClient,
 		Lobby:   lobbyClient,
-	})
+	}
+	slog.Debug("setup api router")
+
+	// initialize api router
+	sc, err := setup(tc)
 	if err != nil {
 		return nil, err
 	}
+
+	// register cron job
+	cronJob, err := InitializeCronJob(ctx, tc, sc)
+	if err != nil {
+		return nil, err
+	}
+	cronJob.Start()
+
+	// register shutdown hook
+	onShutdown := func(ctx context.Context) error {
+		cronJob.Stop()
+		logh.ErrorNotNil("db closed failed", db.Close())
+		logh.ErrorNotNil("redis closed failed", redisClient.Close())
+		logh.ErrorNotNil("email client closed failed", emailClient.Close())
+		return nil
+	}
+	server.OnShutdown = append(server.OnShutdown, onShutdown)
 
 	return server, nil
 }

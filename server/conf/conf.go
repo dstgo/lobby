@@ -15,6 +15,7 @@ type App struct {
 	Jwt    Jwt       `toml:"jwt" comment:"jwt secret configuration"`
 	Limit  RateLimit `toml:"limit" comment:"rate limit configuration"`
 	Dst    Dst       `toml:"dst" comment:"dst configuration'"`
+	Job    Job       `toml:"job" comment:"cron job configuration'"`
 
 	Author    string `toml:"-" mapstructure:"-"`
 	Version   string `toml:"-" mapstructure:"-"`
@@ -117,8 +118,17 @@ type VerifyCode struct {
 }
 
 type Dst struct {
-	ProxyUrl    string `toml:"proxyURL" comment:"proxy URL for http client"`
-	SteamKey    string `toml:"steamKey" comment:"steam web api key"`
-	KeliToken   string `toml:"kleiToken" comment:"klei cluster server token"`
-	CollectCron string `json:"collect_cron" comment:"collect cron for server collecting job"`
+	ProxyUrl  string `toml:"proxyURL" comment:"proxy URL for http client"`
+	SteamKey  string `toml:"steamKey" comment:"steam web api key"`
+	KeliToken string `toml:"kleiToken" comment:"klei cluster server token"`
+}
+
+type Job struct {
+	Collect Collect `toml:"collect" comment:"collect jobs configuration"`
+}
+
+type Collect struct {
+	Cron      string `toml:"cron" comment:"collect jobs cron expression"`
+	Limit     int    `toml:"limit" comment:"max goroutine limit"`
+	BatchSize int    `toml:"batchSize" comment:"batch size for insertion"`
 }

@@ -127,7 +127,7 @@ func (s *ServerRepo) PageQueryByOption(ctx context.Context, options types.LobbyS
 	if options.Continent != "" {
 		query = query.Where(server.ContinentContainsFold(options.Continent))
 	}
-	if options.Platform != lobbyapi.Any {
+	if options.Platform != types.PlatformAny {
 		query = query.Where(server.Platform(options.Platform.String()))
 	}
 

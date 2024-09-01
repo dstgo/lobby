@@ -25,6 +25,12 @@ func (td *TagDelete) Where(ps ...predicate.Tag) *TagDelete {
 	return td
 }
 
+// Limit the number of records to be returned by this query.
+func (td *TagDelete) Limit(limit int) *TagDelete {
+	td.ctx.Limit = &limit
+	return td
+}
+
 // Exec executes the deletion query and returns how many vertices were deleted.
 func (td *TagDelete) Exec(ctx context.Context) (int, error) {
 	return withHooks(ctx, td.sqlExec, td.mutation, td.hooks)

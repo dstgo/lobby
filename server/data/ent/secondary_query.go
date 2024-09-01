@@ -24,6 +24,7 @@ type SecondaryQuery struct {
 	inters      []Interceptor
 	predicates  []predicate.Secondary
 	withServers *ServerQuery
+	modifiers   []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -276,8 +277,9 @@ func (sq *SecondaryQuery) Clone() *SecondaryQuery {
 		predicates:  append([]predicate.Secondary{}, sq.predicates...),
 		withServers: sq.withServers.Clone(),
 		// clone intermediate query.
-		sql:  sq.sql.Clone(),
-		path: sq.path,
+		sql:       sq.sql.Clone(),
+		path:      sq.path,
+		modifiers: append([]func(*sql.Selector){}, sq.modifiers...),
 	}
 }
 
@@ -383,6 +385,9 @@ func (sq *SecondaryQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Se
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
+	if len(sq.modifiers) > 0 {
+		_spec.Modifiers = sq.modifiers
+	}
 	for i := range hooks {
 		hooks[i](ctx, _spec)
 	}
@@ -433,6 +438,9 @@ func (sq *SecondaryQuery) loadServers(ctx context.Context, query *ServerQuery, n
 
 func (sq *SecondaryQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := sq.querySpec()
+	if len(sq.modifiers) > 0 {
+		_spec.Modifiers = sq.modifiers
+	}
 	_spec.Node.Columns = sq.ctx.Fields
 	if len(sq.ctx.Fields) > 0 {
 		_spec.Unique = sq.ctx.Unique != nil && *sq.ctx.Unique
@@ -498,6 +506,9 @@ func (sq *SecondaryQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	if sq.ctx.Unique != nil && *sq.ctx.Unique {
 		selector.Distinct()
 	}
+	for _, m := range sq.modifiers {
+		m(selector)
+	}
 	for _, p := range sq.predicates {
 		p(selector)
 	}
@@ -513,6 +524,12 @@ func (sq *SecondaryQuery) sqlQuery(ctx context.Context) *sql.Selector {
 		selector.Limit(*limit)
 	}
 	return selector
+}
+
+// Modify adds a query modifier for attaching custom logic to queries.
+func (sq *SecondaryQuery) Modify(modifiers ...func(s *sql.Selector)) *SecondarySelect {
+	sq.modifiers = append(sq.modifiers, modifiers...)
+	return sq.Select()
 }
 
 // SecondaryGroupBy is the group-by builder for Secondary entities.
@@ -603,4 +620,10 @@ func (ss *SecondarySelect) sqlScan(ctx context.Context, root *SecondaryQuery, v 
 	}
 	defer rows.Close()
 	return sql.ScanSlice(rows, v)
+}
+
+// Modify adds a query modifier for attaching custom logic to queries.
+func (ss *SecondarySelect) Modify(modifiers ...func(s *sql.Selector)) *SecondarySelect {
+	ss.modifiers = append(ss.modifiers, modifiers...)
+	return ss
 }

@@ -3,6 +3,7 @@ package api
 import (
 	"github.com/dstgo/lobby/server/api/auth"
 	"github.com/dstgo/lobby/server/api/dst"
+	"github.com/dstgo/lobby/server/api/job"
 	"github.com/dstgo/lobby/server/api/system"
 	"github.com/dstgo/lobby/server/api/user"
 	"github.com/google/wire"
@@ -43,6 +44,10 @@ var Provider = wire.NewSet(
 	// dst router
 	dst.NewLobbyAPI,
 	dst.NewRouter,
+
+	// job router
+	job.NewJobAPI,
+	job.NewRouter,
 
 	// build Router struct
 	wire.Struct(new(Router), "*"),

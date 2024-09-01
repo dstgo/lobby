@@ -18,7 +18,10 @@ import (
 	"github.com/dstgo/lobby/server/handler/auth"
 	"github.com/dstgo/lobby/server/handler/dst"
 	"github.com/dstgo/lobby/server/handler/email"
+	"github.com/dstgo/lobby/server/handler/job"
 	"github.com/dstgo/lobby/server/handler/user"
+	"github.com/dstgo/lobby/server/jobs"
+	"github.com/dstgo/lobby/server/svc"
 	"github.com/dstgo/lobby/server/types"
 )
 
@@ -30,21 +33,21 @@ import (
 // Injectors from wire.go:
 
 // initialize and setup app environment
-func setup(env *types.Context) (api.Router, error) {
-	routerGroup := env.Router
-	app := env.AppConf
+func setup(ctx types.Context) (svc.Context, error) {
+	routerGroup := ctx.Router
+	app := ctx.AppConf
 	jwt := app.Jwt
-	client := env.Redis
+	client := ctx.Redis
 	tokenHandler := auth.NewTokenHandler(jwt, client)
-	entClient := env.Ent
+	entClient := ctx.Ent
 	userRepo := repo.NewUserRepo(entClient)
 	redisCodeCache := cache.NewRedisCodeCache(client)
 	confEmail := app.Email
-	mailClient := env.Email
+	mailClient := ctx.Email
 	streamQueue := mq.NewStreamQueue(client)
 	handler, err := email.NewEmailHandler(confEmail, mailClient, streamQueue)
 	if err != nil {
-		return api.Router{}, err
+		return svc.Context{}, err
 	}
 	verifyCodeHandler := auth.NewVerifyCodeHandler(redisCodeCache, handler)
 	authHandler := auth.NewAuthHandler(userRepo, tokenHandler, verifyCodeHandler)
@@ -56,7 +59,7 @@ func setup(env *types.Context) (api.Router, error) {
 	userAPI := user2.NewUserAPI(userHandler)
 	userRouter := user2.NewRouter(routerGroup, userAPI)
 	serverRepo := repo.NewServerRepo(entClient)
-	lobbyapiClient := env.Lobby
+	lobbyapiClient := ctx.Lobby
 	lobbyHandler := dst.NewLobbyHandler(serverRepo, lobbyapiClient)
 	lobbyAPI := dst2.NewLobbyAPI(lobbyHandler)
 	dstRouter := dst2.NewRouter(routerGroup, lobbyAPI)
@@ -66,5 +69,19 @@ func setup(env *types.Context) (api.Router, error) {
 		User:   userRouter,
 		Dst:    dstRouter,
 	}
-	return apiRouter, nil
+	jobRepo := repo.NewJobRepo(entClient)
+	cronJob := jobs.NewCronJob()
+	jobHandler := job.NewJobHandler(jobRepo, cronJob)
+	context := svc.Context{
+		ApiRouter:    apiRouter,
+		LobbyHandler: lobbyHandler,
+		ServerRepo:   serverRepo,
+		UserHandler:  userHandler,
+		UserRepo:     userRepo,
+		AuthHandler:  authHandler,
+		EmailHandler: handler,
+		JobHandler:   jobHandler,
+		JobRepo:      jobRepo,
+	}
+	return context, nil
 }

@@ -1,15 +1,16 @@
-package job
+package jobs
 
 import (
 	"context"
 	"fmt"
+	"github.com/dstgo/lobby/server/conf"
 	"github.com/dstgo/lobby/server/data/ent"
 	"github.com/dstgo/lobby/server/handler/dst"
 	"github.com/dstgo/lobby/server/pkg/geo"
 	"github.com/dstgo/lobby/server/pkg/lobbyapi"
 	"github.com/dstgo/lobby/server/pkg/maputil"
 	"github.com/dstgo/lobby/server/pkg/ts"
-	dstype "github.com/dstgo/lobby/server/types"
+	"github.com/dstgo/lobby/server/types"
 	"golang.org/x/sync/errgroup"
 	"log/slog"
 	"net"
@@ -18,13 +19,29 @@ import (
 	"time"
 )
 
-func NewLobbyCollectJob(handler *dst.LobbyHandler, client *lobbyapi.Client) *LobbyCollectJob {
-	return &LobbyCollectJob{handler: handler, client: client}
+func NewLobbyCollectJob(handler *dst.LobbyHandler, client *lobbyapi.Client,
+	cfg conf.Collect) *LobbyCollectJob {
+	if cfg.Limit <= 0 {
+		cfg.Limit = 10
+	}
+	// it can't be too large or too small, recommended in [500, 1500]
+	if cfg.BatchSize <= 500 {
+		cfg.BatchSize = 500
+	}
+	if cfg.BatchSize >= 1500 {
+		cfg.BatchSize = 1500
+	}
+
+	return &LobbyCollectJob{handler: handler, client: client, limit: cfg.Limit, batch: cfg.BatchSize, cron: cfg.Cron}
 }
 
 type LobbyCollectJob struct {
 	handler *dst.LobbyHandler
 	client  *lobbyapi.Client
+
+	limit int
+	batch int
+	cron  string
 
 	count atomic.Int64
 }
@@ -34,13 +51,13 @@ func (l *LobbyCollectJob) Name() string {
 }
 
 func (l *LobbyCollectJob) Cron() string {
-	// collect data every 2 minutes
-	return "*/2 * * * *"
+	// collect data every 2 minutes by default
+	return l.cron
 }
 
 func (l *LobbyCollectJob) Cmd() func() {
 	return func() {
-		l.CollectBatch(10, 1000)
+		l.CollectBatch(l.limit, l.batch)
 	}
 }
 
@@ -111,14 +128,14 @@ func (l *LobbyCollectJob) getLobbyServers(region string, platform string, qv int
 	if err != nil {
 		return nil, err
 	}
-	return l.ProcessServers(qv, servers.List)
+	return l.processServers(qv, servers.List)
 }
 
-// ProcessServers converts lobbyapi.Server to *ent.Server
-func (l *LobbyCollectJob) ProcessServers(qv int64, servers []lobbyapi.Server) ([]*ent.Server, error) {
+// processServers converts lobbyapi.Server to *ent.Server
+func (l *LobbyCollectJob) processServers(qv int64, servers []lobbyapi.Server) ([]*ent.Server, error) {
 	var entServers []*ent.Server
 	for _, server := range servers {
-		createdServer := dstype.LobbyServerToEntServer(server)
+		createdServer := types.LobbyServerToEntServer(server)
 		createdServer.QueryVersion = qv
 		createdServer.Level = len(server.Secondaries) + 1
 		// process tag str
@@ -149,7 +166,7 @@ func (l *LobbyCollectJob) ProcessServers(qv int64, servers []lobbyapi.Server) ([
 		createdServer.Country = maputil.GetFallBack("zh-CN", "en", ipAddress.Country.Names)
 		createdServer.City = maputil.GetFallBack("zh-CN", "en", ipAddress.City.Names)
 		createdServer.Continent = maputil.GetFallBack("zh-CN", "en", ipAddress.Continent.Names)
-		if createdServer.Platform == lobbyapi.WeGame.String() {
+		if createdServer.Platform == types.PlatformWeGame.String() {
 			createdServer.CountryCode = "CN"
 			createdServer.Continent = "亚洲"
 			createdServer.Country = "中国"

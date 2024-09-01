@@ -9,6 +9,21 @@ import (
 )
 
 var (
+	// CronJobsColumns holds the columns for the "cron_jobs" table.
+	CronJobsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString, Unique: true},
+		{Name: "cron", Type: field.TypeString},
+		{Name: "entry_id", Type: field.TypeInt},
+		{Name: "prev", Type: field.TypeInt64},
+		{Name: "next", Type: field.TypeInt64},
+	}
+	// CronJobsTable holds the schema information for the "cron_jobs" table.
+	CronJobsTable = &schema.Table{
+		Name:       "cron_jobs",
+		Columns:    CronJobsColumns,
+		PrimaryKey: []*schema.Column{CronJobsColumns[0]},
+	}
 	// SecondariesColumns holds the columns for the "secondaries" table.
 	SecondariesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -116,6 +131,7 @@ var (
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		CronJobsTable,
 		SecondariesTable,
 		ServersTable,
 		TagsTable,

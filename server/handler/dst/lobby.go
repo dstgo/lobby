@@ -56,7 +56,7 @@ func (l *LobbyHandler) GetServerDetails(ctx context.Context, region, rowId strin
 	serverInfo.Country = maputil.GetFallBack("zh-CN", "en", ipAddress.Country.Names)
 	serverInfo.City = maputil.GetFallBack("zh-CN", "en", ipAddress.City.Names)
 	serverInfo.Continent = maputil.GetFallBack("zh-CN", "en", ipAddress.Continent.Names)
-	if serverInfo.Platform == lobbyapi.WeGame.String() {
+	if serverInfo.Platform == types.PlatformWeGame.String() {
 		serverInfo.CountryCode = "CN"
 		serverInfo.Continent = "亚洲"
 		serverInfo.Country = "中国"

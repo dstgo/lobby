@@ -13,26 +13,6 @@ definitions:
       version2:
         type: string
     type: object
-  lobbyapi.Platform:
-    enum:
-    - 0
-    - 1
-    - 2
-    - 3
-    - 4
-    - 5
-    - 6
-    - 7
-    type: integer
-    x-enum-varnames:
-    - Any
-    - Steam
-    - WeGame
-    - PSN
-    - PS4Official
-    - XBOne
-    - Switch
-    - Rail
   lobbyapi.Player:
     properties:
       colour:
@@ -164,6 +144,28 @@ definitions:
     - DstSortByVersion
     - DstSortByOnline
     - DstSortByLevel
+  types.JobInfo:
+    properties:
+      cron:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      next:
+        type: integer
+      prev:
+        type: integer
+    type: object
+  types.JobPageList:
+    properties:
+      list:
+        items:
+          $ref: '#/definitions/types.JobInfo'
+        type: array
+      total:
+        type: integer
+    type: object
   types.LobbyServerDetails:
     properties:
       address:
@@ -363,6 +365,26 @@ definitions:
       msg:
         type: string
     type: object
+  types.ServerPlatform:
+    enum:
+    - 0
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    type: integer
+    x-enum-varnames:
+    - PlatformAny
+    - PlatformSteam
+    - PlatformWeGame
+    - PlatformPSN
+    - PlatformPS4Official
+    - PlatformXBOne
+    - PlatformSwitch
+    - PlatformRail
   types.TokenResult:
     properties:
       accessToken:
@@ -532,6 +554,101 @@ paths:
       summary: ResetPassword
       tags:
       - auth
+  /job/info:
+    get:
+      consumes:
+      - application/json
+      description: get job info
+      parameters:
+      - in: query
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/types.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/types.JobInfo'
+              type: object
+      summary: Info
+      tags:
+      - job
+  /job/list:
+    get:
+      consumes:
+      - application/json
+      description: list jobs by page
+      parameters:
+      - in: query
+        name: page
+        type: integer
+      - in: query
+        name: search
+        type: string
+      - in: query
+        name: size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/types.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/types.JobPageList'
+              type: object
+      summary: List
+      tags:
+      - job
+  /job/start:
+    post:
+      consumes:
+      - application/json
+      description: start the job
+      parameters:
+      - in: query
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.Response'
+      summary: Start
+      tags:
+      - job
+  /job/stop:
+    post:
+      consumes:
+      - application/json
+      description: stop the job
+      parameters:
+      - in: query
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.Response'
+      summary: Stop
+      tags:
+      - job
   /lobby/info:
     get:
       consumes:
@@ -611,7 +728,7 @@ paths:
         in: query
         name: password
         type: integer
-      - description: server platform, 0-Any, 1-Steam, 2-WeGame, 3-PSN, 4-PS4Official,
+      - description: server platform, 0-Any, 1-Steam, 2-PlatformWeGame, 3-PSN, 4-PS4Official,
           5-XBone, 6-Switch
         enum:
         - 0
@@ -628,14 +745,14 @@ paths:
         name: platform
         type: integer
         x-enum-varnames:
-        - Any
-        - Steam
-        - WeGame
-        - PSN
-        - PS4Official
-        - XBOne
-        - Switch
-        - Rail
+        - PlatformAny
+        - PlatformSteam
+        - PlatformWeGame
+        - PlatformPSN
+        - PlatformPS4Official
+        - PlatformXBOne
+        - PlatformSwitch
+        - PlatformRail
       - description: -1-off, 0-any, 1-on
         in: query
         name: pvp

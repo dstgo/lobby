@@ -20,6 +20,9 @@ var Provider = wire.NewSet(
 	// server
 	repo.NewServerRepo,
 
+	// repo
+	repo.NewJobRepo,
+
 	// mq
 	mq.NewStreamQueue,
 	wire.Bind(new(mq.Queue), new(*mq.StreamQueue)),

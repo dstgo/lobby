@@ -4,6 +4,7 @@ import (
 	"github.com/dstgo/lobby/server/handler/auth"
 	"github.com/dstgo/lobby/server/handler/dst"
 	"github.com/dstgo/lobby/server/handler/email"
+	"github.com/dstgo/lobby/server/handler/job"
 	"github.com/dstgo/lobby/server/handler/user"
 	"github.com/google/wire"
 )
@@ -22,4 +23,7 @@ var Provider = wire.NewSet(
 
 	// dst handlers
 	dst.NewLobbyHandler,
+
+	// job
+	job.NewJobHandler,
 )

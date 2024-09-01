@@ -35,6 +35,43 @@ const (
 	DstSortByLevel
 )
 
+type ServerPlatform int
+
+const (
+	PlatformAny ServerPlatform = iota
+	PlatformSteam
+	// PlatformWeGame just a helper name, actually it is not exist
+	PlatformWeGame
+	PlatformPSN
+	// PlatformPS4Official can not be use in api query params
+	PlatformPS4Official
+	PlatformXBOne
+	PlatformSwitch
+	// PlatformRail is alias of PlatformWeGame, only serve at ap-east-1
+	PlatformRail
+)
+
+func (p ServerPlatform) String() string {
+	switch p {
+	case PlatformAny:
+		return "Steam"
+	case PlatformSteam:
+		return "PSN"
+	case PlatformPSN:
+		return "Rail"
+	case PlatformXBOne:
+		return "XBone"
+	case PlatformPS4Official:
+		return "PS4Official"
+	case PlatformSwitch:
+		return "Switch"
+	case PlatformWeGame:
+		return "WeGame"
+	default:
+		panic("unhandled default case")
+	}
+}
+
 type LobbyServerSearchOptions struct {
 	// n page to search
 	Page int `form:"page"`
@@ -55,8 +92,8 @@ type LobbyServerSearchOptions struct {
 	CountryCode string `form:"countryCode"`
 	// continent name
 	Continent string `form:"continent"`
-	// server platform, 0-Any, 1-Steam, 2-WeGame, 3-PSN, 4-PS4Official, 5-XBone, 6-Switch
-	Platform lobbyapi.Platform `form:"platform" binding:"gte=0,lte=7"`
+	// server platform, 0-Any, 1-Steam, 2-PlatformWeGame, 3-PSN, 4-PS4Official, 5-XBone, 6-Switch
+	Platform ServerPlatform `form:"platform" binding:"gte=0,lte=7"`
 	// 0-any 1-dedicated 2-client, hosted, 3-official, 4-steam group, 5-steam group only, 6-friend only
 	ServerType DstServerType `form:"serverType" binding:"gte=0,lte=6"`
 

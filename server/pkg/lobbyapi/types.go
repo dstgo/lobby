@@ -6,17 +6,14 @@ const GameId = "DontStarveTogether"
 var OriginalPlatforms = []string{Steam.String(), PSN.String(), Rail.String(), XBOne.String(), Switch.String()}
 
 const (
-	Any Platform = iota
-	Steam
-	// WeGame just a helper name, actually it is not exist
-	WeGame
-	PSN
-	// PS4Official can not be use in api query params
-	PS4Official
-	XBOne
-	Switch
+	Steam Platform = 1
+	PSN   Platform = 2
 	// Rail is alias of WeGame, only serve at ap-east-1
-	Rail
+	Rail  Platform = 4
+	XBOne Platform = 16
+	// PS4Official can not be use in api query params
+	PS4Official Platform = 19
+	Switch      Platform = 32
 )
 
 // Platform represents dst server platform, it may be updated by klei in the future
@@ -24,8 +21,6 @@ type Platform int
 
 func (p Platform) String() string {
 	switch p {
-	case Any:
-		return "Any"
 	case Steam:
 		return "Steam"
 	case PSN:
@@ -38,8 +33,6 @@ func (p Platform) String() string {
 		return "PS4Official"
 	case Switch:
 		return "Switch"
-	case WeGame:
-		return "WeGame"
 	default:
 		panic("unhandled default case")
 	}

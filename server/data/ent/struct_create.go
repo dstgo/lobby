@@ -2,6 +2,15 @@
 
 package ent
 
+func (cjc *CronJobCreate) SetCronJob(input *CronJob) *CronJobCreate {
+	cjc.SetName(input.Name)
+	cjc.SetCron(input.Cron)
+	cjc.SetEntryID(input.EntryID)
+	cjc.SetPrev(input.Prev)
+	cjc.SetNext(input.Next)
+	return cjc
+}
+
 func (sc *SecondaryCreate) SetSecondary(input *Secondary) *SecondaryCreate {
 	sc.SetSid(input.Sid)
 	sc.SetSteamID(input.SteamID)

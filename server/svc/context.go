@@ -15,7 +15,7 @@ var Provider = wire.NewSet(
 	wire.Struct(new(Context), "*"),
 )
 
-// Context represents holds all handler and repo instances, just for helper
+// Context holds all handler and repo instances, just for helper
 type Context struct {
 	// api
 	ApiRouter api.Router

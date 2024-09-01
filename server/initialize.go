@@ -2,17 +2,22 @@ package server
 
 import (
 	entsql "entgo.io/ent/dialect/sql"
+	"errors"
 	"github.com/dstgo/lobby/server/conf"
 	"github.com/dstgo/lobby/server/data/ent"
 	"github.com/dstgo/lobby/server/types"
+	"github.com/gin-gonic/gin"
 	"github.com/ginx-contribs/dbx"
 	"github.com/ginx-contribs/ginx"
+	"github.com/ginx-contribs/ginx/pkg/resp"
 	"github.com/ginx-contribs/logx"
+	ut "github.com/go-playground/universal-translator"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/wire"
 	"github.com/redis/go-redis/v9"
 	"github.com/wneessen/go-mail"
 	"golang.org/x/net/context"
+	"strings"
 
 	// offline time zone database
 	_ "time/tzdata"
@@ -120,11 +125,25 @@ func InitializeEmail(ctx context.Context, emailConf conf.Email) (*mail.Client, e
 func setupHumanizedValidator() error {
 	v := validator.New()
 	v.SetTagName("binding")
-	englishValidator, err := ginx.EnglishValidator(v)
+	englishValidator, err := ginx.EnglishValidator(v, validateParams)
 	if err != nil {
 		return err
 	}
 	ginx.SetValidator(englishValidator)
 	ginx.SetValidateHandler(englishValidator.HandleError)
 	return nil
+}
+
+func validateParams(ctx *gin.Context, val any, err error, translator ut.Translator) {
+	var validationErrors validator.ValidationErrors
+	if errors.As(err, &validationErrors) {
+		var errorMsg []string
+		for _, validateErr := range validationErrors {
+			errorMsg = append(errorMsg, validateErr.Translate(translator))
+		}
+		verr := errors.New(strings.Join(errorMsg, ", "))
+		resp.Fail(ctx).Code(types.ErrBadParams.Code).Error(verr).JSON()
+		return
+	}
+	resp.Fail(ctx).Code(types.ErrBadParams.Code).ErrorMsg("params validate failed").JSON()
 }

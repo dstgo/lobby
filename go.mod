@@ -9,11 +9,11 @@ require (
 	github.com/gin-gonic/gin v1.9.1
 	github.com/ginx-contribs/dbx v1.0.1
 	github.com/ginx-contribs/ent-sqlite v1.1.0
-	github.com/ginx-contribs/ginx v1.3.0
+	github.com/ginx-contribs/ginx v1.4.0
 	github.com/ginx-contribs/jwtx v1.0.0
 	github.com/ginx-contribs/logx v1.1.2
 	github.com/ginx-contribs/str2bytes v1.0.0
-	github.com/go-playground/validator/v10 v10.19.0
+	github.com/go-playground/validator/v10 v10.22.0
 	github.com/go-resty/resty/v2 v2.14.0
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/google/uuid v1.6.0

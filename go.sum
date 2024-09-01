@@ -90,6 +90,8 @@ github.com/ginx-contribs/ent-sqlite v1.1.0 h1:26MZL9lzLyVP6A76YOpekiOTTB84W3WTJA
 github.com/ginx-contribs/ent-sqlite v1.1.0/go.mod h1:drFxdvIT6Ym2euF8HFybmFIeUKbLFzHIRXMFv0ic+eM=
 github.com/ginx-contribs/ginx v1.3.0 h1:xOauize24pwkWbjxYIVjAwaZ/Oce0sx0luJ7R/ffya8=
 github.com/ginx-contribs/ginx v1.3.0/go.mod h1:dc+2vP48DvGWC6BVGFuxC5bDhJEdswepGpN/oPoK2+4=
+github.com/ginx-contribs/ginx v1.4.0 h1:U9mXd3baleR5p/IljMu0wlKwzVWL4b13AIFXmD8/Oiw=
+github.com/ginx-contribs/ginx v1.4.0/go.mod h1:Lgff0kkwPhererRv9HYHLA7h0Sy5/C3UJKr7zihRO0I=
 github.com/ginx-contribs/jwtx v1.0.0 h1:P0WWfjLFluBboZraCy7te3RMMPt4cVF8A5cLVlBhiKc=
 github.com/ginx-contribs/jwtx v1.0.0/go.mod h1:bHo1bGMz7624rIS1s1V9edKUjhX1z/+4I9+brsW0RgA=
 github.com/ginx-contribs/logx v1.1.2 h1:Ege7yAl7OOF4DURvw0SDYzpAfzcjxnc/PxCAzFB8A7o=
@@ -117,6 +119,8 @@ github.com/go-playground/universal-translator v0.18.1/go.mod h1:xekY+UJKNuX9WP91
 github.com/go-playground/validator/v10 v10.4.1/go.mod h1:nlOn6nFhuKACm19sB/8EGNn9GlaMV7XkbRSipzJ0Ii4=
 github.com/go-playground/validator/v10 v10.19.0 h1:ol+5Fu+cSq9JD7SoSqe04GMI92cbn0+wvQ3bZ8b/AU4=
 github.com/go-playground/validator/v10 v10.19.0/go.mod h1:dbuPbCMFw/DrkbEynArYaCwl3amGuJotoKCe95atGMM=
+github.com/go-playground/validator/v10 v10.22.0 h1:k6HsTZ0sTnROkhS//R0O+55JgM8C4Bx7ia+JlgcnOao=
+github.com/go-playground/validator/v10 v10.22.0/go.mod h1:dbuPbCMFw/DrkbEynArYaCwl3amGuJotoKCe95atGMM=
 github.com/go-redis/redis/v8 v8.11.5 h1:AcZZR7igkdvfVmQTPnu9WE37LRrO/YrBH5zWyjDC0oI=
 github.com/go-redis/redis/v8 v8.11.5/go.mod h1:gREzHqY1hg6oD9ngVRbLStwAWKhA0FEgq8Jd4h5lpwo=
 github.com/go-resty/resty/v2 v2.14.0 h1:/rhkzsAqGQkozwfKS5aFAbb6TyKd3zyFRWcdRXLPCAU=

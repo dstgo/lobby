@@ -86,7 +86,7 @@ ent_new:
 
 ent_gen:
 	# generate ent code
-	ent generate $(ent_out) --template $(ent_template)
+	ent generate $(ent_out) --template $(ent_template) --feature sql/modifier,sql/execquery,sql/upsert
 
 ent_clean:
 	@rm -rf $(ent_generated)

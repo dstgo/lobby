@@ -124,11 +124,18 @@ type Dst struct {
 }
 
 type Job struct {
-	Collect Collect `toml:"collect" comment:"collect jobs configuration"`
+	Collect Collect `toml:"collect" comment:"lobby collect jobs configuration"`
+	Clean   Clean   `toml:"clean" comment:"lobby clean jobs configuration"`
 }
 
 type Collect struct {
 	Cron      string `toml:"cron" comment:"collect jobs cron expression"`
 	Limit     int    `toml:"limit" comment:"max goroutine limit"`
 	BatchSize int    `toml:"batchSize" comment:"batch size for insertion"`
+}
+
+type Clean struct {
+	Cron      string        `toml:"cron" comment:"clean jobs cron expression"`
+	Expired   time.Duration `toml:"expired" comment:"max lifetime for records"`
+	BatchSize int           `toml:"batchSize" comment:"batch size for clean"`
 }

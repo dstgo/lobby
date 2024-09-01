@@ -25,12 +25,6 @@ func (cjd *CronJobDelete) Where(ps ...predicate.CronJob) *CronJobDelete {
 	return cjd
 }
 
-// Limit the number of records to be returned by this query.
-func (cjd *CronJobDelete) Limit(limit int) *CronJobDelete {
-	cjd.ctx.Limit = &limit
-	return cjd
-}
-
 // Exec executes the deletion query and returns how many vertices were deleted.
 func (cjd *CronJobDelete) Exec(ctx context.Context) (int, error) {
 	return withHooks(ctx, cjd.sqlExec, cjd.mutation, cjd.hooks)

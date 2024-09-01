@@ -11,6 +11,7 @@ import (
 	"github.com/dstgo/lobby/server/pkg/maputil"
 	"github.com/dstgo/lobby/server/pkg/ts"
 	"github.com/dstgo/lobby/server/types"
+	"github.com/dstgo/lobby/test/testutil"
 	"golang.org/x/sync/errgroup"
 	"log/slog"
 	"net"
@@ -19,8 +20,7 @@ import (
 	"time"
 )
 
-func NewLobbyCollectJob(handler *dst.LobbyHandler, client *lobbyapi.Client,
-	cfg conf.Collect) *LobbyCollectJob {
+func NewLobbyCollectJob(handler *dst.LobbyHandler, client *lobbyapi.Client, cfg conf.Collect) *LobbyCollectJob {
 	if cfg.Limit <= 0 {
 		cfg.Limit = 10
 	}
@@ -31,10 +31,14 @@ func NewLobbyCollectJob(handler *dst.LobbyHandler, client *lobbyapi.Client,
 	if cfg.BatchSize >= 1500 {
 		cfg.BatchSize = 1500
 	}
+	if cfg.Cron == "" {
+		cfg.Cron = "*/2 * * * *"
+	}
 
 	return &LobbyCollectJob{handler: handler, client: client, limit: cfg.Limit, batch: cfg.BatchSize, cron: cfg.Cron}
 }
 
+// LobbyCollectJob has responsibility for collecting lobby servers from klei api
 type LobbyCollectJob struct {
 	handler *dst.LobbyHandler
 	client  *lobbyapi.Client
@@ -65,14 +69,14 @@ func (l *LobbyCollectJob) CollectBatch(limit, batch int) {
 	qv := ts.UnixMicro()
 	servers, cost, err := l.Collect(qv, limit)
 	if err != nil {
-		slog.Error(fmt.Sprintf("%s-%d failed", l.Name(), l.count.Load()), slog.Any("error", err))
+		slog.Error(fmt.Sprintf("%s #%d failed", l.Name(), l.count.Load()), slog.Any("error", err))
 		return
 	}
 	collected, err := l.handler.CreateServersBatch(context.Background(), servers, batch)
 	if err != nil {
-		slog.Error(fmt.Sprintf("%s-%d batch failed", l.Name(), l.count.Load()), slog.Any("error", err))
+		slog.Error(fmt.Sprintf("%s #%d batch failed", l.Name(), l.count.Load()), slog.Any("error", err))
 	} else {
-		slog.Info(fmt.Sprintf("%s-%d ok", l.Name(), l.count.Load()),
+		slog.Info(fmt.Sprintf("%s #%d ok", l.Name(), l.count.Load()),
 			slog.Int64("servers", collected), slog.Duration("cost", cost))
 	}
 	l.count.Add(1)
@@ -175,4 +179,50 @@ func (l *LobbyCollectJob) processServers(qv int64, servers []lobbyapi.Server) ([
 		entServers = append(entServers, createdServer)
 	}
 	return entServers, nil
+}
+
+func NewLobbyCleanJob(handler *dst.LobbyHandler, cleanConf conf.Clean) *LobbyCleanJob {
+	if cleanConf.Cron == "" {
+		cleanConf.Cron = "*/30 * * * *"
+	}
+	if cleanConf.BatchSize == 0 {
+		cleanConf.BatchSize = 2000
+	}
+	if cleanConf.Expired == 0 {
+		cleanConf.Expired = 7 * 24 * time.Hour
+	}
+	return &LobbyCleanJob{handler: handler, batch: cleanConf.BatchSize, expired: cleanConf.Expired, cron: cleanConf.Cron}
+}
+
+type LobbyCleanJob struct {
+	handler *dst.LobbyHandler
+
+	batch   int
+	expired time.Duration
+	cron    string
+	count   atomic.Int64
+}
+
+func (l *LobbyCleanJob) Name() string {
+	return "lobby-clean"
+}
+
+func (l *LobbyCleanJob) Cron() string {
+	return l.cron
+}
+
+func (l *LobbyCleanJob) Cmd() func() {
+	t := testutil.NewTimer()
+	return func() {
+		t.Start()
+		deleted, err := l.handler.DeleteServerBatch(context.Background(), l.expired, l.batch)
+		if err != nil {
+			slog.Error(fmt.Sprintf("%s #%d failed", l.Name(), l.count.Load()), slog.Any("error", err))
+		} else {
+			slog.Info(fmt.Sprintf("%s #%d ok", l.Name(), l.count.Load()),
+				slog.Int64("deleted", deleted), slog.Duration("cost", t.Stop()))
+		}
+		l.count.Add(1)
+		t.Reset()
+	}
 }

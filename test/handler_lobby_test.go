@@ -23,6 +23,7 @@ func newLobbyHandler() (*dst.LobbyHandler, error) {
 	if err != nil {
 		return nil, err
 	}
+	// due to large number of records, do not enable debug sql logging.
 	serverRepo := repo.NewServerRepo(db)
 	client := lobbyapi.NewWith(appconf.Dst.KeliToken, resty.New().SetProxy("http://127.0.0.1:7890"))
 	return dst.NewLobbyHandler(serverRepo, client), nil
@@ -60,7 +61,7 @@ func TestDeleteInBatch(t *testing.T) {
 	if !assert.NoError(t, err) {
 		return
 	}
-	deleted, err := handler.DeleteServerBatch(ctx, time.Hour, 2000)
+	deleted, err := handler.DeleteServerBatch(ctx, time.Minute, 2000)
 	if !assert.NoError(t, err) {
 		return
 	}

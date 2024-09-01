@@ -260,3 +260,60 @@ func (s *ServerRepo) DeleteByQV(ctx context.Context, qv int64) error {
 	}
 	return nil
 }
+
+// ExpiredRecords retrurns a list id of expired records, use limit to return
+func (s *ServerRepo) ExpiredRecords(ctx context.Context, ts int64, limit int) ([]int, error) {
+	ids, err := s.Ent.Server.Query().
+		Where(server.QueryVersionLTE(ts)).
+		Order(ent.Desc(server.FieldQueryVersion)).
+		Limit(limit).IDs(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return ids, nil
+}
+
+// DeleteBulk deletes all records in given query versions.
+// not recommended delete a large mount of records in one time, it will block for long time.
+func (s *ServerRepo) DeleteBulk(ctx context.Context, ids ...int) (int, error) {
+	tx, err := s.Ent.Tx(ctx)
+	if err != nil {
+		return 0, err
+	}
+	defer tx.Rollback()
+	// delete all associated tags
+	tags, err := tx.Tag.Query().
+		Where(
+			tag.HasServersWith(server.IDIn(ids...)),
+		).IDs(ctx)
+	if err != nil {
+		return 0, err
+	}
+	_, err = tx.Tag.Delete().Where(tag.IDIn(tags...)).Exec(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	// delete all associated secondaries
+	secondaries, err := tx.Secondary.Query().
+		Where(secondary.HasServersWith(
+			server.IDIn(ids...),
+		)).IDs(ctx)
+	if err != nil {
+		return 0, err
+	}
+	_, err = tx.Secondary.Delete().Where(secondary.IDIn(secondaries...)).Exec(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	deleted, err := tx.Server.Delete().Where(server.IDIn(ids...)).Exec(ctx)
+	if err != nil {
+		return 0, err
+	}
+	err = tx.Commit()
+	if err != nil {
+		return 0, err
+	}
+	return deleted, nil
+}

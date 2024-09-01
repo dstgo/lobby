@@ -127,15 +127,26 @@ func InitializeEmail(ctx context.Context, emailConf conf.Email) (*mail.Client, e
 // InitializeCronJob initialize cron jobs
 func InitializeCronJob(ctx context.Context, tc types.Context, sc svc.Context) (*jobs.CronJob, error) {
 	cronjob := jobs.NewCronJob()
-	err := cronjob.AddJob(newCollectJob(tc, sc))
-	if err != nil {
-		return nil, err
+	errs := []error{
+		// lobby collect
+		cronjob.AddJob(newCollectJob(tc, sc)),
+		// lobby clean
+		cronjob.AddJob(newCleanJob(tc, sc)),
+	}
+	for _, err := range errs {
+		if err != nil {
+			return nil, err
+		}
 	}
 	return cronjob, nil
 }
 
 func newCollectJob(tc types.Context, sc svc.Context) *jobs.LobbyCollectJob {
 	return jobs.NewLobbyCollectJob(sc.LobbyHandler, tc.Lobby, tc.AppConf.Job.Collect)
+}
+
+func newCleanJob(tc types.Context, sc svc.Context) *jobs.LobbyCleanJob {
+	return jobs.NewLobbyCleanJob(sc.LobbyHandler, tc.AppConf.Job.Clean)
 }
 
 // override the default ginx validation error handler, see ginx.SetValidateHandler

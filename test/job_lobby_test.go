@@ -23,10 +23,28 @@ func newLobbyCollectJob() (*jobs.LobbyCollectJob, error) {
 	if err != nil {
 		return nil, err
 	}
-	serverRepo := repo.NewServerRepo(db.Debug())
+	// due to large number of records, do not enable debug sql logging.
+	serverRepo := repo.NewServerRepo(db)
 	client := lobbyapi.New(cfg.Dst.KeliToken)
 	handler := dst.NewLobbyHandler(serverRepo, client)
 	return jobs.NewLobbyCollectJob(handler, client, cfg.Job.Collect), nil
+}
+
+func newLobbyCleanJob() (*jobs.LobbyCleanJob, error) {
+	ctx := context.Background()
+	cfg, err := testutil.ReadConf()
+	if err != nil {
+		return nil, err
+	}
+	db, err := server.InitializeDB(ctx, cfg.DB)
+	if err != nil {
+		return nil, err
+	}
+	// due to large number of records, do not enable debug sql logging.
+	serverRepo := repo.NewServerRepo(db)
+	client := lobbyapi.New(cfg.Dst.KeliToken)
+	handler := dst.NewLobbyHandler(serverRepo, client)
+	return jobs.NewLobbyCleanJob(handler, cfg.Job.Clean), nil
 }
 
 func TestLobbyCollect(t *testing.T) {
@@ -49,7 +67,7 @@ func TestLobbyCollectBatch(t *testing.T) {
 	collectJob.CollectBatch(10, 1000)
 }
 
-func TestLobbyCron(t *testing.T) {
+func TestLobbyCollectCron(t *testing.T) {
 	cronjob := jobs.NewCronJob()
 	collectJob, err := newLobbyCollectJob()
 	if !assert.NoError(t, err) {
@@ -62,6 +80,15 @@ func TestLobbyCron(t *testing.T) {
 	cronjob.Start()
 	defer cronjob.Stop()
 	select {
-	case <-time.After(time.Second * 1):
+	case <-time.After(time.Minute * 5):
 	}
+}
+
+func TestLobbyClean(t *testing.T) {
+	job, err := newLobbyCleanJob()
+	if !assert.NoError(t, err) {
+		return
+	}
+	cmd := job.Cmd()
+	cmd()
 }

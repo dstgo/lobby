@@ -25,12 +25,6 @@ func (sd *SecondaryDelete) Where(ps ...predicate.Secondary) *SecondaryDelete {
 	return sd
 }
 
-// Limit the number of records to be returned by this query.
-func (sd *SecondaryDelete) Limit(limit int) *SecondaryDelete {
-	sd.ctx.Limit = &limit
-	return sd
-}
-
 // Exec executes the deletion query and returns how many vertices were deleted.
 func (sd *SecondaryDelete) Exec(ctx context.Context) (int, error) {
 	return withHooks(ctx, sd.sqlExec, sd.mutation, sd.hooks)

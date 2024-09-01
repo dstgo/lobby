@@ -2,14 +2,19 @@ package dst
 
 import (
 	"context"
+	"fmt"
 	"github.com/dstgo/lobby/server/data/ent"
 	"github.com/dstgo/lobby/server/data/repo"
 	"github.com/dstgo/lobby/server/pkg/geo"
 	"github.com/dstgo/lobby/server/pkg/lobbyapi"
 	"github.com/dstgo/lobby/server/pkg/maputil"
+	"github.com/dstgo/lobby/server/pkg/ts"
 	"github.com/dstgo/lobby/server/types"
+	"github.com/dstgo/lobby/test/testutil"
 	"github.com/ginx-contribs/ginx/pkg/resp/statuserr"
+	"log/slog"
 	"net"
+	"time"
 )
 
 func NewLobbyHandler(serverRepo *repo.ServerRepo, client *lobbyapi.Client) *LobbyHandler {
@@ -82,4 +87,32 @@ func (l *LobbyHandler) CreateServersBatch(ctx context.Context, servers []*ent.Se
 		created += createdBatch
 	}
 	return created, nil
+}
+
+// DeleteServerBatch delete a list of servers in n batch, filtered by query-version - duration.
+func (l *LobbyHandler) DeleteServerBatch(ctx context.Context, duration time.Duration, batchSize int) (int64, error) {
+	sum := int64(0)
+	expiredTs := ts.Now().Add(-duration).UnixMicro()
+	slog.Debug("delete server batch beginning", slog.Int("batch-size", batchSize), slog.Int64("expiredTs", expiredTs))
+	r := &testutil.Round{}
+	t := &testutil.Timer{}
+	for {
+		t.Start()
+		ids, err := l.serverRepo.ExpiredRecords(ctx, expiredTs, batchSize)
+		if err != nil {
+			return 0, err
+		}
+		deleted, err := l.serverRepo.DeleteBulk(ctx, ids...)
+		if err != nil {
+			return 0, err
+		}
+		slog.Debug(fmt.Sprintf("delete round #%d", r.Round()), slog.Duration("cost", t.Stop()), slog.Int("deleted", deleted))
+		// has been finished
+		if len(ids) == 0 {
+			break
+		}
+		sum += int64(deleted)
+		t.Reset()
+	}
+	return sum, nil
 }

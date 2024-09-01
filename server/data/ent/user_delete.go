@@ -25,12 +25,6 @@ func (ud *UserDelete) Where(ps ...predicate.User) *UserDelete {
 	return ud
 }
 
-// Limit the number of records to be returned by this query.
-func (ud *UserDelete) Limit(limit int) *UserDelete {
-	ud.ctx.Limit = &limit
-	return ud
-}
-
 // Exec executes the deletion query and returns how many vertices were deleted.
 func (ud *UserDelete) Exec(ctx context.Context) (int, error) {
 	return withHooks(ctx, ud.sqlExec, ud.mutation, ud.hooks)

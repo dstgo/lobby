@@ -33,7 +33,7 @@ func LogAfter() AfterHook {
 		if err != nil {
 			slog.Error("cron job failed,", append(baseAttrs, slog.Any("error", err))...)
 		} else {
-			slog.Info("cron job finished, ", append(baseAttrs, slog.Group("result", attrs...))...)
+			slog.Info("cron job finished,", append(baseAttrs, slog.Group("result", attrs...))...)
 		}
 	}
 }

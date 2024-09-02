@@ -82,6 +82,7 @@ func NewApp(ctx context.Context, appConf *conf.App) (*ginx.Server, error) {
 
 	// shutdown hook
 	onShutdown := func(ctx context.Context) error {
+		logh.ErrorNotNil("message queue closed failed", sc.MQ.Close())
 		slog.Info(fmt.Sprintf("stopped %d jobs", cronJob.Stop()))
 		// should close db and redis at the end
 		logh.ErrorNotNil("db closed failed", db.Close())

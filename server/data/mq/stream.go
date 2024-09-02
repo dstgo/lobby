@@ -13,11 +13,14 @@ import (
 )
 
 func NewStreamQueue(client *redis.Client) *StreamQueue {
-	withContext, _ := errgroup.WithContext(context.Background())
+	ctx, cancel := context.WithCancel(context.Background())
+	group, _ := errgroup.WithContext(ctx)
 	return &StreamQueue{
 		redis:      client,
 		subscribes: make(map[string][]Consumer),
-		group:      withContext,
+		ctx:        ctx,
+		cancel:     cancel,
+		group:      group,
 	}
 }
 
@@ -28,9 +31,10 @@ type StreamQueue struct {
 	subscribes map[string][]Consumer
 
 	running atomic.Bool
+	ctx     context.Context
+	cancel  context.CancelFunc
 	group   *errgroup.Group
 	once    sync.Once
-	close   atomic.Bool
 }
 
 func (q *StreamQueue) Subscribe(consumer Consumer) error {
@@ -65,7 +69,7 @@ func (q *StreamQueue) Start(ctx context.Context) {
 }
 
 func (q *StreamQueue) Close() error {
-	q.close.Store(true)
+	q.cancel()
 	return q.group.Wait()
 }
 
@@ -86,26 +90,23 @@ func (q *StreamQueue) consume(ctx context.Context, topic, group, consumer string
 	// consume messages in a loop
 	for {
 		// quit if queue was closed
-		if q.close.Load() {
+		select {
+		case <-q.ctx.Done():
 			return nil
+		default:
+			// read the latest message
+			if id, err := q.readStream(ctx, topic, group, consumer, ">", batchSize, cb); err != nil {
+				errorLog("stream read latest failed", err, id, topic, group, consumer)
+			}
+			// read the messages that received but not ack
+			if id, err := q.readStream(ctx, topic, group, consumer, "1", batchSize, cb); err != nil {
+				errorLog("stream read not-ack failed", err, id, topic, group, consumer)
+			}
+			// clear dead messages in pending list
+			if err := q.clearDead(ctx, topic, group, time.Minute*5, 10); err != nil {
+				slog.Error("stream clear dead failed", slog.Any("error", err))
+			}
 		}
-
-		// read the latest message
-		if id, err := q.readStream(ctx, topic, group, consumer, ">", batchSize, cb); err != nil {
-			errorLog("stream read latest failed", err, id, topic, group, consumer)
-		}
-
-		// read the messages that received but not ack
-		if id, err := q.readStream(ctx, topic, group, consumer, "1", batchSize, cb); err != nil {
-			errorLog("stream read not-ack failed", err, id, topic, group, consumer)
-		}
-
-		// clear dead messages in pending list
-		if err := q.clearDead(ctx, topic, group, time.Minute*5, 10); err != nil {
-			slog.Error("stream clear dead failed", slog.Any("error", err))
-		}
-
-		time.Sleep(1)
 	}
 }
 
@@ -114,6 +115,7 @@ func (q *StreamQueue) readStream(ctx context.Context, topic, group, consumer, id
 	result, err := q.redis.XReadGroup(ctx, &redis.XReadGroupArgs{
 		Group:    group,
 		Consumer: consumer,
+		Block:    time.Second,
 		Streams:  []string{topic, id},
 		Count:    batchSize,
 	}).Result()

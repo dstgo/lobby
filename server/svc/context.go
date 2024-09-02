@@ -2,6 +2,7 @@ package svc
 
 import (
 	"github.com/dstgo/lobby/server/api"
+	"github.com/dstgo/lobby/server/data/mq"
 	"github.com/dstgo/lobby/server/data/repo"
 	"github.com/dstgo/lobby/server/handler/auth"
 	"github.com/dstgo/lobby/server/handler/dst"
@@ -37,4 +38,7 @@ type Context struct {
 	// job
 	JobHandler *job.JobHandler
 	JobRepo    *repo.JobRepo
+
+	// message queue
+	MQ mq.Queue
 }

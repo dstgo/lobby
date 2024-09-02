@@ -66,7 +66,7 @@ type AuthVerifyCodeOption struct {
 	// email receiver
 	To string `json:"to" binding:"email"`
 	// verify code usage: 1-register 2-reset password
-	Usage Usage `json:"usage" binding:"required"`
+	Usage Usage `json:"usage" binding:"required,gte=1,lte=2"`
 }
 
 type TokenPayload struct {

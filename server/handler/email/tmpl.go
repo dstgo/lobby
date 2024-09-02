@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+// TmplConfirmCode template for confirm code
 func TmplConfirmCode(usage, name, code string, ttl time.Duration) hermes.Email {
 	return hermes.Email{
 		Body: hermes.Body{

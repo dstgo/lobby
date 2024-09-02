@@ -8,81 +8,56 @@ import (
 	"github.com/ginx-contribs/ginx/pkg/resp/statuserr"
 	"github.com/ginx-contribs/str2bytes"
 	"github.com/matcornic/hermes/v2"
-	"github.com/redis/go-redis/v9"
 	"github.com/wneessen/go-mail"
 	"golang.org/x/net/context"
 )
 
-// Message represents an email message
-type Message struct {
-	ContentType mail.ContentType `mapstructure:"contentType"`
-	From        string           `mapstructure:"from"`
-	To          []string         `mapstructure:"to"`
-	CC          []string         `mapstructure:"cc"`
-	Bcc         []string         `mapstructure:"bcc"`
-	Subject     string           `mapstructure:"subject"`
-	Body        string           `mapstructure:"body"`
-}
-
-// BuildMailMsg build *mail.Msg from Message
-func BuildMailMsg(msg Message) (*mail.Msg, error) {
-	mailMsg := mail.NewMsg()
-	if err := mailMsg.From(msg.From); err != nil {
-		return nil, err
-	}
-	if err := mailMsg.To(msg.To...); err != nil {
-		return nil, err
-	}
-	if err := mailMsg.Cc(msg.CC...); err != nil {
-		return nil, err
-	}
-	if err := mailMsg.Bcc(msg.Bcc...); err != nil {
-		return nil, err
-	}
-	mailMsg.Subject(msg.Subject)
-	mailMsg.SetBodyString(msg.ContentType, msg.Body)
-	return mailMsg, nil
-}
-
 func NewEmailHandler(cfg conf.Email, client *mail.Client, queue mq.Queue) (*Handler, error) {
-	h := &Handler{Cfg: cfg}
+	handler := &Handler{Cfg: cfg, client: client, queue: queue}
 
-	h.pub = &Publisher{queue: queue, topic: cfg.MQ.Topic, maxLen: cfg.MQ.MaxLen}
-	// run the consumer
+	// subscribe the queue
 	for _, consumer := range cfg.MQ.Consumers {
 		c := &Consumer{
 			topic:     cfg.MQ.Topic,
 			group:     cfg.MQ.Group,
-			consumer:  consumer,
+			name:      consumer,
 			batchSize: cfg.MQ.BatchSize,
-			queue:     queue,
-			email:     client,
+			h:         handler,
 		}
-		if err := c.Consume(context.Background()); err != nil {
+		if err := queue.Subscribe(c); err != nil {
 			return nil, err
 		}
-		h.cons = append(h.cons, c)
 	}
 
-	h.product = hermes.Hermes{
+	handler.product = hermes.Hermes{
 		Product: hermes.Product{
 			Name:      "dstgo",
 			Copyright: "Copyright © dstgo",
 		},
 	}
-
-	return h, nil
+	return handler, nil
 }
 
-// Handler is email handler
+// Handler is responsible for publishing and sending emails
 type Handler struct {
-	Cfg     conf.Email
-	pub     *Publisher
-	cons    []*Consumer
+	Cfg conf.Email
+
+	client  *mail.Client
+	queue   mq.Queue
 	product hermes.Hermes
 }
 
-func (h *Handler) SendHermesEmail(ctx context.Context, subject string, to []string, email hermes.Email) error {
+// SendEmail send email to smtp server
+func (h *Handler) SendEmail(ctx context.Context, message Message) error {
+	msg, err := BuildMail(message)
+	if err != nil {
+		return err
+	}
+	return h.client.DialAndSendWithContext(ctx, msg)
+}
+
+// PublishHermesEmail publish hermes email into queue
+func (h *Handler) PublishHermesEmail(ctx context.Context, subject string, to []string, email hermes.Email) error {
 	html, err := h.product.GenerateHTML(email)
 	if err != nil {
 		return err
@@ -96,55 +71,57 @@ func (h *Handler) SendHermesEmail(ctx context.Context, subject string, to []stri
 		Body:        html,
 	}
 
-	if err := h.pub.Publish(ctx, msg); err != nil {
+	if err := h.Publish(ctx, msg); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (h *Handler) SendEmail(ctx context.Context, msg Message) error {
+// Publish publishes normal message to queue
+func (h *Handler) Publish(ctx context.Context, msg Message) error {
 	msg.From = h.Cfg.Username
-	return h.pub.Publish(ctx, msg)
-}
-
-// Publisher store email message into queue and then return right now
-type Publisher struct {
-	queue mq.Queue
-
-	topic  string
-	maxLen int64
-}
-
-// Publish publishes email message
-func (s *Publisher) Publish(ctx context.Context, msg Message) error {
 	marshal, err := sonic.Marshal(msg)
 	if err != nil {
 		return statuserr.InternalError(err)
 	}
-
-	_, err = s.queue.Publish(ctx, s.topic, map[string]any{"mail": marshal}, s.maxLen)
+	_, err = h.queue.Publish(ctx, h.Cfg.MQ.Topic, map[string]any{"mail": marshal}, 0)
 	if err != nil {
 		return statuserr.InternalError(err)
 	}
 	return err
 }
 
-// Consumer is responsible for reading messages from queues and then send these emails.
+// Consumer is responsible for reading messages from queue and then send these emails.
 type Consumer struct {
 	topic     string
 	group     string
-	consumer  string
+	name      string
 	batchSize int64
 
-	queue mq.Queue
-	email *mail.Client
+	h *Handler
 }
 
-func (c *Consumer) Consume(ctx context.Context) error {
-	return c.queue.Consume(ctx, c.topic, c.group, c.consumer, c.batchSize, c.consume)
+func (c *Consumer) Name() string {
+	return c.name
 }
 
-func (c *Consumer) consume(ctx context.Context, client *redis.Client, topic, group string, id string, value any) error {
+func (c *Consumer) Topic() string {
+	return c.topic
+}
+
+func (c *Consumer) Group() string {
+	return c.group
+}
+
+func (c *Consumer) Size() int64 {
+	return c.batchSize
+}
+
+func (c *Consumer) Consume(ctx context.Context, id string, value any) error {
+	return c.consume(ctx, id, value)
+}
+
+func (c *Consumer) consume(ctx context.Context, id string, value any) error {
 	val, ok := value.(map[string]interface{})
 	if !ok {
 		return fmt.Errorf("mismatched value type from mq, expected map[string]any, but got %T", value)
@@ -160,11 +137,5 @@ func (c *Consumer) consume(ctx context.Context, client *redis.Client, topic, gro
 	if err != nil {
 		return err
 	}
-
-	buildMail, err := BuildMailMsg(msg)
-	if err != nil {
-		return err
-	}
-
-	return c.email.DialAndSendWithContext(ctx, buildMail)
+	return c.h.SendEmail(ctx, msg)
 }

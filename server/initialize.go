@@ -174,6 +174,7 @@ func NewEmailClient(ctx context.Context, emailConf conf.Email) (*mail.Client, er
 	if err != nil {
 		return nil, err
 	}
+	// test if smtp server is available
 	err = client.DialWithContext(ctx)
 	if err != nil {
 		return nil, err

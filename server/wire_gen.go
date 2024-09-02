@@ -82,6 +82,7 @@ func setup(ctx types.Context) (svc.Context, error) {
 		EmailHandler: handler,
 		JobHandler:   jobHandler,
 		JobRepo:      jobRepo,
+		MQ:           streamQueue,
 	}
 	return context, nil
 }

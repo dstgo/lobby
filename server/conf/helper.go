@@ -81,7 +81,6 @@ var DefaultConfig = App{
 		Password: "",
 		MQ: EmailMq{
 			Topic:     "email",
-			MaxLen:    10_000,
 			BatchSize: 20,
 			Group:     "email-group",
 			Consumers: []string{"consumerA"},

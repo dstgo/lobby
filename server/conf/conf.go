@@ -107,7 +107,6 @@ type Email struct {
 
 type EmailMq struct {
 	Topic     string   `toml:"topic" comment:"email mq topic"`
-	MaxLen    int64    `toml:"maxLen" comment:"max length of topic"`
 	BatchSize int64    `toml:"batchSize" comment:"max batch size of per reading"`
 	Group     string   `toml:"group" comment:"consumer group"`
 	Consumers []string `toml:"consumers" comment:"how many consumer in groups, must >=1."`

@@ -54,7 +54,7 @@ func (v *VerifyCodeHandler) SendVerifyCodeEmail(ctx context.Context, to string, 
 	pendingMail := email.TmplConfirmCode(usage.String(), to, code, ttl.Duration())
 
 	// send email
-	err := v.sender.SendHermesEmail(ctx, fmt.Sprintf("you are applying for verification code for %s.", usage.String()), []string{to}, pendingMail)
+	err := v.sender.PublishHermesEmail(ctx, fmt.Sprintf("you are applying for verification code for %s.", usage.String()), []string{to}, pendingMail)
 	if err != nil {
 		if err := v.codeCache.Del(ctx, usage, code); err != nil {
 			return statuserr.InternalError(err)

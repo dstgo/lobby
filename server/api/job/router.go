@@ -9,11 +9,11 @@ type Router struct {
 }
 
 func NewRouter(root *ginx.RouterGroup, job *JobAPI) Router {
-	group := root.Group("job")
+	group := root.Group("/job")
 	group.GET("/info", job.Info)
 	group.GET("/list", job.List)
-	group.GET("/start", job.Start)
-	group.GET("/stop", job.Stop)
+	group.POST("/start", job.Start)
+	group.POST("/stop", job.Stop)
 
 	return Router{Job: job}
 }

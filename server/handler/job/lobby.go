@@ -1,4 +1,4 @@
-package jobs
+package job
 
 import (
 	"context"
@@ -51,7 +51,7 @@ type LobbyCollectJob struct {
 }
 
 func (l *LobbyCollectJob) Name() string {
-	return "lobby-Collect"
+	return "lobby-collect"
 }
 
 func (l *LobbyCollectJob) Cron() string {

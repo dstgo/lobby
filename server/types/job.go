@@ -1,6 +1,14 @@
 package types
 
-import "github.com/dstgo/lobby/server/data/ent"
+import (
+	"github.com/dstgo/lobby/server/data/ent"
+	"github.com/ginx-contribs/ginx/constant/status"
+	"github.com/ginx-contribs/ginx/pkg/resp/statuserr"
+)
+
+var (
+	ErrJobNotFound = statuserr.Errorf("cron job not found").SetCode(4_400_001).SetStatus(status.BadRequest)
+)
 
 type JobNameOptions struct {
 	Name string `form:"name" binding:"required"`
@@ -13,11 +21,11 @@ type JobPageOption struct {
 }
 
 type JobInfo struct {
-	Id   int    `json:"id"`
-	Name string `json:"name"`
-	Cron string `json:"cron"`
-	Next int64  `json:"next"`
-	Prev int64  `json:"prev"`
+	Name  string `json:"name"`
+	Entry int    `json:"entry"`
+	Cron  string `json:"cron"`
+	Next  int64  `json:"next"`
+	Prev  int64  `json:"prev"`
 }
 
 type JobPageList struct {
@@ -27,11 +35,11 @@ type JobPageList struct {
 
 func EntJobToJobInfo(j *ent.CronJob) JobInfo {
 	return JobInfo{
-		Id:   j.EntryID,
-		Name: j.Name,
-		Cron: j.Cron,
-		Next: j.Next,
-		Prev: j.Prev,
+		Entry: j.EntryID,
+		Name:  j.Name,
+		Cron:  j.Cron,
+		Next:  j.Next,
+		Prev:  j.Prev,
 	}
 }
 

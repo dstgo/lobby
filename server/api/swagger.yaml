@@ -109,6 +109,8 @@ definitions:
         allOf:
         - $ref: '#/definitions/types.Usage'
         description: 'verify code usage: 1-register 2-reset password'
+        maximum: 2
+        minimum: 1
     required:
     - usage
     type: object

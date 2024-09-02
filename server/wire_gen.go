@@ -10,6 +10,7 @@ import (
 	"github.com/dstgo/lobby/server/api"
 	auth2 "github.com/dstgo/lobby/server/api/auth"
 	dst2 "github.com/dstgo/lobby/server/api/dst"
+	job2 "github.com/dstgo/lobby/server/api/job"
 	"github.com/dstgo/lobby/server/api/system"
 	user2 "github.com/dstgo/lobby/server/api/user"
 	"github.com/dstgo/lobby/server/data/cache"
@@ -20,7 +21,6 @@ import (
 	"github.com/dstgo/lobby/server/handler/email"
 	"github.com/dstgo/lobby/server/handler/job"
 	"github.com/dstgo/lobby/server/handler/user"
-	"github.com/dstgo/lobby/server/jobs"
 	"github.com/dstgo/lobby/server/svc"
 	"github.com/dstgo/lobby/server/types"
 )
@@ -63,15 +63,18 @@ func setup(ctx types.Context) (svc.Context, error) {
 	lobbyHandler := dst.NewLobbyHandler(serverRepo, lobbyapiClient)
 	lobbyAPI := dst2.NewLobbyAPI(lobbyHandler)
 	dstRouter := dst2.NewRouter(routerGroup, lobbyAPI)
+	jobRepo := repo.NewJobRepo(entClient)
+	cronJob := job.NewCronJob()
+	jobHandler := job.NewJobHandler(jobRepo, cronJob)
+	jobAPI := job2.NewJobAPI(jobHandler)
+	jobRouter := job2.NewRouter(routerGroup, jobAPI)
 	apiRouter := api.Router{
 		Auth:   router,
 		System: systemRouter,
 		User:   userRouter,
 		Dst:    dstRouter,
+		Job:    jobRouter,
 	}
-	jobRepo := repo.NewJobRepo(entClient)
-	cronJob := jobs.NewCronJob()
-	jobHandler := job.NewJobHandler(jobRepo, cronJob)
 	context := svc.Context{
 		ApiRouter:    apiRouter,
 		LobbyHandler: lobbyHandler,
@@ -82,6 +85,7 @@ func setup(ctx types.Context) (svc.Context, error) {
 		EmailHandler: handler,
 		JobHandler:   jobHandler,
 		JobRepo:      jobRepo,
+		CronJob:      cronJob,
 		MQ:           streamQueue,
 	}
 	return context, nil

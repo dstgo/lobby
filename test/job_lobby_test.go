@@ -5,7 +5,7 @@ import (
 	"github.com/dstgo/lobby/server"
 	"github.com/dstgo/lobby/server/data/repo"
 	"github.com/dstgo/lobby/server/handler/dst"
-	"github.com/dstgo/lobby/server/jobs"
+	"github.com/dstgo/lobby/server/handler/job"
 	"github.com/dstgo/lobby/server/pkg/lobbyapi"
 	"github.com/dstgo/lobby/test/testutil"
 	"github.com/stretchr/testify/assert"
@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-func newLobbyCollectJob() (*jobs.LobbyCollectJob, error) {
+func newLobbyCollectJob() (*job.LobbyCollectJob, error) {
 	ctx := context.Background()
 	cfg, err := testutil.ReadConf()
 	if err != nil {
@@ -27,10 +27,10 @@ func newLobbyCollectJob() (*jobs.LobbyCollectJob, error) {
 	serverRepo := repo.NewServerRepo(db)
 	client := lobbyapi.New(cfg.Dst.KeliToken)
 	handler := dst.NewLobbyHandler(serverRepo, client)
-	return jobs.NewLobbyCollectJob(handler, client, cfg.Job.Collect), nil
+	return job.NewLobbyCollectJob(handler, client, cfg.Job.Collect), nil
 }
 
-func newLobbyCleanJob() (*jobs.LobbyCleanJob, error) {
+func newLobbyCleanJob() (*job.LobbyCleanJob, error) {
 	ctx := context.Background()
 	cfg, err := testutil.ReadConf()
 	if err != nil {
@@ -44,7 +44,7 @@ func newLobbyCleanJob() (*jobs.LobbyCleanJob, error) {
 	serverRepo := repo.NewServerRepo(db)
 	client := lobbyapi.New(cfg.Dst.KeliToken)
 	handler := dst.NewLobbyHandler(serverRepo, client)
-	return jobs.NewLobbyCleanJob(handler, cfg.Job.Clean), nil
+	return job.NewLobbyCleanJob(handler, cfg.Job.Clean), nil
 }
 
 func TestLobbyCollect(t *testing.T) {
@@ -68,7 +68,7 @@ func TestLobbyCollectBatch(t *testing.T) {
 }
 
 func TestLobbyCollectCron(t *testing.T) {
-	cronjob := jobs.NewCronJob()
+	cronjob := job.NewCronJob()
 	collectJob, err := newLobbyCollectJob()
 	if !assert.NoError(t, err) {
 		return

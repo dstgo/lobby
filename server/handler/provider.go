@@ -25,5 +25,6 @@ var Provider = wire.NewSet(
 	dst.NewLobbyHandler,
 
 	// job
+	job.NewCronJob,
 	job.NewJobHandler,
 )

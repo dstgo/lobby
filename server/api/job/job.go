@@ -8,12 +8,12 @@ import (
 	"github.com/ginx-contribs/ginx/pkg/resp"
 )
 
-func NewJobAPI(jHandler *job.JobHandler) *JobAPI {
+func NewJobAPI(jHandler *job.Handler) *JobAPI {
 	return &JobAPI{jHandler: jHandler}
 }
 
 type JobAPI struct {
-	jHandler *job.JobHandler
+	jHandler *job.Handler
 }
 
 // List

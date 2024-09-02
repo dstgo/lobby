@@ -14,6 +14,10 @@ type JobRepo struct {
 	Ent *ent.Client
 }
 
+func (j *JobRepo) Clear(ctx context.Context) (int, error) {
+	return j.Ent.CronJob.Delete().Exec(ctx)
+}
+
 // UpsertOne creates a new Job if it is not existing, otherwise it wille update it.
 func (j *JobRepo) UpsertOne(ctx context.Context, job *ent.CronJob) error {
 	first, err := j.Ent.CronJob.Query().Where(cronjob.Name(job.Name)).First(ctx)
@@ -23,9 +27,8 @@ func (j *JobRepo) UpsertOne(ctx context.Context, job *ent.CronJob) error {
 	} else if err != nil {
 		return err
 	}
-
 	_, err = j.Ent.CronJob.UpdateOneID(first.ID).
-		SetEntryID(job.ID).
+		SetEntryID(job.EntryID).
 		SetPrev(job.Prev).
 		SetNext(job.Next).Save(ctx)
 	if err != nil {
@@ -37,6 +40,10 @@ func (j *JobRepo) UpsertOne(ctx context.Context, job *ent.CronJob) error {
 // QueryOne returns a job with the given name
 func (j *JobRepo) QueryOne(ctx context.Context, name string) (*ent.CronJob, error) {
 	return j.Ent.CronJob.Query().Where(cronjob.Name(name)).First(ctx)
+}
+
+func (j *JobRepo) FindByEntryId(ctx context.Context, ids ...int) ([]*ent.CronJob, error) {
+	return j.Ent.CronJob.Query().Where(cronjob.EntryIDIn(ids...)).All(ctx)
 }
 
 // ListByPage returns a list of jobs

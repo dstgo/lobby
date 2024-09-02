@@ -6,7 +6,7 @@ import (
 	"github.com/dstgo/lobby/server/conf"
 	"github.com/dstgo/lobby/server/data/ent"
 	authhandler "github.com/dstgo/lobby/server/handler/auth"
-	"github.com/dstgo/lobby/server/jobs"
+	"github.com/dstgo/lobby/server/handler/job"
 	"github.com/dstgo/lobby/server/mids"
 	"github.com/dstgo/lobby/server/svc"
 	"github.com/dstgo/lobby/server/types"
@@ -183,28 +183,37 @@ func NewEmailClient(ctx context.Context, emailConf conf.Email) (*mail.Client, er
 }
 
 // NewCronJob initialize cron jobs
-func NewCronJob(ctx context.Context, tc types.Context, sc svc.Context) (*jobs.CronJob, error) {
-	cronjob := jobs.NewCronJob()
+func NewCronJob(ctx context.Context, tc types.Context, sc svc.Context) (*job.CronJob, error) {
+	cj := sc.CronJob
+	// hooks
+	cj.BeforeHooks = append(cj.BeforeHooks, job.LogBefore(), job.UpdateBefore(sc.JobHandler))
+	cj.AfterHooks = append(cj.AfterHooks, job.LogAfter())
 	errs := []error{
 		// lobby collect
-		cronjob.AddJob(newCollectJob(tc, sc)),
+		cj.AddJob(newCollectJob(tc, sc)),
 		// lobby clean
-		cronjob.AddJob(newCleanJob(tc, sc)),
+		cj.AddJob(newCleanJob(tc, sc)),
 	}
 	for _, err := range errs {
 		if err != nil {
 			return nil, err
 		}
 	}
-	return cronjob, nil
+	for _, j := range cj.FutureJobs() {
+		err := sc.JobHandler.Upsert(ctx, j)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return cj, nil
 }
 
-func newCollectJob(tc types.Context, sc svc.Context) *jobs.LobbyCollectJob {
-	return jobs.NewLobbyCollectJob(sc.LobbyHandler, tc.Lobby, tc.AppConf.Job.Collect)
+func newCollectJob(tc types.Context, sc svc.Context) *job.LobbyCollectJob {
+	return job.NewLobbyCollectJob(sc.LobbyHandler, tc.Lobby, tc.AppConf.Job.Collect)
 }
 
-func newCleanJob(tc types.Context, sc svc.Context) *jobs.LobbyCleanJob {
-	return jobs.NewLobbyCleanJob(sc.LobbyHandler, tc.AppConf.Job.Clean)
+func newCleanJob(tc types.Context, sc svc.Context) *job.LobbyCleanJob {
+	return job.NewLobbyCleanJob(sc.LobbyHandler, tc.AppConf.Job.Clean)
 }
 
 // override the default ginx validation error handler, see ginx.SetValidateHandler

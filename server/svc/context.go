@@ -36,8 +36,9 @@ type Context struct {
 	EmailHandler *email.Handler
 
 	// job
-	JobHandler *job.JobHandler
+	JobHandler *job.Handler
 	JobRepo    *repo.JobRepo
+	CronJob    *job.CronJob
 
 	// message queue
 	MQ mq.Queue

@@ -29,6 +29,7 @@ type Router struct {
 	System system.Router
 	User   user.Router
 	Dst    dst.Router
+	Job    job.Router
 }
 
 var Provider = wire.NewSet(

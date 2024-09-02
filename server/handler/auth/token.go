@@ -45,7 +45,7 @@ func (t *TokenHandler) Issue(ctx context.Context, payload types.TokenPayload, re
 	// consider network latency
 	latency := time.Second * 10
 
-	ttl := t.JwtConf.Access.Expire + t.JwtConf.Access.Delay + latency
+	ttl := t.JwtConf.Access.Expire.Duration() + t.JwtConf.Access.Delay.Duration() + latency
 	// store into the cache
 	if err := t.accessCache.Set(ctx, accessToken.Claims.ID, accessToken.Claims.ID, ttl); err != nil {
 		return types.TokenPair{}, err
@@ -64,7 +64,7 @@ func (t *TokenHandler) Issue(ctx context.Context, payload types.TokenPayload, re
 	}
 
 	// associated with access token
-	if err := t.refreshCache.Set(ctx, refreshToken.Claims.ID, accessToken.Claims.ID, t.JwtConf.Refresh.Expire); err != nil {
+	if err := t.refreshCache.Set(ctx, refreshToken.Claims.ID, accessToken.Claims.ID, t.JwtConf.Refresh.Expire.Duration()); err != nil {
 		return tokenPair, nil
 	}
 	tokenPair.RefreshToken = refreshToken
@@ -87,7 +87,7 @@ func (t *TokenHandler) Refresh(ctx context.Context, accessToken string, refreshT
 	access, err := t.VerifyAccess(ctx, accessToken, now)
 	if errors.Is(err, jwt.ErrTokenExpired) {
 		// return if over the delay time
-		if access.Claims.ExpiresAt.Add(t.JwtConf.Access.Delay).Sub(now) < 0 {
+		if access.Claims.ExpiresAt.Add(t.JwtConf.Access.Delay.Duration()).Sub(now) < 0 {
 			return pair, jwt.ErrTokenExpired
 		}
 	} else if err != nil {
@@ -116,7 +116,7 @@ func (t *TokenHandler) Refresh(ctx context.Context, accessToken string, refreshT
 		return pair, statuserr.InternalError(err)
 	}
 	// extend lifetime of access token
-	ttl += t.JwtConf.Access.Expire
+	ttl += t.JwtConf.Access.Expire.Duration()
 	if err := t.accessCache.Set(ctx, newAccess.Claims.ID, newAccess.Claims.ID, ttl); err != nil {
 		return pair, statuserr.InternalError(err)
 	}
@@ -134,7 +134,7 @@ func (t *TokenHandler) VerifyAccess(ctx context.Context, token string, now time.
 	parsedToken, err := t.parse(token, t.JwtConf.Access.Key)
 	if errors.Is(err, jwt.ErrTokenExpired) {
 		// check if token needs to be refreshed
-		if parsedToken.Claims.Remember && parsedToken.Claims.ExpiresAt.Add(t.JwtConf.Access.Delay).Sub(now) > 0 {
+		if parsedToken.Claims.Remember && parsedToken.Claims.ExpiresAt.Add(t.JwtConf.Access.Delay.Duration()).Sub(now) > 0 {
 			return parsedToken, types.ErrTokenNeedsRefresh
 		}
 		return parsedToken, err
@@ -173,7 +173,7 @@ func (t *TokenHandler) newToken(now time.Time, key string, payload types.TokenPa
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    t.JwtConf.Issuer,
 			IssuedAt:  jwt.NewNumericDate(now),
-			ExpiresAt: jwt.NewNumericDate(now.Add(t.JwtConf.Access.Expire)),
+			ExpiresAt: jwt.NewNumericDate(now.Add(t.JwtConf.Access.Expire.Duration())),
 			ID:        uuid.NewString(),
 		},
 	}

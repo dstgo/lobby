@@ -77,8 +77,8 @@ func InitializeDB(ctx context.Context, dbConf conf.DB) (*ent.Client, error) {
 		Params:             dbConf.Params,
 		MaxIdleConnections: dbConf.MaxIdleConnections,
 		MaxOpenConnections: dbConf.MaxOpenConnections,
-		MaxLifeTime:        dbConf.MaxLifeTime,
-		MaxIdleTime:        dbConf.MaxIdleTime,
+		MaxLifeTime:        dbConf.MaxLifeTime.Duration(),
+		MaxIdleTime:        dbConf.MaxIdleTime.Duration(),
 	})
 	if err != nil {
 		return nil, err
@@ -99,14 +99,13 @@ func InitializeRedis(ctx context.Context, redisConf conf.Redis) (*redis.Client, 
 	redisClient := redis.NewClient(&redis.Options{
 		Addr:         redisConf.Address,
 		Password:     redisConf.Password,
-		ReadTimeout:  redisConf.ReadTimeout,
-		WriteTimeout: redisConf.WriteTimeout,
+		ReadTimeout:  redisConf.ReadTimeout.Duration(),
+		WriteTimeout: redisConf.WriteTimeout.Duration(),
 	})
 	pingResult := redisClient.Ping(ctx)
 	if pingResult.Err() != nil {
 		return nil, pingResult.Err()
 	}
-
 	return redisClient, nil
 }
 
@@ -118,6 +117,10 @@ func InitializeEmail(ctx context.Context, emailConf conf.Email) (*mail.Client, e
 		mail.WithUsername(emailConf.Username),
 		mail.WithPassword(emailConf.Password),
 	)
+	if err != nil {
+		return nil, err
+	}
+	err = client.DialWithContext(ctx)
 	if err != nil {
 		return nil, err
 	}

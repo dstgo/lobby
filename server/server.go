@@ -64,9 +64,9 @@ func NewApp(ctx context.Context, appConf *conf.App) (*ginx.Server, error) {
 		ginx.WithOptions(ginx.Options{
 			Mode:               gin.ReleaseMode,
 			Address:            appConf.Server.Address,
-			ReadTimeout:        appConf.Server.ReadTimeout,
-			WriteTimeout:       appConf.Server.WriteTimeout,
-			IdleTimeout:        appConf.Server.IdleTimeout,
+			ReadTimeout:        appConf.Server.ReadTimeout.Duration(),
+			WriteTimeout:       appConf.Server.WriteTimeout.Duration(),
+			IdleTimeout:        appConf.Server.IdleTimeout.Duration(),
 			MaxMultipartMemory: appConf.Server.MultipartMax,
 			MaxHeaderBytes:     int(size.MB * 2),
 			MaxShutdownTimeout: time.Second * 5,
@@ -81,7 +81,7 @@ func NewApp(ctx context.Context, appConf *conf.App) (*ginx.Server, error) {
 			// access logger
 			middleware.Logger(slog.Default(), "request-log"),
 			// rate limit by counting
-			mids.RateLimitByCount(redisClient, appConf.Limit.Public.Limit, appConf.Limit.Public.Window, mids.ByIpPath),
+			mids.RateLimitByCount(redisClient, appConf.Limit.Public.Limit, appConf.Limit.Public.Window.Duration(), mids.ByIpPath),
 			// jwt authentication
 			mids.TokenAuthenticator(authhandler.NewTokenHandler(appConf.Jwt, redisClient)),
 		),

@@ -1,13 +1,13 @@
 package conf
 
 import (
+	"github.com/246859/duration"
 	"github.com/ginx-contribs/logx"
 	"github.com/mitchellh/mapstructure"
 	"github.com/pelletier/go-toml/v2"
 	"log/slog"
 	"os"
 	"reflect"
-	"time"
 )
 
 // ReadFrom read app configuration from specified file
@@ -41,9 +41,9 @@ func WriteTo(filename string, app App) error {
 var DefaultConfig = App{
 	Server: Server{
 		Address:      "127.0.0.1:8080",
-		ReadTimeout:  time.Minute,
-		WriteTimeout: time.Minute,
-		IdleTimeout:  time.Minute * 5,
+		ReadTimeout:  duration.Minute,
+		WriteTimeout: duration.Minute,
+		IdleTimeout:  5 * duration.Minute,
 		MultipartMax: 50 << 20,
 		Pprof:        false,
 	},
@@ -64,14 +64,14 @@ var DefaultConfig = App{
 		Params:             "",
 		MaxIdleConnections: 10,
 		MaxOpenConnections: 100,
-		MaxLifeTime:        time.Hour,
-		MaxIdleTime:        time.Minute * 10,
+		MaxLifeTime:        duration.Hour,
+		MaxIdleTime:        10 * duration.Minute,
 	},
 	Redis: Redis{
 		Address:      "127.0.0.1:6379",
 		Password:     "password",
-		WriteTimeout: time.Minute,
-		ReadTimeout:  time.Minute,
+		WriteTimeout: duration.Minute,
+		ReadTimeout:  duration.Minute,
 	},
 	Email: Email{
 		Host:     "",
@@ -86,19 +86,19 @@ var DefaultConfig = App{
 			Consumers: []string{"consumerA"},
 		},
 		Code: VerifyCode{
-			TTL:      time.Minute * 5,
-			RetryTTL: time.Minute,
+			TTL:      5 * duration.Minute,
+			RetryTTL: duration.Minute,
 		},
 	},
 	Jwt: Jwt{
 		Issuer: "lobby",
 		Access: AccessToken{
-			Expire: time.Hour * 4,
-			Delay:  time.Minute * 10,
+			Expire: 4 * duration.Hour,
+			Delay:  10 * duration.Minute,
 			Key:    "01J6EA2G4FSF9ABC218VFJ2B3C",
 		},
 		Refresh: RefreshToken{
-			Expire: time.Hour * 144,
+			Expire: 144 * duration.Hour,
 			Key:    "01J6EA3FKDDHTT9Q8Z5YKWHVCE",
 		},
 	},

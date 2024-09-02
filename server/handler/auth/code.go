@@ -38,7 +38,7 @@ func (v *VerifyCodeHandler) SendVerifyCodeEmail(ctx context.Context, to string, 
 
 		// generated a verification code
 		code = NewVerifyCode(8)
-		tryOk, err := v.codeCache.Set(ctx, usage, code, to, ttl, retryttl)
+		tryOk, err := v.codeCache.Set(ctx, usage, code, to, ttl.Duration(), retryttl.Duration())
 
 		if errors.Is(err, cache.ErrCodeRepeated) {
 			continue
@@ -51,7 +51,7 @@ func (v *VerifyCodeHandler) SendVerifyCodeEmail(ctx context.Context, to string, 
 		}
 	}
 
-	pendingMail := email.TmplConfirmCode(usage.String(), to, code, ttl)
+	pendingMail := email.TmplConfirmCode(usage.String(), to, code, ttl.Duration())
 
 	// send email
 	err := v.sender.SendHermesEmail(ctx, fmt.Sprintf("you are applying for verification code for %s.", usage.String()), []string{to}, pendingMail)

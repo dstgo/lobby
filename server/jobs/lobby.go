@@ -3,6 +3,7 @@ package jobs
 import (
 	"context"
 	"fmt"
+	"github.com/246859/duration"
 	"github.com/dstgo/lobby/server/conf"
 	"github.com/dstgo/lobby/server/data/ent"
 	"github.com/dstgo/lobby/server/handler/dst"
@@ -189,9 +190,9 @@ func NewLobbyCleanJob(handler *dst.LobbyHandler, cleanConf conf.Clean) *LobbyCle
 		cleanConf.BatchSize = 2000
 	}
 	if cleanConf.Expired == 0 {
-		cleanConf.Expired = 7 * 24 * time.Hour
+		cleanConf.Expired = 7 * 24 * duration.Hour
 	}
-	return &LobbyCleanJob{handler: handler, batch: cleanConf.BatchSize, expired: cleanConf.Expired, cron: cleanConf.Cron}
+	return &LobbyCleanJob{handler: handler, batch: cleanConf.BatchSize, expired: cleanConf.Expired.Duration(), cron: cleanConf.Cron}
 }
 
 type LobbyCleanJob struct {

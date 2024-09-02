@@ -19,7 +19,7 @@ func newLobbyCollectJob() (*jobs.LobbyCollectJob, error) {
 	if err != nil {
 		return nil, err
 	}
-	db, err := server.InitializeDB(ctx, cfg.DB)
+	db, err := server.NewDBClient(ctx, cfg.DB)
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +36,7 @@ func newLobbyCleanJob() (*jobs.LobbyCleanJob, error) {
 	if err != nil {
 		return nil, err
 	}
-	db, err := server.InitializeDB(ctx, cfg.DB)
+	db, err := server.NewDBClient(ctx, cfg.DB)
 	if err != nil {
 		return nil, err
 	}
@@ -52,11 +52,11 @@ func TestLobbyCollect(t *testing.T) {
 	if !assert.NoError(t, err) {
 		return
 	}
-	collected, cost, err := collectJob.Collect(1, 10)
+	collected, err := collectJob.Collect(1, 10)
 	if !assert.NoError(t, err) {
 		return
 	}
-	t.Log(len(collected), cost)
+	t.Log(len(collected))
 }
 
 func TestLobbyCollectBatch(t *testing.T) {

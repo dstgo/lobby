@@ -25,6 +25,7 @@ type App struct {
 // Server is configuration for the http server
 type Server struct {
 	Address      string            `toml:"address" comment:"server bind address"`
+	BasePath     string            `toml:"basepath" comment:"base path for api"`
 	ReadTimeout  duration.Duration `toml:"readTimeout" comment:"the maximum duration for reading the entire request"`
 	WriteTimeout duration.Duration `toml:"writeTimeout" comment:"the maximum duration before timing out writes of the response"`
 	IdleTimeout  duration.Duration `toml:"idleTimeout" comment:"the maximum amount of time to wait for the next request when keep-alives are enabled"`

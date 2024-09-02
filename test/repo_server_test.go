@@ -18,7 +18,7 @@ func newServerRepo() (*repo.ServerRepo, error) {
 	if err != nil {
 		return nil, err
 	}
-	db, err := server.InitializeDB(ctx, dbConf)
+	db, err := server.NewDBClient(ctx, dbConf)
 	if err != nil {
 		return nil, err
 	}

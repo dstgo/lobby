@@ -19,7 +19,7 @@ func newLobbyHandler() (*dst.LobbyHandler, error) {
 	if err != nil {
 		return nil, err
 	}
-	db, err := server.InitializeDB(ctx, appconf.DB)
+	db, err := server.NewDBClient(ctx, appconf.DB)
 	if err != nil {
 		return nil, err
 	}

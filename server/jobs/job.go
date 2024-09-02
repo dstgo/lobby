@@ -2,24 +2,15 @@ package jobs
 
 import (
 	"errors"
+	"fmt"
+	"github.com/dstgo/lobby/test/testutil"
 	"github.com/google/wire"
 	cmap "github.com/orcaman/concurrent-map/v2"
 	"github.com/robfig/cron/v3"
+	"io"
 	"log/slog"
+	"sync/atomic"
 )
-
-type cronLogger struct {
-	logger *slog.Logger
-	prefab string
-}
-
-func (c cronLogger) Info(msg string, keysAndValues ...interface{}) {
-	c.logger.Info(c.prefab+": "+msg, keysAndValues...)
-}
-
-func (c cronLogger) Error(err error, msg string, keysAndValues ...interface{}) {
-	c.logger.Error(c.prefab+": "+msg, append([]any{"err", err}, keysAndValues...)...)
-}
 
 // Job is representation of a cron jobs
 type Job interface {
@@ -28,11 +19,11 @@ type Job interface {
 	// Cron returns the cron expression for the jobs
 	Cron() string
 	// Cmd returns the command to be executed by the jobs
-	Cmd() func()
+	Cmd() func() (attrs []any, err error)
 }
 
-// RunningJob is representation of a running cron jobs
-type RunningJob struct {
+// FutureJob is representation of a future cron jobs
+type FutureJob struct {
 	Job
 	cron.Entry
 }
@@ -42,40 +33,47 @@ var Provider = wire.NewSet(
 )
 
 func NewCronJob() *CronJob {
-	logger := cronLogger{logger: slog.Default(), prefab: "cron-job-runtime-manager"}
-	c := cron.New(cron.WithLogger(logger))
-	return &CronJob{
-		cron:    c,
-		record:  cmap.New[Job](),
-		running: cmap.New[RunningJob](),
+	c := cron.New(cron.WithLogger(discardLogger{out: io.Discard}))
+	cj := &CronJob{
+		cron:   c,
+		record: cmap.New[Job](),
+		future: cmap.New[FutureJob](),
 	}
+	cj.beforeHooks = append(cj.beforeHooks, LogBefore())
+	cj.afterHooks = append(cj.afterHooks, LogAfter())
+	return cj
 }
 
 // CronJob is a simple cron jobs manager
 type CronJob struct {
-	cron    *cron.Cron
-	record  cmap.ConcurrentMap[string, Job]
-	running cmap.ConcurrentMap[string, RunningJob]
+	cron   *cron.Cron
+	record cmap.ConcurrentMap[string, Job]
+	future cmap.ConcurrentMap[string, FutureJob]
+
+	beforeHooks []BeforeHook
+	afterHooks  []AfterHook
 }
 
+// AddJob add a new job to the future list
 func (c *CronJob) AddJob(job Job) error {
 	_, e := c.GetJob(job.Name())
 	if e {
 		return errors.New("same job already")
 	}
-	entryId, err := c.cron.AddFunc(job.Cron(), job.Cmd())
+	entryId, err := c.cron.AddJob(job.Cron(), c.newWrapper(job))
 	if err != nil {
 		return err
 	}
 	c.record.Set(job.Name(), job)
-	c.running.Set(job.Name(), RunningJob{Entry: cron.Entry{ID: entryId}, Job: job})
+	c.future.Set(job.Name(), FutureJob{Entry: cron.Entry{ID: entryId}, Job: job})
 	return nil
 }
 
-func (c *CronJob) GetJob(name string) (RunningJob, bool) {
-	job, e := c.running.Get(name)
+// GetJob return a job from the future list
+func (c *CronJob) GetJob(name string) (FutureJob, bool) {
+	job, e := c.future.Get(name)
 	if !e {
-		return RunningJob{}, false
+		return FutureJob{}, false
 	}
 	entry := c.cron.Entry(job.ID)
 	if (entry != cron.Entry{}) {
@@ -84,36 +82,86 @@ func (c *CronJob) GetJob(name string) (RunningJob, bool) {
 	return job, true
 }
 
+// DelJob remove a job from the future list, but it will not remove from the record
 func (c *CronJob) DelJob(name string) {
 	job, e := c.GetJob(name)
 	if !e {
 		return
 	}
 	c.cron.Remove(job.ID)
-	c.running.Remove(name)
+	c.future.Remove(name)
+	slog.Info(fmt.Sprintf("remove job %v from future", name))
 }
 
-func (c *CronJob) do() {
-
-}
-
+// ContinueJob put a job existing in the record into the future list
 func (c *CronJob) ContinueJob(name string) error {
 	job, e := c.record.Get(name)
 	if !e {
 		return errors.New("job not found")
 	}
-	entryId, err := c.cron.AddFunc(job.Cron(), job.Cmd())
+	entryId, err := c.cron.AddJob(job.Cron(), c.newWrapper(job))
 	if err != nil {
 		return err
 	}
-	c.running.Set(job.Name(), RunningJob{Entry: cron.Entry{ID: entryId}, Job: job})
+	c.future.Set(job.Name(), FutureJob{Entry: cron.Entry{ID: entryId}, Job: job})
+	slog.Info(fmt.Sprintf("continue job %v to future", name))
 	return nil
 }
 
-func (c *CronJob) Start() {
+// Start starts the cron schedule running
+func (c *CronJob) Start() int {
 	c.cron.Start()
+	return len(c.cron.Entries())
 }
 
-func (c *CronJob) Stop() {
+// Stop stops and waits for the all scheduled jobs to complete
+func (c *CronJob) Stop() int {
+	live := len(c.cron.Entries())
 	c.cron.Stop()
+	return live
 }
+
+func (c *CronJob) newWrapper(job Job) *JobWrapper {
+	return &JobWrapper{c: c, job: job}
+}
+
+// JobWrapper is a wrapper for Job
+type JobWrapper struct {
+	c     *CronJob
+	job   Job
+	round atomic.Int64
+}
+
+func (r *JobWrapper) Run() {
+	// it must be existing in there
+	job, _ := r.c.GetJob(r.job.Name())
+
+	// execute hooks before cmd
+	for _, hook := range r.c.beforeHooks {
+		hook(job, r.round.Load())
+	}
+
+	timer := testutil.NewTimer()
+	timer.Start()
+
+	// execute command
+	attrs, err := r.job.Cmd()()
+
+	elapsed := timer.Stop()
+
+	// execute hooks after cmd
+	for _, hook := range r.c.afterHooks {
+		hook(job, r.round.Load(), elapsed, err, attrs...)
+	}
+
+	r.round.Add(1)
+}
+
+type discardLogger struct {
+	out    io.Writer
+	prefab string
+}
+
+func (c discardLogger) Info(msg string, keysAndValues ...interface{}) {}
+
+func (c discardLogger) Error(err error, msg string, keysAndValues ...interface{}) {}

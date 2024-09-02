@@ -41,6 +41,7 @@ func WriteTo(filename string, app App) error {
 var DefaultConfig = App{
 	Server: Server{
 		Address:      "127.0.0.1:8080",
+		BasePath:     "/api",
 		ReadTimeout:  duration.Minute,
 		WriteTimeout: duration.Minute,
 		IdleTimeout:  5 * duration.Minute,

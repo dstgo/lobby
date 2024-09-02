@@ -5,12 +5,18 @@ import (
 	"errors"
 	"github.com/dstgo/lobby/server/conf"
 	"github.com/dstgo/lobby/server/data/ent"
+	authhandler "github.com/dstgo/lobby/server/handler/auth"
 	"github.com/dstgo/lobby/server/jobs"
+	"github.com/dstgo/lobby/server/mids"
 	"github.com/dstgo/lobby/server/svc"
 	"github.com/dstgo/lobby/server/types"
+	"github.com/dstgo/size"
 	"github.com/gin-gonic/gin"
 	"github.com/ginx-contribs/dbx"
 	"github.com/ginx-contribs/ginx"
+	"github.com/ginx-contribs/ginx/constant/methods"
+	"github.com/ginx-contribs/ginx/contribs/requestid"
+	"github.com/ginx-contribs/ginx/middleware"
 	"github.com/ginx-contribs/ginx/pkg/resp"
 	"github.com/ginx-contribs/logx"
 	ut "github.com/go-playground/universal-translator"
@@ -19,7 +25,10 @@ import (
 	"github.com/redis/go-redis/v9"
 	"github.com/wneessen/go-mail"
 	"golang.org/x/net/context"
+	"log/slog"
+	"net/http/pprof"
 	"strings"
+	"time"
 
 	// offline time zone database
 	_ "time/tzdata"
@@ -66,8 +75,53 @@ func NewLogger(option conf.Log) (*logx.Logger, error) {
 	return logger, nil
 }
 
-// InitializeDB initialize database with ent
-func InitializeDB(ctx context.Context, dbConf conf.DB) (*ent.Client, error) {
+func NewHttpServer(ctx context.Context, appConf *conf.App, tc types.Context) (*ginx.Server, error) {
+	server := ginx.New(
+		ginx.WithOptions(ginx.Options{
+			Mode:               gin.ReleaseMode,
+			Address:            appConf.Server.Address,
+			ReadTimeout:        appConf.Server.ReadTimeout.Duration(),
+			WriteTimeout:       appConf.Server.WriteTimeout.Duration(),
+			IdleTimeout:        appConf.Server.IdleTimeout.Duration(),
+			MaxMultipartMemory: appConf.Server.MultipartMax,
+			MaxHeaderBytes:     int(size.MB * 2),
+			MaxShutdownTimeout: time.Second * 5,
+		}),
+		ginx.WithNoMethod(middleware.NoMethod(methods.Get, methods.Post, methods.Put, methods.Delete, methods.Options)),
+		ginx.WithNoRoute(middleware.NoRoute()),
+		ginx.WithMiddlewares(
+			// reocvery handler
+			middleware.Recovery(slog.Default(), nil),
+			// request id
+			requestid.RequestId(),
+			// access logger
+			middleware.Logger(slog.Default(), "request-log"),
+			// rate limit by counting
+			mids.RateLimitByCount(tc.Redis, appConf.Limit.Public.Limit, appConf.Limit.Public.Window.Duration(), mids.ByIpPath),
+			// jwt authentication
+			mids.TokenAuthenticator(authhandler.NewTokenHandler(appConf.Jwt, tc.Redis)),
+		),
+	)
+
+	// set validator for gin
+	err := setupHumanizedValidator()
+	if err != nil {
+		return nil, err
+	}
+
+	// whether to enable pprof program profiling
+	if appConf.Server.Pprof {
+		server.Engine().GET("/pprof/profile", gin.WrapF(pprof.Profile))
+		server.Engine().GET("/pprof/heap", gin.WrapH(pprof.Handler("heap")))
+		server.Engine().GET("/pprof/goroutine", gin.WrapH(pprof.Handler("goroutine")))
+		slog.Info("pprof profiling enabled")
+	}
+
+	return server, nil
+}
+
+// NewDBClient initialize database with ent
+func NewDBClient(ctx context.Context, dbConf conf.DB) (*ent.Client, error) {
 	sqldb, err := dbx.Open(dbx.Options{
 		Driver:             dbConf.Driver,
 		Address:            dbConf.Address,
@@ -94,8 +148,8 @@ func InitializeDB(ctx context.Context, dbConf conf.DB) (*ent.Client, error) {
 	return entClient, err
 }
 
-// InitializeRedis initialize redis connection
-func InitializeRedis(ctx context.Context, redisConf conf.Redis) (*redis.Client, error) {
+// NewRedisClient initialize redis connection
+func NewRedisClient(ctx context.Context, redisConf conf.Redis) (*redis.Client, error) {
 	redisClient := redis.NewClient(&redis.Options{
 		Addr:         redisConf.Address,
 		Password:     redisConf.Password,
@@ -109,8 +163,8 @@ func InitializeRedis(ctx context.Context, redisConf conf.Redis) (*redis.Client, 
 	return redisClient, nil
 }
 
-// InitializeEmail initialize email client
-func InitializeEmail(ctx context.Context, emailConf conf.Email) (*mail.Client, error) {
+// NewEmailClient initialize email client
+func NewEmailClient(ctx context.Context, emailConf conf.Email) (*mail.Client, error) {
 	client, err := mail.NewClient(emailConf.Host,
 		mail.WithPort(emailConf.Port),
 		mail.WithSMTPAuth(mail.SMTPAuthPlain),
@@ -127,8 +181,8 @@ func InitializeEmail(ctx context.Context, emailConf conf.Email) (*mail.Client, e
 	return client, nil
 }
 
-// InitializeCronJob initialize cron jobs
-func InitializeCronJob(ctx context.Context, tc types.Context, sc svc.Context) (*jobs.CronJob, error) {
+// NewCronJob initialize cron jobs
+func NewCronJob(ctx context.Context, tc types.Context, sc svc.Context) (*jobs.CronJob, error) {
 	cronjob := jobs.NewCronJob()
 	errs := []error{
 		// lobby collect

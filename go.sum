@@ -2,6 +2,8 @@ ariga.io/atlas v0.25.1-0.20240717145915-af51d3945208 h1:ixs1c/fAXGS3mTdalyKQrtvf
 ariga.io/atlas v0.25.1-0.20240717145915-af51d3945208/go.mod h1:KPLc7Zj+nzoXfWshrcY1RwlOh94dsATQEy4UPrF2RkM=
 entgo.io/ent v0.14.1 h1:fUERL506Pqr92EPHJqr8EYxbPioflJo6PudkrEA8a/s=
 entgo.io/ent v0.14.1/go.mod h1:MH6XLG0KXpkcDQhKiHfANZSzR55TJyPL5IGNpI8wpco=
+github.com/246859/duration v1.1.0 h1:wI6XVbG6YtuMKjkYQGYAXOa6unk39Lww5y9dhug29+I=
+github.com/246859/duration v1.1.0/go.mod h1:N06UU3GpiFNNzlzUvYoz51XTiregpSwMFxmWsfudn/g=
 github.com/Azure/azure-sdk-for-go/sdk/azcore v1.7.1 h1:/iHxaJhsFr0+xVFfbMr5vxz848jyiWuIEDhYq3y5odY=
 github.com/Azure/azure-sdk-for-go/sdk/azcore v1.7.1/go.mod h1:bjGvMhVMb+EEm3VRNQawDMUyMMjo+S5ewNjflkep/0Q=
 github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.3.0 h1:vcYCAze6p19qBW7MhZybIsqD8sMV8js0NyQM8JDnVtg=

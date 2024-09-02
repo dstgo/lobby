@@ -120,7 +120,9 @@ func (q *StreamQueue) readStream(ctx context.Context, topic, group, consumer, id
 		Count:    batchSize,
 	}).Result()
 
-	if err != nil {
+	if errors.Is(err, redis.Nil) {
+		return "", nil
+	} else if err != nil {
 		return "", err
 	}
 

@@ -58,6 +58,7 @@ func (q *StreamQueue) Publish(ctx context.Context, topic string, msg any, maxLen
 
 func (q *StreamQueue) Start(ctx context.Context) {
 	q.once.Do(func() {
+		q.running.Store(true)
 		for _, consumers := range q.subscribes {
 			for _, consumer := range consumers {
 				q.group.Go(func() error {
@@ -95,11 +96,11 @@ func (q *StreamQueue) consume(ctx context.Context, topic, group, consumer string
 			return nil
 		default:
 			// read the latest message
-			if id, err := q.readStream(ctx, topic, group, consumer, ">", batchSize, cb); err != nil {
+			if id, err := q.readStream(ctx, topic, group, consumer, ">", batchSize, cb, 1000*time.Millisecond); err != nil {
 				errorLog("stream read latest failed", err, id, topic, group, consumer)
 			}
 			// read the messages that received but not ack
-			if id, err := q.readStream(ctx, topic, group, consumer, "1", batchSize, cb); err != nil {
+			if id, err := q.readStream(ctx, topic, group, consumer, "1", batchSize, cb, 1000*time.Millisecond); err != nil {
 				errorLog("stream read not-ack failed", err, id, topic, group, consumer)
 			}
 			// clear dead messages in pending list
@@ -110,12 +111,12 @@ func (q *StreamQueue) consume(ctx context.Context, topic, group, consumer string
 	}
 }
 
-func (q *StreamQueue) readStream(ctx context.Context, topic, group, consumer, id string, batchSize int64, cb Consumer) (errorId string, err error) {
+func (q *StreamQueue) readStream(ctx context.Context, topic, group, consumer, id string, batchSize int64, cb Consumer, maxWait time.Duration) (errorId string, err error) {
 	// read from specified stream in specified group
 	result, err := q.redis.XReadGroup(ctx, &redis.XReadGroupArgs{
 		Group:    group,
 		Consumer: consumer,
-		Block:    time.Second,
+		Block:    maxWait,
 		Streams:  []string{topic, id},
 		Count:    batchSize,
 	}).Result()

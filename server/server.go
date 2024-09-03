@@ -69,7 +69,8 @@ func NewApp(ctx context.Context, appConf *conf.App) (*ginx.Server, error) {
 		return nil, err
 	}
 
-	sc.MQ.Start(ctx)
+	queue := sc.MQ
+	queue.Start(ctx)
 	slog.Info("message queue is listening")
 
 	// register cron job
@@ -82,7 +83,7 @@ func NewApp(ctx context.Context, appConf *conf.App) (*ginx.Server, error) {
 
 	// shutdown hook
 	onShutdown := func(ctx context.Context) error {
-		logh.ErrorNotNil("message queue closed failed", sc.MQ.Close())
+		logh.ErrorNotNil("message queue closed failed", queue.Close())
 		slog.Info(fmt.Sprintf("stopped %d jobs", cronJob.Stop()))
 		// should close db and redis at the end
 		logh.ErrorNotNil("db closed failed", db.Close())

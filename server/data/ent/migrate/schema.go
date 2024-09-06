@@ -50,23 +50,23 @@ var (
 	// ServersColumns holds the columns for the "servers" table.
 	ServersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "guid", Type: field.TypeString},
-		{Name: "row_id", Type: field.TypeString},
-		{Name: "steam_id", Type: field.TypeString},
-		{Name: "steam_clan_id", Type: field.TypeString},
-		{Name: "owner_id", Type: field.TypeString},
+		{Name: "guid", Type: field.TypeString, SchemaType: map[string]string{"mysql": "varchar(50)"}},
+		{Name: "row_id", Type: field.TypeString, SchemaType: map[string]string{"mysql": "varchar(40)"}},
+		{Name: "steam_id", Type: field.TypeString, SchemaType: map[string]string{"mysql": "varchar(50)"}},
+		{Name: "steam_clan_id", Type: field.TypeString, SchemaType: map[string]string{"mysql": "varchar(25)"}},
+		{Name: "owner_id", Type: field.TypeString, SchemaType: map[string]string{"mysql": "varchar(25)"}},
 		{Name: "steam_room", Type: field.TypeString},
 		{Name: "session", Type: field.TypeString},
-		{Name: "address", Type: field.TypeString},
+		{Name: "address", Type: field.TypeString, SchemaType: map[string]string{"mysql": "varchar(25)"}},
 		{Name: "port", Type: field.TypeInt},
 		{Name: "host", Type: field.TypeString},
-		{Name: "platform", Type: field.TypeString},
+		{Name: "platform", Type: field.TypeString, SchemaType: map[string]string{"mysql": "varchar(30)"}},
 		{Name: "clan_only", Type: field.TypeBool},
 		{Name: "lan_only", Type: field.TypeBool},
 		{Name: "name", Type: field.TypeString},
-		{Name: "game_mode", Type: field.TypeString},
-		{Name: "intent", Type: field.TypeString},
-		{Name: "season", Type: field.TypeString},
+		{Name: "game_mode", Type: field.TypeString, SchemaType: map[string]string{"mysql": "varchar(40)"}},
+		{Name: "intent", Type: field.TypeString, SchemaType: map[string]string{"mysql": "varchar(40)"}},
+		{Name: "season", Type: field.TypeString, SchemaType: map[string]string{"mysql": "varchar(40)"}},
 		{Name: "version", Type: field.TypeInt},
 		{Name: "max_online", Type: field.TypeInt},
 		{Name: "online", Type: field.TypeInt},
@@ -80,17 +80,29 @@ var (
 		{Name: "server_paused", Type: field.TypeBool},
 		{Name: "friend_only", Type: field.TypeBool},
 		{Name: "query_version", Type: field.TypeInt64},
-		{Name: "country", Type: field.TypeString},
-		{Name: "continent", Type: field.TypeString},
-		{Name: "country_code", Type: field.TypeString},
-		{Name: "city", Type: field.TypeString},
-		{Name: "region", Type: field.TypeString},
+		{Name: "country", Type: field.TypeString, SchemaType: map[string]string{"mysql": "varchar(50)"}},
+		{Name: "continent", Type: field.TypeString, SchemaType: map[string]string{"mysql": "varchar(50)"}},
+		{Name: "country_code", Type: field.TypeString, SchemaType: map[string]string{"mysql": "varchar(50)"}},
+		{Name: "city", Type: field.TypeString, SchemaType: map[string]string{"mysql": "varchar(50)"}},
+		{Name: "region", Type: field.TypeString, SchemaType: map[string]string{"mysql": "varchar(50)"}},
 	}
 	// ServersTable holds the schema information for the "servers" table.
 	ServersTable = &schema.Table{
 		Name:       "servers",
 		Columns:    ServersColumns,
 		PrimaryKey: []*schema.Column{ServersColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "server_query_version",
+				Unique:  false,
+				Columns: []*schema.Column{ServersColumns[30]},
+			},
+			{
+				Name:    "server_version",
+				Unique:  false,
+				Columns: []*schema.Column{ServersColumns[18]},
+			},
+		},
 	}
 	// TagsColumns holds the columns for the "tags" table.
 	TagsColumns = []*schema.Column{

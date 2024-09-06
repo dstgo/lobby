@@ -120,6 +120,33 @@ func NewHttpServer(ctx context.Context, appConf *conf.App, tc types.Context) (*g
 	return server, nil
 }
 
+// override the default ginx validation error handler, see ginx.SetValidateHandler
+func setupHumanizedValidator() error {
+	v := validator.New()
+	v.SetTagName("binding")
+	englishValidator, err := ginx.EnglishValidator(v, validateParams)
+	if err != nil {
+		return err
+	}
+	ginx.SetValidator(englishValidator)
+	ginx.SetValidateHandler(englishValidator.HandleError)
+	return nil
+}
+
+func validateParams(ctx *gin.Context, val any, err error, translator ut.Translator) {
+	var validationErrors validator.ValidationErrors
+	if errors.As(err, &validationErrors) {
+		var errorMsg []string
+		for _, validateErr := range validationErrors {
+			errorMsg = append(errorMsg, validateErr.Translate(translator))
+		}
+		verr := errors.New(strings.Join(errorMsg, ", "))
+		resp.Fail(ctx).Code(types.ErrBadParams.Code).Error(verr).JSON()
+		return
+	}
+	resp.Fail(ctx).Code(types.ErrBadParams.Code).ErrorMsg("params validate failed").JSON()
+}
+
 // NewDBClient initialize database with ent
 func NewDBClient(ctx context.Context, dbConf conf.DB) (*ent.Client, error) {
 	sqldb, err := dbx.Open(dbx.Options{
@@ -188,23 +215,23 @@ func NewCronJob(ctx context.Context, tc types.Context, sc svc.Context) (*job.Cro
 	// hooks
 	cj.BeforeHooks = append(cj.BeforeHooks, job.LogBefore(), job.UpdateBefore(sc.JobHandler))
 	cj.AfterHooks = append(cj.AfterHooks, job.LogAfter())
-	errs := []error{
-		// lobby collect
-		cj.AddJob(newCollectJob(tc, sc)),
-		// lobby clean
-		cj.AddJob(newCleanJob(tc, sc)),
-	}
-	for _, err := range errs {
-		if err != nil {
-			return nil, err
-		}
-	}
-	for _, j := range cj.FutureJobs() {
-		err := sc.JobHandler.Upsert(ctx, j)
-		if err != nil {
-			return nil, err
-		}
-	}
+	//errs := []error{
+	//	// lobby collect
+	//	cj.AddJob(newCollectJob(tc, sc)),
+	//	// lobby clean
+	//	cj.AddJob(newCleanJob(tc, sc)),
+	//}
+	//for _, err := range errs {
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//}
+	//for _, j := range cj.FutureJobs() {
+	//	err := sc.JobHandler.Upsert(ctx, j)
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//}
 	return cj, nil
 }
 
@@ -214,31 +241,4 @@ func newCollectJob(tc types.Context, sc svc.Context) *job.LobbyCollectJob {
 
 func newCleanJob(tc types.Context, sc svc.Context) *job.LobbyCleanJob {
 	return job.NewLobbyCleanJob(sc.LobbyHandler, tc.AppConf.Job.Clean)
-}
-
-// override the default ginx validation error handler, see ginx.SetValidateHandler
-func setupHumanizedValidator() error {
-	v := validator.New()
-	v.SetTagName("binding")
-	englishValidator, err := ginx.EnglishValidator(v, validateParams)
-	if err != nil {
-		return err
-	}
-	ginx.SetValidator(englishValidator)
-	ginx.SetValidateHandler(englishValidator.HandleError)
-	return nil
-}
-
-func validateParams(ctx *gin.Context, val any, err error, translator ut.Translator) {
-	var validationErrors validator.ValidationErrors
-	if errors.As(err, &validationErrors) {
-		var errorMsg []string
-		for _, validateErr := range validationErrors {
-			errorMsg = append(errorMsg, validateErr.Translate(translator))
-		}
-		verr := errors.New(strings.Join(errorMsg, ", "))
-		resp.Fail(ctx).Code(types.ErrBadParams.Code).Error(verr).JSON()
-		return
-	}
-	resp.Fail(ctx).Code(types.ErrBadParams.Code).ErrorMsg("params validate failed").JSON()
 }

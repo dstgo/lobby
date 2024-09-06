@@ -37,6 +37,7 @@ require (
 require (
 	ariga.io/atlas v0.25.1-0.20240717145915-af51d3945208 // indirect
 	github.com/246859/duration v1.1.0 // indirect
+	github.com/246859/schematype v1.0.0 // indirect
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/Masterminds/sprig v2.22.0+incompatible // indirect

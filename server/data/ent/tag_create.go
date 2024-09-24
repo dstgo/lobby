@@ -34,6 +34,12 @@ func (tc *TagCreate) SetOwnerID(i int) *TagCreate {
 	return tc
 }
 
+// SetQueryVersion sets the "query_version" field.
+func (tc *TagCreate) SetQueryVersion(i int64) *TagCreate {
+	tc.mutation.SetQueryVersion(i)
+	return tc
+}
+
 // SetServersID sets the "servers" edge to the Server entity by ID.
 func (tc *TagCreate) SetServersID(id int) *TagCreate {
 	tc.mutation.SetServersID(id)
@@ -85,6 +91,9 @@ func (tc *TagCreate) check() error {
 	if _, ok := tc.mutation.OwnerID(); !ok {
 		return &ValidationError{Name: "owner_id", err: errors.New(`ent: missing required field "Tag.owner_id"`)}
 	}
+	if _, ok := tc.mutation.QueryVersion(); !ok {
+		return &ValidationError{Name: "query_version", err: errors.New(`ent: missing required field "Tag.query_version"`)}
+	}
 	if len(tc.mutation.ServersIDs()) == 0 {
 		return &ValidationError{Name: "servers", err: errors.New(`ent: missing required edge "Tag.servers"`)}
 	}
@@ -118,6 +127,10 @@ func (tc *TagCreate) createSpec() (*Tag, *sqlgraph.CreateSpec) {
 	if value, ok := tc.mutation.Value(); ok {
 		_spec.SetField(tag.FieldValue, field.TypeString, value)
 		_node.Value = value
+	}
+	if value, ok := tc.mutation.QueryVersion(); ok {
+		_spec.SetField(tag.FieldQueryVersion, field.TypeInt64, value)
+		_node.QueryVersion = value
 	}
 	if nodes := tc.mutation.ServersIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -212,6 +225,24 @@ func (u *TagUpsert) UpdateOwnerID() *TagUpsert {
 	return u
 }
 
+// SetQueryVersion sets the "query_version" field.
+func (u *TagUpsert) SetQueryVersion(v int64) *TagUpsert {
+	u.Set(tag.FieldQueryVersion, v)
+	return u
+}
+
+// UpdateQueryVersion sets the "query_version" field to the value that was provided on create.
+func (u *TagUpsert) UpdateQueryVersion() *TagUpsert {
+	u.SetExcluded(tag.FieldQueryVersion)
+	return u
+}
+
+// AddQueryVersion adds v to the "query_version" field.
+func (u *TagUpsert) AddQueryVersion(v int64) *TagUpsert {
+	u.Add(tag.FieldQueryVersion, v)
+	return u
+}
+
 // UpdateNewValues updates the mutable fields using the new values that were set on create.
 // Using this option is equivalent to using:
 //
@@ -277,6 +308,27 @@ func (u *TagUpsertOne) SetOwnerID(v int) *TagUpsertOne {
 func (u *TagUpsertOne) UpdateOwnerID() *TagUpsertOne {
 	return u.Update(func(s *TagUpsert) {
 		s.UpdateOwnerID()
+	})
+}
+
+// SetQueryVersion sets the "query_version" field.
+func (u *TagUpsertOne) SetQueryVersion(v int64) *TagUpsertOne {
+	return u.Update(func(s *TagUpsert) {
+		s.SetQueryVersion(v)
+	})
+}
+
+// AddQueryVersion adds v to the "query_version" field.
+func (u *TagUpsertOne) AddQueryVersion(v int64) *TagUpsertOne {
+	return u.Update(func(s *TagUpsert) {
+		s.AddQueryVersion(v)
+	})
+}
+
+// UpdateQueryVersion sets the "query_version" field to the value that was provided on create.
+func (u *TagUpsertOne) UpdateQueryVersion() *TagUpsertOne {
+	return u.Update(func(s *TagUpsert) {
+		s.UpdateQueryVersion()
 	})
 }
 
@@ -508,6 +560,27 @@ func (u *TagUpsertBulk) SetOwnerID(v int) *TagUpsertBulk {
 func (u *TagUpsertBulk) UpdateOwnerID() *TagUpsertBulk {
 	return u.Update(func(s *TagUpsert) {
 		s.UpdateOwnerID()
+	})
+}
+
+// SetQueryVersion sets the "query_version" field.
+func (u *TagUpsertBulk) SetQueryVersion(v int64) *TagUpsertBulk {
+	return u.Update(func(s *TagUpsert) {
+		s.SetQueryVersion(v)
+	})
+}
+
+// AddQueryVersion adds v to the "query_version" field.
+func (u *TagUpsertBulk) AddQueryVersion(v int64) *TagUpsertBulk {
+	return u.Update(func(s *TagUpsert) {
+		s.AddQueryVersion(v)
+	})
+}
+
+// UpdateQueryVersion sets the "query_version" field to the value that was provided on create.
+func (u *TagUpsertBulk) UpdateQueryVersion() *TagUpsertBulk {
+	return u.Update(func(s *TagUpsert) {
+		s.UpdateQueryVersion()
 	})
 }
 

@@ -3,6 +3,7 @@ package test
 import (
 	"context"
 	"github.com/dstgo/lobby/server"
+	"github.com/dstgo/lobby/server/conf"
 	"github.com/dstgo/lobby/server/data/repo"
 	"github.com/dstgo/lobby/server/handler/dst"
 	"github.com/dstgo/lobby/server/pkg/lobbyapi"
@@ -26,7 +27,7 @@ func newLobbyHandler() (*dst.LobbyHandler, error) {
 	// due to large number of records, do not enable debug sql logging.
 	serverRepo := repo.NewServerRepo(db)
 	client := lobbyapi.NewWith(appconf.Dst.KeliToken, resty.New().SetProxy("http://127.0.0.1:7890"))
-	return dst.NewLobbyHandler(serverRepo, client), nil
+	return dst.NewLobbyHandler(serverRepo, client, nil, conf.Elasticsearch{}), nil
 }
 
 func TestLobbyDetails(t *testing.T) {

@@ -63,6 +63,11 @@ func OwnerID(v int) predicate.Tag {
 	return predicate.Tag(sql.FieldEQ(FieldOwnerID, v))
 }
 
+// QueryVersion applies equality check predicate on the "query_version" field. It's identical to QueryVersionEQ.
+func QueryVersion(v int64) predicate.Tag {
+	return predicate.Tag(sql.FieldEQ(FieldQueryVersion, v))
+}
+
 // ValueEQ applies the EQ predicate on the "value" field.
 func ValueEQ(v string) predicate.Tag {
 	return predicate.Tag(sql.FieldEQ(FieldValue, v))
@@ -146,6 +151,46 @@ func OwnerIDIn(vs ...int) predicate.Tag {
 // OwnerIDNotIn applies the NotIn predicate on the "owner_id" field.
 func OwnerIDNotIn(vs ...int) predicate.Tag {
 	return predicate.Tag(sql.FieldNotIn(FieldOwnerID, vs...))
+}
+
+// QueryVersionEQ applies the EQ predicate on the "query_version" field.
+func QueryVersionEQ(v int64) predicate.Tag {
+	return predicate.Tag(sql.FieldEQ(FieldQueryVersion, v))
+}
+
+// QueryVersionNEQ applies the NEQ predicate on the "query_version" field.
+func QueryVersionNEQ(v int64) predicate.Tag {
+	return predicate.Tag(sql.FieldNEQ(FieldQueryVersion, v))
+}
+
+// QueryVersionIn applies the In predicate on the "query_version" field.
+func QueryVersionIn(vs ...int64) predicate.Tag {
+	return predicate.Tag(sql.FieldIn(FieldQueryVersion, vs...))
+}
+
+// QueryVersionNotIn applies the NotIn predicate on the "query_version" field.
+func QueryVersionNotIn(vs ...int64) predicate.Tag {
+	return predicate.Tag(sql.FieldNotIn(FieldQueryVersion, vs...))
+}
+
+// QueryVersionGT applies the GT predicate on the "query_version" field.
+func QueryVersionGT(v int64) predicate.Tag {
+	return predicate.Tag(sql.FieldGT(FieldQueryVersion, v))
+}
+
+// QueryVersionGTE applies the GTE predicate on the "query_version" field.
+func QueryVersionGTE(v int64) predicate.Tag {
+	return predicate.Tag(sql.FieldGTE(FieldQueryVersion, v))
+}
+
+// QueryVersionLT applies the LT predicate on the "query_version" field.
+func QueryVersionLT(v int64) predicate.Tag {
+	return predicate.Tag(sql.FieldLT(FieldQueryVersion, v))
+}
+
+// QueryVersionLTE applies the LTE predicate on the "query_version" field.
+func QueryVersionLTE(v int64) predicate.Tag {
+	return predicate.Tag(sql.FieldLTE(FieldQueryVersion, v))
 }
 
 // HasServers applies the HasEdge predicate on the "servers" edge.

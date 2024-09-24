@@ -7,15 +7,15 @@ import (
 
 // App is configuration for the whole application
 type App struct {
-	Server Server    `toml:"server" comment:"http server configuration"`
-	Log    Log       `toml:"log" comment:"server log configuration"`
-	DB     DB        `toml:"db" comment:"database connection configuration"`
-	Redis  Redis     `toml:"redis" comment:"redis connection configuration"`
-	Email  Email     `toml:"email" comment:"email smtp client configuration"`
-	Jwt    Jwt       `toml:"jwt" comment:"jwt secret configuration"`
-	Limit  RateLimit `toml:"limit" comment:"rate limit configuration"`
-	Dst    Dst       `toml:"dst" comment:"dst configuration'"`
-	Job    Job       `toml:"job" comment:"cron job configuration'"`
+	Server  Server        `toml:"server" comment:"http server configuration"`
+	Log     Log           `toml:"log" comment:"server log configuration"`
+	Elastic Elasticsearch `toml:"elastic" comment:"elasticsearch configuration"`
+	DB      DB            `toml:"db" comment:"database connection configuration"`
+	Redis   Redis         `toml:"redis" comment:"redis connection configuration"`
+	Email   Email         `toml:"email" comment:"email smtp client configuration"`
+	Jwt     Jwt           `toml:"jwt" comment:"jwt secret configuration"`
+	Dst     Dst           `toml:"dst" comment:"dst configuration'"`
+	Job     Job           `toml:"job" comment:"cron job configuration'"`
 
 	Author    string `toml:"-" mapstructure:"-"`
 	Version   string `toml:"-" mapstructure:"-"`
@@ -138,4 +138,12 @@ type Clean struct {
 	Cron      string            `toml:"cron" comment:"clean jobs cron expression"`
 	Expired   duration.Duration `toml:"expired" comment:"max lifetime for records"`
 	BatchSize int               `toml:"batchSize" comment:"batch size for clean"`
+}
+
+type Elasticsearch struct {
+	Enabled       bool   `toml:"enabled" comment:"whether to enable elasticsearch"`
+	Address       string `toml:"address" comment:"address to connect to elasticsearch"`
+	CAFingerprint string `toml:"caFingerprint" comment:"SHA256 hex fingerprint given by Elasticsearch"`
+	Username      string `toml:"username" comment:"user for elasticsearch"`
+	Password      string `toml:"password" comment:"password for user"`
 }

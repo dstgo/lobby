@@ -681,20 +681,22 @@ func (m *CronJobMutation) ResetEdge(name string) error {
 // SecondaryMutation represents an operation that mutates the Secondary nodes in the graph.
 type SecondaryMutation struct {
 	config
-	op             Op
-	typ            string
-	id             *int
-	sid            *string
-	steam_id       *string
-	address        *string
-	port           *int
-	addport        *int
-	clearedFields  map[string]struct{}
-	servers        *int
-	clearedservers bool
-	done           bool
-	oldValue       func(context.Context) (*Secondary, error)
-	predicates     []predicate.Secondary
+	op               Op
+	typ              string
+	id               *int
+	sid              *string
+	steam_id         *string
+	address          *string
+	port             *int
+	addport          *int
+	query_version    *int64
+	addquery_version *int64
+	clearedFields    map[string]struct{}
+	servers          *int
+	clearedservers   bool
+	done             bool
+	oldValue         func(context.Context) (*Secondary, error)
+	predicates       []predicate.Secondary
 }
 
 var _ ent.Mutation = (*SecondaryMutation)(nil)
@@ -995,6 +997,62 @@ func (m *SecondaryMutation) ResetOwnerID() {
 	m.servers = nil
 }
 
+// SetQueryVersion sets the "query_version" field.
+func (m *SecondaryMutation) SetQueryVersion(i int64) {
+	m.query_version = &i
+	m.addquery_version = nil
+}
+
+// QueryVersion returns the value of the "query_version" field in the mutation.
+func (m *SecondaryMutation) QueryVersion() (r int64, exists bool) {
+	v := m.query_version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldQueryVersion returns the old "query_version" field's value of the Secondary entity.
+// If the Secondary object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SecondaryMutation) OldQueryVersion(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldQueryVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldQueryVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldQueryVersion: %w", err)
+	}
+	return oldValue.QueryVersion, nil
+}
+
+// AddQueryVersion adds i to the "query_version" field.
+func (m *SecondaryMutation) AddQueryVersion(i int64) {
+	if m.addquery_version != nil {
+		*m.addquery_version += i
+	} else {
+		m.addquery_version = &i
+	}
+}
+
+// AddedQueryVersion returns the value that was added to the "query_version" field in this mutation.
+func (m *SecondaryMutation) AddedQueryVersion() (r int64, exists bool) {
+	v := m.addquery_version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetQueryVersion resets all changes to the "query_version" field.
+func (m *SecondaryMutation) ResetQueryVersion() {
+	m.query_version = nil
+	m.addquery_version = nil
+}
+
 // SetServersID sets the "servers" edge to the Server entity by id.
 func (m *SecondaryMutation) SetServersID(id int) {
 	m.servers = &id
@@ -1069,7 +1127,7 @@ func (m *SecondaryMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *SecondaryMutation) Fields() []string {
-	fields := make([]string, 0, 5)
+	fields := make([]string, 0, 6)
 	if m.sid != nil {
 		fields = append(fields, secondary.FieldSid)
 	}
@@ -1084,6 +1142,9 @@ func (m *SecondaryMutation) Fields() []string {
 	}
 	if m.servers != nil {
 		fields = append(fields, secondary.FieldOwnerID)
+	}
+	if m.query_version != nil {
+		fields = append(fields, secondary.FieldQueryVersion)
 	}
 	return fields
 }
@@ -1103,6 +1164,8 @@ func (m *SecondaryMutation) Field(name string) (ent.Value, bool) {
 		return m.Port()
 	case secondary.FieldOwnerID:
 		return m.OwnerID()
+	case secondary.FieldQueryVersion:
+		return m.QueryVersion()
 	}
 	return nil, false
 }
@@ -1122,6 +1185,8 @@ func (m *SecondaryMutation) OldField(ctx context.Context, name string) (ent.Valu
 		return m.OldPort(ctx)
 	case secondary.FieldOwnerID:
 		return m.OldOwnerID(ctx)
+	case secondary.FieldQueryVersion:
+		return m.OldQueryVersion(ctx)
 	}
 	return nil, fmt.Errorf("unknown Secondary field %s", name)
 }
@@ -1166,6 +1231,13 @@ func (m *SecondaryMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetOwnerID(v)
 		return nil
+	case secondary.FieldQueryVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetQueryVersion(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Secondary field %s", name)
 }
@@ -1177,6 +1249,9 @@ func (m *SecondaryMutation) AddedFields() []string {
 	if m.addport != nil {
 		fields = append(fields, secondary.FieldPort)
 	}
+	if m.addquery_version != nil {
+		fields = append(fields, secondary.FieldQueryVersion)
+	}
 	return fields
 }
 
@@ -1187,6 +1262,8 @@ func (m *SecondaryMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
 	case secondary.FieldPort:
 		return m.AddedPort()
+	case secondary.FieldQueryVersion:
+		return m.AddedQueryVersion()
 	}
 	return nil, false
 }
@@ -1202,6 +1279,13 @@ func (m *SecondaryMutation) AddField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.AddPort(v)
+		return nil
+	case secondary.FieldQueryVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddQueryVersion(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Secondary numeric field %s", name)
@@ -1244,6 +1328,9 @@ func (m *SecondaryMutation) ResetField(name string) error {
 		return nil
 	case secondary.FieldOwnerID:
 		m.ResetOwnerID()
+		return nil
+	case secondary.FieldQueryVersion:
+		m.ResetQueryVersion()
 		return nil
 	}
 	return fmt.Errorf("unknown Secondary field %s", name)
@@ -3865,16 +3952,18 @@ func (m *ServerMutation) ResetEdge(name string) error {
 // TagMutation represents an operation that mutates the Tag nodes in the graph.
 type TagMutation struct {
 	config
-	op             Op
-	typ            string
-	id             *int
-	value          *string
-	clearedFields  map[string]struct{}
-	servers        *int
-	clearedservers bool
-	done           bool
-	oldValue       func(context.Context) (*Tag, error)
-	predicates     []predicate.Tag
+	op               Op
+	typ              string
+	id               *int
+	value            *string
+	query_version    *int64
+	addquery_version *int64
+	clearedFields    map[string]struct{}
+	servers          *int
+	clearedservers   bool
+	done             bool
+	oldValue         func(context.Context) (*Tag, error)
+	predicates       []predicate.Tag
 }
 
 var _ ent.Mutation = (*TagMutation)(nil)
@@ -4047,6 +4136,62 @@ func (m *TagMutation) ResetOwnerID() {
 	m.servers = nil
 }
 
+// SetQueryVersion sets the "query_version" field.
+func (m *TagMutation) SetQueryVersion(i int64) {
+	m.query_version = &i
+	m.addquery_version = nil
+}
+
+// QueryVersion returns the value of the "query_version" field in the mutation.
+func (m *TagMutation) QueryVersion() (r int64, exists bool) {
+	v := m.query_version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldQueryVersion returns the old "query_version" field's value of the Tag entity.
+// If the Tag object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TagMutation) OldQueryVersion(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldQueryVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldQueryVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldQueryVersion: %w", err)
+	}
+	return oldValue.QueryVersion, nil
+}
+
+// AddQueryVersion adds i to the "query_version" field.
+func (m *TagMutation) AddQueryVersion(i int64) {
+	if m.addquery_version != nil {
+		*m.addquery_version += i
+	} else {
+		m.addquery_version = &i
+	}
+}
+
+// AddedQueryVersion returns the value that was added to the "query_version" field in this mutation.
+func (m *TagMutation) AddedQueryVersion() (r int64, exists bool) {
+	v := m.addquery_version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetQueryVersion resets all changes to the "query_version" field.
+func (m *TagMutation) ResetQueryVersion() {
+	m.query_version = nil
+	m.addquery_version = nil
+}
+
 // SetServersID sets the "servers" edge to the Server entity by id.
 func (m *TagMutation) SetServersID(id int) {
 	m.servers = &id
@@ -4121,12 +4266,15 @@ func (m *TagMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *TagMutation) Fields() []string {
-	fields := make([]string, 0, 2)
+	fields := make([]string, 0, 3)
 	if m.value != nil {
 		fields = append(fields, tag.FieldValue)
 	}
 	if m.servers != nil {
 		fields = append(fields, tag.FieldOwnerID)
+	}
+	if m.query_version != nil {
+		fields = append(fields, tag.FieldQueryVersion)
 	}
 	return fields
 }
@@ -4140,6 +4288,8 @@ func (m *TagMutation) Field(name string) (ent.Value, bool) {
 		return m.Value()
 	case tag.FieldOwnerID:
 		return m.OwnerID()
+	case tag.FieldQueryVersion:
+		return m.QueryVersion()
 	}
 	return nil, false
 }
@@ -4153,6 +4303,8 @@ func (m *TagMutation) OldField(ctx context.Context, name string) (ent.Value, err
 		return m.OldValue(ctx)
 	case tag.FieldOwnerID:
 		return m.OldOwnerID(ctx)
+	case tag.FieldQueryVersion:
+		return m.OldQueryVersion(ctx)
 	}
 	return nil, fmt.Errorf("unknown Tag field %s", name)
 }
@@ -4176,6 +4328,13 @@ func (m *TagMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetOwnerID(v)
 		return nil
+	case tag.FieldQueryVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetQueryVersion(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Tag field %s", name)
 }
@@ -4184,6 +4343,9 @@ func (m *TagMutation) SetField(name string, value ent.Value) error {
 // this mutation.
 func (m *TagMutation) AddedFields() []string {
 	var fields []string
+	if m.addquery_version != nil {
+		fields = append(fields, tag.FieldQueryVersion)
+	}
 	return fields
 }
 
@@ -4192,6 +4354,8 @@ func (m *TagMutation) AddedFields() []string {
 // was not set, or was not defined in the schema.
 func (m *TagMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
+	case tag.FieldQueryVersion:
+		return m.AddedQueryVersion()
 	}
 	return nil, false
 }
@@ -4201,6 +4365,13 @@ func (m *TagMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *TagMutation) AddField(name string, value ent.Value) error {
 	switch name {
+	case tag.FieldQueryVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddQueryVersion(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Tag numeric field %s", name)
 }
@@ -4233,6 +4404,9 @@ func (m *TagMutation) ResetField(name string) error {
 		return nil
 	case tag.FieldOwnerID:
 		m.ResetOwnerID()
+		return nil
+	case tag.FieldQueryVersion:
+		m.ResetQueryVersion()
 		return nil
 	}
 	return fmt.Errorf("unknown Tag field %s", name)

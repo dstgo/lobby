@@ -19,6 +19,7 @@ func (Secondary) Fields() []ent.Field {
 		field.String("address"),
 		field.Int("port"),
 		field.Int("owner_id"),
+		field.Int64("query_version"),
 	}
 }
 

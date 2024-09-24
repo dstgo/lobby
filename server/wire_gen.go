@@ -60,7 +60,10 @@ func setup(ctx types.Context) (svc.Context, error) {
 	userRouter := user2.NewRouter(routerGroup, userAPI)
 	serverRepo := repo.NewServerRepo(entClient)
 	lobbyapiClient := ctx.Lobby
-	lobbyHandler := dst.NewLobbyHandler(serverRepo, lobbyapiClient)
+	elasticsearchClient := ctx.Elastic
+	serverEsRepo := repo.NewServerEsRepo(elasticsearchClient)
+	elasticsearch := app.Elastic
+	lobbyHandler := dst.NewLobbyHandler(serverRepo, lobbyapiClient, serverEsRepo, elasticsearch)
 	lobbyAPI := dst2.NewLobbyAPI(lobbyHandler)
 	dstRouter := dst2.NewRouter(routerGroup, lobbyAPI)
 	jobRepo := repo.NewJobRepo(entClient)

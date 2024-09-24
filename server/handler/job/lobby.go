@@ -70,7 +70,7 @@ func (l *LobbyCollectJob) Cmd() func() ([]any, error) {
 }
 
 func (l *LobbyCollectJob) CollectBatch(limit, batch int) (int64, error) {
-	qv := ts.UnixMicro()
+	qv := ts.Now().Unix()
 	servers, err := l.Collect(qv, limit)
 	if err != nil {
 		return 0, err
@@ -142,17 +142,18 @@ func (l *LobbyCollectJob) processServers(qv int64, servers []lobbyapi.Server) ([
 		// process tag str
 		var tags []*ent.Tag
 		for _, t := range server.Tags {
-			tags = append(tags, &ent.Tag{Value: t})
+			tags = append(tags, &ent.Tag{Value: t, QueryVersion: qv})
 		}
 		createdServer.Edges.Tags = tags
 		// process secondary
 		var secondaries []*ent.Secondary
 		for _, secondary := range server.Secondaries {
 			secondaries = append(secondaries, &ent.Secondary{
-				Sid:     secondary.Id,
-				SteamID: secondary.SteamId,
-				Address: secondary.Address,
-				Port:    secondary.Port,
+				Sid:          secondary.Id,
+				SteamID:      secondary.SteamId,
+				Address:      secondary.Address,
+				Port:         secondary.Port,
+				QueryVersion: qv,
 			})
 		}
 		createdServer.Edges.Secondaries = secondaries

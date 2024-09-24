@@ -54,9 +54,9 @@ const (
 func (p ServerPlatform) String() string {
 	switch p {
 	case PlatformAny:
-		return "Steam"
+		return ""
 	case PlatformSteam:
-		return "PSN"
+		return "Steam"
 	case PlatformPSN:
 		return "Rail"
 	case PlatformXBOne:
@@ -68,11 +68,12 @@ func (p ServerPlatform) String() string {
 	case PlatformWeGame:
 		return "WeGame"
 	default:
-		panic("unhandled default case")
+		panic("unknown server platform")
 	}
 }
 
 type LobbyServerSearchOptions struct {
+	Qv int64 `form:"_qv"`
 	// n page to search
 	Page int `form:"page"`
 	// size of page
@@ -286,4 +287,120 @@ func LobbyServerToEntServer(server lobbyapi.Server) *ent.Server {
 		FriendOnly:      server.FriendOnly,
 		Region:          server.Region,
 	}
+}
+
+func EsServerToEntServer(ess EsServer) *ent.Server {
+	return &ent.Server{
+		ID:              ess.ID,
+		GUID:            ess.GUID,
+		RowID:           ess.RowID,
+		SteamID:         ess.SteamID,
+		SteamClanID:     ess.SteamClanID,
+		OwnerID:         ess.OwnerID,
+		SteamRoom:       ess.SteamRoom,
+		Session:         ess.Session,
+		Address:         ess.Address,
+		Port:            ess.Port,
+		Host:            ess.Host,
+		Platform:        ess.Platform,
+		ClanOnly:        ess.ClanOnly > 0,
+		LanOnly:         ess.LanOnly > 0,
+		Name:            ess.Name,
+		GameMode:        ess.GameMode,
+		Intent:          ess.Intent,
+		Season:          ess.Season,
+		Version:         ess.Version,
+		MaxOnline:       ess.MaxOnline,
+		Online:          ess.Online,
+		Level:           ess.Level,
+		Mod:             ess.Mod > 0,
+		Pvp:             ess.Pvp > 0,
+		Password:        ess.Password > 0,
+		Dedicated:       ess.Dedicated > 0,
+		ClientHosted:    ess.ClientHosted > 0,
+		AllowNewPlayers: ess.AllowNewPlayers > 0,
+		ServerPaused:    ess.ServerPaused > 0,
+		FriendOnly:      ess.FriendOnly > 0,
+		QueryVersion:    ess.QueryVersion,
+		Country:         ess.Country,
+		Continent:       ess.Continent,
+		CountryCode:     ess.CountryCode,
+		City:            ess.City,
+		Region:          ess.Region,
+	}
+}
+
+type EsServer struct {
+	// ID of the ent.
+	ID int `json:"id,omitempty"`
+	// GUID holds the value of the "guid" field.
+	GUID string `json:"guid,omitempty"`
+	// RowID holds the value of the "row_id" field.
+	RowID string `json:"row_id,omitempty"`
+	// SteamID holds the value of the "steam_id" field.
+	SteamID string `json:"steam_id,omitempty"`
+	// SteamClanID holds the value of the "steam_clan_id" field.
+	SteamClanID string `json:"steam_clan_id,omitempty"`
+	// OwnerID holds the value of the "owner_id" field.
+	OwnerID string `json:"owner_id,omitempty"`
+	// SteamRoom holds the value of the "steam_room" field.
+	SteamRoom string `json:"steam_room,omitempty"`
+	// Session holds the value of the "session" field.
+	Session string `json:"session,omitempty"`
+	// Address holds the value of the "address" field.
+	Address string `json:"address,omitempty"`
+	// Port holds the value of the "port" field.
+	Port int `json:"port,omitempty"`
+	// Host holds the value of the "host" field.
+	Host string `json:"host,omitempty"`
+	// Platform holds the value of the "platform" field.
+	Platform string `json:"platform,omitempty"`
+	// ClanOnly holds the value of the "clan_only" field.
+	ClanOnly int `json:"clan_only,omitempty"`
+	// LanOnly holds the value of the "lan_only" field.
+	LanOnly int `json:"lan_only,omitempty"`
+	// Name holds the value of the "name" field.
+	Name string `json:"name,omitempty"`
+	// GameMode holds the value of the "game_mode" field.
+	GameMode string `json:"game_mode,omitempty"`
+	// Intent holds the value of the "intent" field.
+	Intent string `json:"intent,omitempty"`
+	// Season holds the value of the "season" field.
+	Season string `json:"season,omitempty"`
+	// Version holds the value of the "version" field.
+	Version int `json:"version,omitempty"`
+	// MaxOnline holds the value of the "max_online" field.
+	MaxOnline int `json:"max_online,omitempty"`
+	// Online holds the value of the "online" field.
+	Online int `json:"online,omitempty"`
+	// Level holds the value of the "level" field.
+	Level int `json:"level,omitempty"`
+	// Mod holds the value of the "mod" field.
+	Mod int `json:"mod,omitempty"`
+	// Pvp holds the value of the "pvp" field.
+	Pvp int `json:"pvp,omitempty"`
+	// Password holds the value of the "password" field.
+	Password int `json:"password,omitempty"`
+	// Dedicated holds the value of the "dedicated" field.
+	Dedicated int `json:"dedicated,omitempty"`
+	// ClientHosted holds the value of the "client_hosted" field.
+	ClientHosted int `json:"client_hosted,omitempty"`
+	// AllowNewPlayers holds the value of the "allow_new_players" field.
+	AllowNewPlayers int `json:"allow_new_players,omitempty"`
+	// ServerPaused holds the value of the "server_paused" field.
+	ServerPaused int `json:"server_paused,omitempty"`
+	// FriendOnly holds the value of the "friend_only" field.
+	FriendOnly int `json:"friend_only,omitempty"`
+	// QueryVersion holds the value of the "query_version" field.
+	QueryVersion int64 `json:"query_version,omitempty"`
+	// Country holds the value of the "country" field.
+	Country string `json:"country,omitempty"`
+	// Continent holds the value of the "continent" field.
+	Continent string `json:"continent,omitempty"`
+	// CountryCode holds the value of the "country_code" field.
+	CountryCode string `json:"country_code,omitempty"`
+	// City holds the value of the "city" field.
+	City string `json:"city,omitempty"`
+	// Region holds the value of the "region" field.
+	Region string `json:"region,omitempty"`
 }

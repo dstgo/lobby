@@ -3,6 +3,7 @@ package dst
 import (
 	"context"
 	"fmt"
+	"github.com/dstgo/lobby/server/conf"
 	"github.com/dstgo/lobby/server/data/ent"
 	"github.com/dstgo/lobby/server/data/repo"
 	"github.com/dstgo/lobby/server/pkg/geo"
@@ -17,21 +18,36 @@ import (
 	"time"
 )
 
-func NewLobbyHandler(serverRepo *repo.ServerRepo, client *lobbyapi.Client) *LobbyHandler {
-	return &LobbyHandler{serverRepo: serverRepo, client: client}
+func NewLobbyHandler(serverRepo *repo.ServerRepo, client *lobbyapi.Client, esRepo *repo.ServerEsRepo, esConf conf.Elasticsearch) *LobbyHandler {
+	return &LobbyHandler{serverRepo: serverRepo, client: client, esRepo: esRepo, esConf: esConf}
 }
 
 type LobbyHandler struct {
 	client     *lobbyapi.Client
 	serverRepo *repo.ServerRepo
+	esRepo     *repo.ServerEsRepo
+	esConf     conf.Elasticsearch
 }
 
 func (l *LobbyHandler) SearchByPage(ctx context.Context, options types.LobbyServerSearchOptions) (types.LobbyServerSearchResult, error) {
 	options.Size = min(options.Size, 100)
-	list, total, err := l.serverRepo.PageQueryByOption(ctx, options)
+	var (
+		list  []*ent.Server
+		total int
+		err   error
+	)
+
+	if l.esConf.Enabled {
+		list, total, err = l.esRepo.PageQueryByOption(ctx, options)
+	} else {
+		list, total, err = l.serverRepo.PageQueryByOption(ctx, options)
+	}
+
 	if err != nil {
 		return types.LobbyServerSearchResult{}, statuserr.InternalError(err)
 	}
+
+	// process
 	var servers []types.LobbyServerInfo
 	for _, e := range list {
 		servers = append(servers, types.EntServerToServerInfo(e))

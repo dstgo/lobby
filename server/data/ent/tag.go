@@ -21,6 +21,8 @@ type Tag struct {
 	Value string `json:"value,omitempty"`
 	// OwnerID holds the value of the "owner_id" field.
 	OwnerID int `json:"owner_id,omitempty"`
+	// QueryVersion holds the value of the "query_version" field.
+	QueryVersion int64 `json:"query_version,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the TagQuery when eager-loading is set.
 	Edges        TagEdges `json:"edges"`
@@ -52,7 +54,7 @@ func (*Tag) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case tag.FieldID, tag.FieldOwnerID:
+		case tag.FieldID, tag.FieldOwnerID, tag.FieldQueryVersion:
 			values[i] = new(sql.NullInt64)
 		case tag.FieldValue:
 			values[i] = new(sql.NullString)
@@ -88,6 +90,12 @@ func (t *Tag) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field owner_id", values[i])
 			} else if value.Valid {
 				t.OwnerID = int(value.Int64)
+			}
+		case tag.FieldQueryVersion:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field query_version", values[i])
+			} else if value.Valid {
+				t.QueryVersion = value.Int64
 			}
 		default:
 			t.selectValues.Set(columns[i], values[i])
@@ -135,6 +143,9 @@ func (t *Tag) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("owner_id=")
 	builder.WriteString(fmt.Sprintf("%v", t.OwnerID))
+	builder.WriteString(", ")
+	builder.WriteString("query_version=")
+	builder.WriteString(fmt.Sprintf("%v", t.QueryVersion))
 	builder.WriteByte(')')
 	return builder.String()
 }

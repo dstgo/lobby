@@ -16,6 +16,8 @@ const (
 	FieldValue = "value"
 	// FieldOwnerID holds the string denoting the owner_id field in the database.
 	FieldOwnerID = "owner_id"
+	// FieldQueryVersion holds the string denoting the query_version field in the database.
+	FieldQueryVersion = "query_version"
 	// EdgeServers holds the string denoting the servers edge name in mutations.
 	EdgeServers = "servers"
 	// Table holds the table name of the tag in the database.
@@ -34,6 +36,7 @@ var Columns = []string{
 	FieldID,
 	FieldValue,
 	FieldOwnerID,
+	FieldQueryVersion,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -62,6 +65,11 @@ func ByValue(opts ...sql.OrderTermOption) OrderOption {
 // ByOwnerID orders the results by the owner_id field.
 func ByOwnerID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldOwnerID, opts...).ToFunc()
+}
+
+// ByQueryVersion orders the results by the query_version field.
+func ByQueryVersion(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldQueryVersion, opts...).ToFunc()
 }
 
 // ByServersField orders the results by servers field.

@@ -3,6 +3,7 @@ package server
 import (
 	entsql "entgo.io/ent/dialect/sql"
 	"errors"
+	"fmt"
 	"github.com/dstgo/lobby/server/conf"
 	"github.com/dstgo/lobby/server/data/ent"
 	authhandler "github.com/dstgo/lobby/server/handler/auth"
@@ -11,6 +12,7 @@ import (
 	"github.com/dstgo/lobby/server/svc"
 	"github.com/dstgo/lobby/server/types"
 	"github.com/dstgo/size"
+	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/gin-gonic/gin"
 	"github.com/ginx-contribs/dbx"
 	"github.com/ginx-contribs/ginx"
@@ -42,8 +44,10 @@ var ContextProvider = wire.NewSet(
 	wire.FieldsOf(new(types.Context), "Router"),
 	wire.FieldsOf(new(types.Context), "Email"),
 	wire.FieldsOf(new(types.Context), "Lobby"),
+	wire.FieldsOf(new(types.Context), "Elastic"),
 	wire.FieldsOf(new(*conf.App), "Jwt"),
 	wire.FieldsOf(new(*conf.App), "Email"),
+	wire.FieldsOf(new(*conf.App), "Elastic"),
 )
 
 // NewLogger returns a new app logger with the given options
@@ -96,8 +100,6 @@ func NewHttpServer(ctx context.Context, appConf *conf.App, tc types.Context) (*g
 			requestid.RequestId(),
 			// access logger
 			middleware.Logger(slog.Default(), "request-log"),
-			// rate limit by counting
-			mids.RateLimitByCount(tc.Redis, appConf.Limit.Public.Limit, appConf.Limit.Public.Window.Duration(), mids.ByIpPath),
 			// jwt authentication
 			mids.TokenAuthenticator(authhandler.NewTokenHandler(appConf.Jwt, tc.Redis)),
 		),
@@ -215,23 +217,23 @@ func NewCronJob(ctx context.Context, tc types.Context, sc svc.Context) (*job.Cro
 	// hooks
 	cj.BeforeHooks = append(cj.BeforeHooks, job.LogBefore(), job.UpdateBefore(sc.JobHandler))
 	cj.AfterHooks = append(cj.AfterHooks, job.LogAfter())
-	//errs := []error{
-	//	// lobby collect
-	//	cj.AddJob(newCollectJob(tc, sc)),
-	//	// lobby clean
-	//	cj.AddJob(newCleanJob(tc, sc)),
-	//}
-	//for _, err := range errs {
-	//	if err != nil {
-	//		return nil, err
-	//	}
-	//}
-	//for _, j := range cj.FutureJobs() {
-	//	err := sc.JobHandler.Upsert(ctx, j)
-	//	if err != nil {
-	//		return nil, err
-	//	}
-	//}
+	errs := []error{
+		// lobby collect
+		cj.AddJob(newCollectJob(tc, sc)),
+		// lobby clean
+		cj.AddJob(newCleanJob(tc, sc)),
+	}
+	for _, err := range errs {
+		if err != nil {
+			return nil, err
+		}
+	}
+	for _, j := range cj.FutureJobs() {
+		err := sc.JobHandler.Upsert(ctx, j)
+		if err != nil {
+			return nil, err
+		}
+	}
 	return cj, nil
 }
 
@@ -241,4 +243,32 @@ func newCollectJob(tc types.Context, sc svc.Context) *job.LobbyCollectJob {
 
 func newCleanJob(tc types.Context, sc svc.Context) *job.LobbyCleanJob {
 	return job.NewLobbyCleanJob(sc.LobbyHandler, tc.AppConf.Job.Clean)
+}
+
+// NewElasticClient initializes the elasticsearch client
+func NewElasticClient(ctx context.Context, config conf.Elasticsearch) (*elasticsearch.Client, error) {
+	if !config.Enabled {
+		return nil, nil
+	}
+
+	elastic, err := elasticsearch.NewClient(elasticsearch.Config{
+		Addresses:              []string{config.Address},
+		Username:               config.Username,
+		Password:               config.Password,
+		CertificateFingerprint: config.CAFingerprint,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	pingResp, err := elastic.Ping(elastic.Ping.WithContext(ctx))
+	if err != nil {
+		return nil, err
+	}
+	if pingResp.IsError() {
+		return nil, fmt.Errorf("elasticsearch ping error: %s", pingResp.String())
+	}
+
+	return elastic, nil
 }

@@ -25,6 +25,19 @@ func newServerRepo() (*repo.ServerRepo, error) {
 	return repo.NewServerRepo(db.Debug()), nil
 }
 
+func newServerEsRepo() (*repo.ServerEsRepo, error) {
+	ctx := context.Background()
+	cfg, err := testutil.ReadConf()
+	if err != nil {
+		return nil, err
+	}
+	elastic, err := server.NewElasticClient(ctx, cfg.Elastic)
+	if err != nil {
+		return nil, err
+	}
+	return repo.NewServerEsRepo(elastic), nil
+}
+
 func TestServerRepoCreate(t *testing.T) {
 	ctx := context.Background()
 	serverRepo, err := newServerRepo()
@@ -275,5 +288,51 @@ func TestPageQueryByOptionsWithManyCondition(t *testing.T) {
 		for _, e := range list {
 			t.Log(e)
 		}
+	}
+}
+
+func TestEsServerRepoMaxQV(t *testing.T) {
+	ctx := context.Background()
+	esRepo, err := newServerEsRepo()
+	if !assert.NoError(t, err) {
+		return
+	}
+	qv, err := esRepo.MaxQv(ctx)
+	if !assert.NoError(t, err) {
+		return
+	}
+	t.Log(qv)
+}
+
+func TestEsServerRepoTotalCount(t *testing.T) {
+	ctx := context.Background()
+	esRepo, err := newServerEsRepo()
+	if !assert.NoError(t, err) {
+		return
+	}
+	qv, err := esRepo.TotalCount(ctx)
+	if !assert.NoError(t, err) {
+		return
+	}
+	t.Log(qv)
+}
+
+func TestEsServerRepoPageQuery(t *testing.T) {
+	ctx := context.Background()
+	esRepo, err := newServerEsRepo()
+	if !assert.NoError(t, err) {
+		return
+	}
+	list, total, err := esRepo.PageQueryByOption(ctx, types.LobbyServerSearchOptions{
+		Page:     10,
+		Size:     100,
+		Platform: types.PlatformSteam,
+	})
+	if !assert.NoError(t, err) {
+		return
+	}
+	t.Log(total)
+	for _, e := range list {
+		t.Log(e)
 	}
 }

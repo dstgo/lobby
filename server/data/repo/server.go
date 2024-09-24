@@ -3,12 +3,17 @@ package repo
 import (
 	"context"
 	"entgo.io/ent/dialect/sql"
+	"fmt"
 	"github.com/dstgo/lobby/server/data/ent"
 	"github.com/dstgo/lobby/server/data/ent/secondary"
 	"github.com/dstgo/lobby/server/data/ent/server"
 	"github.com/dstgo/lobby/server/data/ent/tag"
 	"github.com/dstgo/lobby/server/pkg/lobbyapi"
 	"github.com/dstgo/lobby/server/types"
+	"github.com/elastic/go-elasticsearch/v8"
+	"github.com/goccy/go-json"
+	"github.com/tidwall/gjson"
+	"strings"
 )
 
 // NewServerRepo returns a new instance of ServerRepo
@@ -87,6 +92,9 @@ func (s *ServerRepo) PageQueryByOption(ctx context.Context, options types.LobbyS
 	if err != nil {
 		return
 	}
+	if options.Qv != 0 {
+		qv = options.Qv
+	}
 
 	// count total size
 	query = query.Where(server.QueryVersionEQ(qv))
@@ -117,7 +125,7 @@ func (s *ServerRepo) PageQueryByOption(ctx context.Context, options types.LobbyS
 		query = query.Where(server.AddressContainsFold(options.Address))
 	}
 
-	// geo search
+	// geo es_search
 	if options.Country != "" {
 		query = query.Where(server.CountryCodeContainsFold(options.Country))
 	}
@@ -139,7 +147,7 @@ func (s *ServerRepo) PageQueryByOption(ctx context.Context, options types.LobbyS
 		query = query.Where(server.ClientHosted(true))
 	case types.TypeOfficial:
 		query = query.Where(server.Or(
-			server.NameContains("Public Server"),
+			server.NameContains("Public EsServer"),
 			server.NameContains("Klei Official"),
 			server.HostIn("KU_KleiServ", "KU_KleiServ", "KU_zHxWQDSW"),
 		))
@@ -197,6 +205,8 @@ func (s *ServerRepo) PageQueryByOption(ctx context.Context, options types.LobbyS
 		query = query.Order(server.ByOnline(orderOpt))
 	case types.DstSortByLevel:
 		query = query.Order(server.ByLevel(orderOpt))
+	default:
+		query = query.Order(server.ByID(orderOpt))
 	}
 
 	// execute the query
@@ -316,4 +326,364 @@ func (s *ServerRepo) DeleteBulk(ctx context.Context, ids ...int) (int, error) {
 		return 0, err
 	}
 	return deleted, nil
+}
+
+func NewServerEsRepo(elastic *elasticsearch.Client) *ServerEsRepo {
+	return &ServerEsRepo{Elastic: elastic}
+}
+
+type ServerEsRepo struct {
+	Elastic *elasticsearch.Client
+}
+
+func (s *ServerEsRepo) MaxQv(ctx context.Context) (int64, error) {
+	dsl := types.H{
+		"aggs": types.H{
+			"max_qv": types.H{"max": types.H{"field": "data.query_version"}}},
+	}
+	// get the latest query version
+	_, body, err := esSearch(s.Elastic, ctx, []string{"lobby-servers"}, dsl)
+	if err != nil {
+		return 0, err
+	}
+	path := "aggregations.max_qv.value"
+	maxQv := gjson.GetBytes(body, path)
+	if !maxQv.Exists() {
+		return 0, fmt.Errorf("missing field in elastic es_search resp: %s", path)
+	}
+	return maxQv.Int(), nil
+}
+
+// TotalCount return total count of document without any condition
+func (s *ServerEsRepo) TotalCount(ctx context.Context) (int64, error) {
+	dsl := types.H{
+		"_source": types.S{"data.id"},
+		"aggs": types.H{
+			"total_count": types.H{"value_count": types.H{"field": "data.id"}}},
+	}
+	_, body, err := esSearch(s.Elastic, ctx, []string{"lobby-servers"}, dsl)
+	if err != nil {
+		return 0, err
+	}
+	path := "aggregations.total_count.value"
+	maxQv := gjson.GetBytes(body, path)
+	if !maxQv.Exists() {
+		return 0, fmt.Errorf("missing field in elastic es_search resp: %s", path)
+	}
+	return maxQv.Int(), nil
+}
+
+func (s *ServerEsRepo) PageQueryByOption(ctx context.Context, options types.LobbyServerSearchOptions) (list []*ent.Server, total int, err error) {
+	qv, err := s.MaxQv(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+	if options.Qv != 0 {
+		qv = options.Qv
+	}
+
+	count, err := s.TotalCount(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// revise the pagination options
+	if options.Size <= 0 {
+		options.Size = 10
+	}
+
+	if options.Page <= 0 {
+		options.Page = 1
+	} else if int64(options.Page) > count/int64(options.Size) && count%int64(options.Page) != 0 { // the last page
+		options.Page = int(count/int64(options.Size) + 1)
+	} else if int64(options.Page) > count/int64(options.Size) && count%int64(options.Page) == 0 {
+		options.Page = int(count / int64(options.Size))
+	}
+
+	// limit for elasticsearch
+	if options.Page*options.Size >= 10000 {
+		options.Page = (10000-options.Size)/options.Size + 1
+	}
+
+	// query dsl
+	dsl := types.H{
+		"from": (options.Page - 1) * options.Size,
+		"size": options.Size,
+		"query": types.H{
+			"bool": types.H{
+				"must": types.S{
+					types.H{
+						"match": types.H{
+							"data.query_version": qv,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	// match section
+	condition := dsl["query"].(types.H)["bool"].(types.H)["must"].(types.S)
+
+	// server name match
+	if options.Match != "" {
+		condition = append(condition, types.H{
+			"match": types.H{
+				"data.name": options.Match,
+			},
+		})
+	}
+
+	// ip address
+	if options.Address != "" {
+		condition = append(condition, types.H{
+			"match": types.H{
+				"data.address": options.Address,
+			},
+		})
+	}
+
+	// geo info
+	if options.Country != "" {
+		condition = append(condition, types.H{
+			"match": types.H{
+				"data.country": options.Country,
+			},
+		})
+	}
+	if options.CountryCode != "" {
+		condition = append(condition, types.H{
+			"match": types.H{
+				"data.country_code": options.CountryCode,
+			},
+		})
+	}
+	if options.Continent != "" {
+		condition = append(condition, types.H{
+			"match": types.H{
+				"data.continent": options.Continent,
+			},
+		})
+	}
+	if options.Platform != types.PlatformAny {
+		condition = append(condition, types.H{
+			"match": types.H{
+				"data.platform": options.Platform.String(),
+			},
+		})
+	}
+
+	// game options
+	if options.Season != "" {
+		condition = append(condition, types.H{
+			"match": types.H{
+				"data.season": options.Season,
+			},
+		})
+	}
+	if options.GameMode != "" {
+		condition = append(condition, types.H{
+			"match": types.H{
+				"data.game_mode": options.GameMode,
+			},
+		})
+	}
+	if options.Intent != "" {
+		condition = append(condition, types.H{
+			"match": types.H{
+				"data.intent": options.Intent,
+			},
+		})
+	}
+	if options.Level > 0 {
+		condition = append(condition, types.H{
+			"range": types.H{
+				"data.level": types.H{
+					"gte": options.Level,
+				},
+			},
+		})
+	}
+	if options.PvpEnabled != 0 {
+		condition = append(condition, types.H{
+			"match": types.H{
+				"data.pvp": max(options.PvpEnabled, 0),
+			},
+		})
+	}
+	if options.ModEnabled != 0 {
+		condition = append(condition, types.H{
+			"match": types.H{
+				"data.mod": max(options.ModEnabled, 0),
+			},
+		})
+	}
+	if options.HasPassword != 0 {
+		condition = append(condition, types.H{
+			"match": types.H{
+				"data.password": max(options.HasPassword, 0),
+			},
+		})
+	}
+
+	// server type
+	switch options.ServerType {
+	case types.TypeDedicated:
+		// dedicated = 1
+		condition = append(condition, types.H{
+			"match": types.H{
+				"data.dedicated": 1,
+			},
+		})
+	case types.TypeClientHosted:
+		// client_hosted = 1
+		condition = append(condition, types.H{
+			"match": types.H{
+				"data.client_hosted": 1,
+			},
+		})
+	case types.TypeOfficial:
+		// name LIKE "%Public EsServer%" OR ame LIKE "%Klei Official%" OR host IN ("KU_KleiServ", "KU_KleiServ", "KU_zHxWQDSW")
+		condition = append(condition, types.H{
+			"bool": types.H{
+				"should": types.S{
+					types.H{
+						"match": types.H{
+							"data.name": "Public EsServer",
+						},
+					},
+					types.H{
+						"match": types.H{
+							"data.name": "Klei Official",
+						},
+					},
+					types.H{
+						"terms": types.H{
+							"data.host": types.S{"KU_KleiServ", "KU_KleiServ", "KU_zHxWQDSW"},
+						},
+					},
+				},
+			},
+		})
+	case types.TypeSteamClan:
+		// steam_clan_id != ""
+		condition = append(condition, types.H{
+			"bool": types.H{
+				"must_not": types.S{
+					types.H{
+						"term": types.H{
+							"data.steam_clan_id": "",
+						},
+					},
+				},
+			},
+		})
+	case types.TypeSteamClanOnly:
+		// steam_clan_id != "" AND clan_only = 1
+		condition = append(condition, types.H{
+			"bool": types.H{
+				"must_not": types.S{
+					types.H{
+						"term": types.H{
+							"data.steam_clan_id": "",
+						},
+					},
+				},
+				"must": types.S{
+					types.H{
+						"term": types.H{
+							"data.clan_only": 1,
+						},
+					},
+				},
+			},
+		})
+	case types.TypeFriendOnly:
+		// friend_only = 1
+		condition = append(condition, types.H{
+			"match": types.H{
+				"data.friend_only": 1,
+			},
+		})
+	}
+
+	order := func(desc bool) string {
+		if desc {
+			return "desc"
+		}
+		return "asc"
+	}
+
+	// sort order
+	switch options.Sort {
+	case types.DstSortByName:
+		dsl["sort"] = types.H{
+			"data.name.keyword": types.H{
+				"order": order(options.Desc),
+			},
+		}
+	case types.DstSortByCountry:
+		dsl["sort"] = types.H{
+			"data.country.keyword": types.H{
+				"order": order(options.Desc),
+			},
+		}
+	case types.DstSortByVersion:
+		dsl["sort"] = types.H{
+			"data.version": types.H{
+				"order": order(options.Desc),
+			},
+		}
+	case types.DstSortByOnline:
+		dsl["sort"] = types.H{
+			"data.online": types.H{
+				"order": order(options.Desc),
+			},
+		}
+	case types.DstSortByLevel:
+		dsl["sort"] = types.H{
+			"data.level": types.H{
+				"order": order(options.Desc),
+			},
+		}
+	default:
+		dsl["sort"] = types.H{
+			"data.id": types.H{
+				"order": order(options.Desc),
+			},
+		}
+	}
+
+	// apply condition
+	dsl["query"].(types.H)["bool"].(types.H)["must"] = condition
+
+	// search from es
+	_, body, err := esSearch(s.Elastic, ctx, []string{"lobby-servers"}, dsl)
+	if err != nil {
+		return nil, 0, err
+	}
+	// total of result
+	totalResult := gjson.GetBytes(body, "hits.total.value").Int()
+
+	// collect data
+	var servers []types.EsServer
+	hits := gjson.GetBytes(body, "hits.hits").Array()
+	buffer := strings.NewReader("")
+	for _, result := range hits {
+		dataServer := types.EsServer{}
+		dataJson := gjson.Get(result.Raw, "_source.data").Raw
+		buffer.Reset(dataJson)
+		err = json.NewDecoder(buffer).DecodeWithOption(&dataServer)
+		if err != nil {
+			return nil, 0, err
+		}
+		servers = append(servers, dataServer)
+	}
+
+	// type convert
+	var result []*ent.Server
+	for _, ess := range servers {
+		result = append(result, types.EsServerToEntServer(ess))
+	}
+	return result, int(totalResult), err
 }

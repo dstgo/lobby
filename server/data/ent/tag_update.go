@@ -57,6 +57,27 @@ func (tu *TagUpdate) SetNillableOwnerID(i *int) *TagUpdate {
 	return tu
 }
 
+// SetQueryVersion sets the "query_version" field.
+func (tu *TagUpdate) SetQueryVersion(i int64) *TagUpdate {
+	tu.mutation.ResetQueryVersion()
+	tu.mutation.SetQueryVersion(i)
+	return tu
+}
+
+// SetNillableQueryVersion sets the "query_version" field if the given value is not nil.
+func (tu *TagUpdate) SetNillableQueryVersion(i *int64) *TagUpdate {
+	if i != nil {
+		tu.SetQueryVersion(*i)
+	}
+	return tu
+}
+
+// AddQueryVersion adds i to the "query_version" field.
+func (tu *TagUpdate) AddQueryVersion(i int64) *TagUpdate {
+	tu.mutation.AddQueryVersion(i)
+	return tu
+}
+
 // SetServersID sets the "servers" edge to the Server entity by ID.
 func (tu *TagUpdate) SetServersID(id int) *TagUpdate {
 	tu.mutation.SetServersID(id)
@@ -135,6 +156,12 @@ func (tu *TagUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := tu.mutation.Value(); ok {
 		_spec.SetField(tag.FieldValue, field.TypeString, value)
 	}
+	if value, ok := tu.mutation.QueryVersion(); ok {
+		_spec.SetField(tag.FieldQueryVersion, field.TypeInt64, value)
+	}
+	if value, ok := tu.mutation.AddedQueryVersion(); ok {
+		_spec.AddField(tag.FieldQueryVersion, field.TypeInt64, value)
+	}
 	if tu.mutation.ServersCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -211,6 +238,27 @@ func (tuo *TagUpdateOne) SetNillableOwnerID(i *int) *TagUpdateOne {
 	if i != nil {
 		tuo.SetOwnerID(*i)
 	}
+	return tuo
+}
+
+// SetQueryVersion sets the "query_version" field.
+func (tuo *TagUpdateOne) SetQueryVersion(i int64) *TagUpdateOne {
+	tuo.mutation.ResetQueryVersion()
+	tuo.mutation.SetQueryVersion(i)
+	return tuo
+}
+
+// SetNillableQueryVersion sets the "query_version" field if the given value is not nil.
+func (tuo *TagUpdateOne) SetNillableQueryVersion(i *int64) *TagUpdateOne {
+	if i != nil {
+		tuo.SetQueryVersion(*i)
+	}
+	return tuo
+}
+
+// AddQueryVersion adds i to the "query_version" field.
+func (tuo *TagUpdateOne) AddQueryVersion(i int64) *TagUpdateOne {
+	tuo.mutation.AddQueryVersion(i)
 	return tuo
 }
 
@@ -321,6 +369,12 @@ func (tuo *TagUpdateOne) sqlSave(ctx context.Context) (_node *Tag, err error) {
 	}
 	if value, ok := tuo.mutation.Value(); ok {
 		_spec.SetField(tag.FieldValue, field.TypeString, value)
+	}
+	if value, ok := tuo.mutation.QueryVersion(); ok {
+		_spec.SetField(tag.FieldQueryVersion, field.TypeInt64, value)
+	}
+	if value, ok := tuo.mutation.AddedQueryVersion(); ok {
+		_spec.AddField(tag.FieldQueryVersion, field.TypeInt64, value)
 	}
 	if tuo.mutation.ServersCleared() {
 		edge := &sqlgraph.EdgeSpec{

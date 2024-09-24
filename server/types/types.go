@@ -4,12 +4,17 @@ import (
 	"github.com/dstgo/lobby/server/conf"
 	"github.com/dstgo/lobby/server/data/ent"
 	"github.com/dstgo/lobby/server/pkg/lobbyapi"
+	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/ginx-contribs/ginx"
 	"github.com/ginx-contribs/ginx/constant/status"
 	"github.com/ginx-contribs/ginx/pkg/resp/statuserr"
 	"github.com/redis/go-redis/v9"
 	"github.com/wneessen/go-mail"
 )
+
+type H = map[string]any
+
+type S = []any
 
 // Response it is only used for documentation, use package 'ginx/resp' to build response.
 type Response struct {
@@ -33,6 +38,8 @@ type Context struct {
 	Email *mail.Client
 	// lobbyapi client
 	Lobby *lobbyapi.Client
+	// elasticsearch client
+	Elastic *elasticsearch.Client
 }
 
 // custom code is composed of three parts: Order_Status_Code, it will be shown in the response body.

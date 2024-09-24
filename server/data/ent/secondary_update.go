@@ -106,6 +106,27 @@ func (su *SecondaryUpdate) SetNillableOwnerID(i *int) *SecondaryUpdate {
 	return su
 }
 
+// SetQueryVersion sets the "query_version" field.
+func (su *SecondaryUpdate) SetQueryVersion(i int64) *SecondaryUpdate {
+	su.mutation.ResetQueryVersion()
+	su.mutation.SetQueryVersion(i)
+	return su
+}
+
+// SetNillableQueryVersion sets the "query_version" field if the given value is not nil.
+func (su *SecondaryUpdate) SetNillableQueryVersion(i *int64) *SecondaryUpdate {
+	if i != nil {
+		su.SetQueryVersion(*i)
+	}
+	return su
+}
+
+// AddQueryVersion adds i to the "query_version" field.
+func (su *SecondaryUpdate) AddQueryVersion(i int64) *SecondaryUpdate {
+	su.mutation.AddQueryVersion(i)
+	return su
+}
+
 // SetServersID sets the "servers" edge to the Server entity by ID.
 func (su *SecondaryUpdate) SetServersID(id int) *SecondaryUpdate {
 	su.mutation.SetServersID(id)
@@ -195,6 +216,12 @@ func (su *SecondaryUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := su.mutation.AddedPort(); ok {
 		_spec.AddField(secondary.FieldPort, field.TypeInt, value)
+	}
+	if value, ok := su.mutation.QueryVersion(); ok {
+		_spec.SetField(secondary.FieldQueryVersion, field.TypeInt64, value)
+	}
+	if value, ok := su.mutation.AddedQueryVersion(); ok {
+		_spec.AddField(secondary.FieldQueryVersion, field.TypeInt64, value)
 	}
 	if su.mutation.ServersCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -324,6 +351,27 @@ func (suo *SecondaryUpdateOne) SetNillableOwnerID(i *int) *SecondaryUpdateOne {
 	return suo
 }
 
+// SetQueryVersion sets the "query_version" field.
+func (suo *SecondaryUpdateOne) SetQueryVersion(i int64) *SecondaryUpdateOne {
+	suo.mutation.ResetQueryVersion()
+	suo.mutation.SetQueryVersion(i)
+	return suo
+}
+
+// SetNillableQueryVersion sets the "query_version" field if the given value is not nil.
+func (suo *SecondaryUpdateOne) SetNillableQueryVersion(i *int64) *SecondaryUpdateOne {
+	if i != nil {
+		suo.SetQueryVersion(*i)
+	}
+	return suo
+}
+
+// AddQueryVersion adds i to the "query_version" field.
+func (suo *SecondaryUpdateOne) AddQueryVersion(i int64) *SecondaryUpdateOne {
+	suo.mutation.AddQueryVersion(i)
+	return suo
+}
+
 // SetServersID sets the "servers" edge to the Server entity by ID.
 func (suo *SecondaryUpdateOne) SetServersID(id int) *SecondaryUpdateOne {
 	suo.mutation.SetServersID(id)
@@ -443,6 +491,12 @@ func (suo *SecondaryUpdateOne) sqlSave(ctx context.Context) (_node *Secondary, e
 	}
 	if value, ok := suo.mutation.AddedPort(); ok {
 		_spec.AddField(secondary.FieldPort, field.TypeInt, value)
+	}
+	if value, ok := suo.mutation.QueryVersion(); ok {
+		_spec.SetField(secondary.FieldQueryVersion, field.TypeInt64, value)
+	}
+	if value, ok := suo.mutation.AddedQueryVersion(); ok {
+		_spec.AddField(secondary.FieldQueryVersion, field.TypeInt64, value)
 	}
 	if suo.mutation.ServersCleared() {
 		edge := &sqlgraph.EdgeSpec{

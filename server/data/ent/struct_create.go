@@ -17,6 +17,7 @@ func (sc *SecondaryCreate) SetSecondary(input *Secondary) *SecondaryCreate {
 	sc.SetAddress(input.Address)
 	sc.SetPort(input.Port)
 	sc.SetOwnerID(input.OwnerID)
+	sc.SetQueryVersion(input.QueryVersion)
 	return sc
 }
 
@@ -62,6 +63,7 @@ func (sc *ServerCreate) SetServer(input *Server) *ServerCreate {
 func (tc *TagCreate) SetTag(input *Tag) *TagCreate {
 	tc.SetValue(input.Value)
 	tc.SetOwnerID(input.OwnerID)
+	tc.SetQueryVersion(input.QueryVersion)
 	return tc
 }
 

@@ -37,6 +37,12 @@ func NewApp(ctx context.Context, appConf *conf.App) (*ginx.Server, error) {
 		return nil, err
 	}
 
+	slog.Debug("connecting to elasticsearch(%s)", appConf.Elastic.Address)
+	elasticClient, err := NewElasticClient(ctx, appConf.Elastic)
+	if err != nil {
+		return nil, err
+	}
+
 	// initialize lobby client
 	slog.Debug("initialize lobby client")
 	var lobbyClient *lobbyapi.Client
@@ -53,6 +59,7 @@ func NewApp(ctx context.Context, appConf *conf.App) (*ginx.Server, error) {
 		Redis:   redisClient,
 		Email:   emailClient,
 		Lobby:   lobbyClient,
+		Elastic: elasticClient,
 	}
 
 	// initialize ginx server

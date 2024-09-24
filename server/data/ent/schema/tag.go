@@ -16,6 +16,7 @@ func (Tag) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("value"),
 		field.Int("owner_id"),
+		field.Int64("query_version"),
 	}
 }
 

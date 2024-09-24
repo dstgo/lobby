@@ -52,6 +52,12 @@ func (sc *SecondaryCreate) SetOwnerID(i int) *SecondaryCreate {
 	return sc
 }
 
+// SetQueryVersion sets the "query_version" field.
+func (sc *SecondaryCreate) SetQueryVersion(i int64) *SecondaryCreate {
+	sc.mutation.SetQueryVersion(i)
+	return sc
+}
+
 // SetServersID sets the "servers" edge to the Server entity by ID.
 func (sc *SecondaryCreate) SetServersID(id int) *SecondaryCreate {
 	sc.mutation.SetServersID(id)
@@ -112,6 +118,9 @@ func (sc *SecondaryCreate) check() error {
 	if _, ok := sc.mutation.OwnerID(); !ok {
 		return &ValidationError{Name: "owner_id", err: errors.New(`ent: missing required field "Secondary.owner_id"`)}
 	}
+	if _, ok := sc.mutation.QueryVersion(); !ok {
+		return &ValidationError{Name: "query_version", err: errors.New(`ent: missing required field "Secondary.query_version"`)}
+	}
 	if len(sc.mutation.ServersIDs()) == 0 {
 		return &ValidationError{Name: "servers", err: errors.New(`ent: missing required edge "Secondary.servers"`)}
 	}
@@ -157,6 +166,10 @@ func (sc *SecondaryCreate) createSpec() (*Secondary, *sqlgraph.CreateSpec) {
 	if value, ok := sc.mutation.Port(); ok {
 		_spec.SetField(secondary.FieldPort, field.TypeInt, value)
 		_node.Port = value
+	}
+	if value, ok := sc.mutation.QueryVersion(); ok {
+		_spec.SetField(secondary.FieldQueryVersion, field.TypeInt64, value)
+		_node.QueryVersion = value
 	}
 	if nodes := sc.mutation.ServersIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -293,6 +306,24 @@ func (u *SecondaryUpsert) UpdateOwnerID() *SecondaryUpsert {
 	return u
 }
 
+// SetQueryVersion sets the "query_version" field.
+func (u *SecondaryUpsert) SetQueryVersion(v int64) *SecondaryUpsert {
+	u.Set(secondary.FieldQueryVersion, v)
+	return u
+}
+
+// UpdateQueryVersion sets the "query_version" field to the value that was provided on create.
+func (u *SecondaryUpsert) UpdateQueryVersion() *SecondaryUpsert {
+	u.SetExcluded(secondary.FieldQueryVersion)
+	return u
+}
+
+// AddQueryVersion adds v to the "query_version" field.
+func (u *SecondaryUpsert) AddQueryVersion(v int64) *SecondaryUpsert {
+	u.Add(secondary.FieldQueryVersion, v)
+	return u
+}
+
 // UpdateNewValues updates the mutable fields using the new values that were set on create.
 // Using this option is equivalent to using:
 //
@@ -407,6 +438,27 @@ func (u *SecondaryUpsertOne) SetOwnerID(v int) *SecondaryUpsertOne {
 func (u *SecondaryUpsertOne) UpdateOwnerID() *SecondaryUpsertOne {
 	return u.Update(func(s *SecondaryUpsert) {
 		s.UpdateOwnerID()
+	})
+}
+
+// SetQueryVersion sets the "query_version" field.
+func (u *SecondaryUpsertOne) SetQueryVersion(v int64) *SecondaryUpsertOne {
+	return u.Update(func(s *SecondaryUpsert) {
+		s.SetQueryVersion(v)
+	})
+}
+
+// AddQueryVersion adds v to the "query_version" field.
+func (u *SecondaryUpsertOne) AddQueryVersion(v int64) *SecondaryUpsertOne {
+	return u.Update(func(s *SecondaryUpsert) {
+		s.AddQueryVersion(v)
+	})
+}
+
+// UpdateQueryVersion sets the "query_version" field to the value that was provided on create.
+func (u *SecondaryUpsertOne) UpdateQueryVersion() *SecondaryUpsertOne {
+	return u.Update(func(s *SecondaryUpsert) {
+		s.UpdateQueryVersion()
 	})
 }
 
@@ -687,6 +739,27 @@ func (u *SecondaryUpsertBulk) SetOwnerID(v int) *SecondaryUpsertBulk {
 func (u *SecondaryUpsertBulk) UpdateOwnerID() *SecondaryUpsertBulk {
 	return u.Update(func(s *SecondaryUpsert) {
 		s.UpdateOwnerID()
+	})
+}
+
+// SetQueryVersion sets the "query_version" field.
+func (u *SecondaryUpsertBulk) SetQueryVersion(v int64) *SecondaryUpsertBulk {
+	return u.Update(func(s *SecondaryUpsert) {
+		s.SetQueryVersion(v)
+	})
+}
+
+// AddQueryVersion adds v to the "query_version" field.
+func (u *SecondaryUpsertBulk) AddQueryVersion(v int64) *SecondaryUpsertBulk {
+	return u.Update(func(s *SecondaryUpsert) {
+		s.AddQueryVersion(v)
+	})
+}
+
+// UpdateQueryVersion sets the "query_version" field to the value that was provided on create.
+func (u *SecondaryUpsertBulk) UpdateQueryVersion() *SecondaryUpsertBulk {
+	return u.Update(func(s *SecondaryUpsert) {
+		s.UpdateQueryVersion()
 	})
 }
 

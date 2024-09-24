@@ -3,6 +3,7 @@ package test
 import (
 	"context"
 	"github.com/dstgo/lobby/server"
+	"github.com/dstgo/lobby/server/conf"
 	"github.com/dstgo/lobby/server/data/repo"
 	"github.com/dstgo/lobby/server/handler/dst"
 	"github.com/dstgo/lobby/server/handler/job"
@@ -26,7 +27,7 @@ func newLobbyCollectJob() (*job.LobbyCollectJob, error) {
 	// due to large number of records, do not enable debug sql logging.
 	serverRepo := repo.NewServerRepo(db)
 	client := lobbyapi.New(cfg.Dst.KeliToken)
-	handler := dst.NewLobbyHandler(serverRepo, client)
+	handler := dst.NewLobbyHandler(serverRepo, client, nil, conf.Elasticsearch{})
 	return job.NewLobbyCollectJob(handler, client, cfg.Job.Collect), nil
 }
 
@@ -43,7 +44,7 @@ func newLobbyCleanJob() (*job.LobbyCleanJob, error) {
 	// due to large number of records, do not enable debug sql logging.
 	serverRepo := repo.NewServerRepo(db)
 	client := lobbyapi.New(cfg.Dst.KeliToken)
-	handler := dst.NewLobbyHandler(serverRepo, client)
+	handler := dst.NewLobbyHandler(serverRepo, client, nil, conf.Elasticsearch{})
 	return job.NewLobbyCleanJob(handler, cfg.Job.Clean), nil
 }
 

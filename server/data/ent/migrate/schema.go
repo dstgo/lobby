@@ -31,6 +31,7 @@ var (
 		{Name: "steam_id", Type: field.TypeString},
 		{Name: "address", Type: field.TypeString},
 		{Name: "port", Type: field.TypeInt},
+		{Name: "query_version", Type: field.TypeInt64},
 		{Name: "owner_id", Type: field.TypeInt},
 	}
 	// SecondariesTable holds the schema information for the "secondaries" table.
@@ -41,7 +42,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "secondaries_servers_secondaries",
-				Columns:    []*schema.Column{SecondariesColumns[5]},
+				Columns:    []*schema.Column{SecondariesColumns[6]},
 				RefColumns: []*schema.Column{ServersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -108,6 +109,7 @@ var (
 	TagsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "value", Type: field.TypeString},
+		{Name: "query_version", Type: field.TypeInt64},
 		{Name: "owner_id", Type: field.TypeInt},
 	}
 	// TagsTable holds the schema information for the "tags" table.
@@ -118,7 +120,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "tags_servers_tags",
-				Columns:    []*schema.Column{TagsColumns[2]},
+				Columns:    []*schema.Column{TagsColumns[3]},
 				RefColumns: []*schema.Column{ServersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},

@@ -19,6 +19,7 @@ var Provider = wire.NewSet(
 
 	// server
 	repo.NewServerRepo,
+	repo.NewServerEsRepo,
 
 	// repo
 	repo.NewJobRepo,

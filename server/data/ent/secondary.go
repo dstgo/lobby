@@ -27,6 +27,8 @@ type Secondary struct {
 	Port int `json:"port,omitempty"`
 	// OwnerID holds the value of the "owner_id" field.
 	OwnerID int `json:"owner_id,omitempty"`
+	// QueryVersion holds the value of the "query_version" field.
+	QueryVersion int64 `json:"query_version,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the SecondaryQuery when eager-loading is set.
 	Edges        SecondaryEdges `json:"edges"`
@@ -58,7 +60,7 @@ func (*Secondary) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case secondary.FieldID, secondary.FieldPort, secondary.FieldOwnerID:
+		case secondary.FieldID, secondary.FieldPort, secondary.FieldOwnerID, secondary.FieldQueryVersion:
 			values[i] = new(sql.NullInt64)
 		case secondary.FieldSid, secondary.FieldSteamID, secondary.FieldAddress:
 			values[i] = new(sql.NullString)
@@ -112,6 +114,12 @@ func (s *Secondary) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field owner_id", values[i])
 			} else if value.Valid {
 				s.OwnerID = int(value.Int64)
+			}
+		case secondary.FieldQueryVersion:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field query_version", values[i])
+			} else if value.Valid {
+				s.QueryVersion = value.Int64
 			}
 		default:
 			s.selectValues.Set(columns[i], values[i])
@@ -168,6 +176,9 @@ func (s *Secondary) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("owner_id=")
 	builder.WriteString(fmt.Sprintf("%v", s.OwnerID))
+	builder.WriteString(", ")
+	builder.WriteString("query_version=")
+	builder.WriteString(fmt.Sprintf("%v", s.QueryVersion))
 	builder.WriteByte(')')
 	return builder.String()
 }
